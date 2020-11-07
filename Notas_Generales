@@ -1,0 +1,33 @@
+
+# --- IDI-III --#
+
+- Inversión Pasiva Vs Invesión Activa (Simple)
+- Portafolio Vs Trading (Simple)
+- Trading Discrecional Vs Trading Sistemático
+- Trading Sistemático Humanos Vs Trading Sistemático Algorítmo
+- Definición concpetual de Sistema de Trading
+
+- Criterio 1: Uso de datos
+- - Datos de entrada
+- - Ingeniería, Importancia y Selección de variables
+- - Division de conjuntos
+- - - Caracterizacion de datos
+- - - Método 1: Fechas arbitrarias (mes por mes) de entrenamiento y prueba (en el mismo mes)
+- - - Método 2: Fechas de entrenamiento y prueba elegidas por características de datos (1 vez cada proceso)
+
+- Criterio 2: Generacion de señal (Clasificacion)
+- - Definición de modelo
+- - - OLS + L1L2
+- - - LS-SVM
+- - - MLP
+- - Optimización
+- - - Unión de resultados
+- - - - Método 1: Moda en vectores de combinación de parámetros
+- - Backtest
+
+
+- Criterio 3
+- - para IDI-IV
+
+- Criterio 4
+- - para IDI-IV

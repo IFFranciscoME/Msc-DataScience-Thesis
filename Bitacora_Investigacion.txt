@@ -1,0 +1,6 @@
+
+Bitacora de investigacion
+
+|          Actividad          |          Tipo          | TimeStamp (HH:MM dia.mes.año)   | Tiempo invertido (horas) | Tiempo acumulado (horas) | 
+| --------------------------- | ---------------------- | ------------------------------- | ------------------------ | ------------------------ |
+|                             |                        |                                 |                          |                          |
