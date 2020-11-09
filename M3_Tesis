@@ -1,0 +1,58 @@
+# -- Conexion con otras materias -- #
+
+REGRESION SIMBOLICA
+- (Recibe) Datos de futuros continuos (USDMXN)
+- (Otorga) Codigos iniciales de Regresion Simbolica
+- (Otorga) Rutas Heurísticas
+- (Otorga) Resultados preliminares
+- (Recibe) Generar y robustecer teoria de Ingenieria de variables (Criterio 2)
+
+TESIS
+- (Otorga) Datos de futuros continuos (USDMXN)
+- (Recibe) Codigos iniciales de Regresion Simbolica
+- (Recibe) Rutas Heurísticas
+- (Recibe) Resultados preliminares
+- (Otorga) Funcion para división y uso de datos para Optimizacion y Backtest (Criterio 1)
+- (Otorga) Acomodo, análisis y visualización de resultados de optimización/backtest (Criterio 2)
+
+ADA (Python)
+- Titulo:
+    Programación genética y redes neuronales para la construcción de un modelo predictivo para series
+    de tiempo.
+
+- Objetivos:
+    - Ingenieria de Variables simbolicas con gplearn
+    - Definir una red neuronal como modelo predictivo
+    - Conducir proceso de optimizacion del modelo
+    - Conducir proceso de backtest del resultado del modelo optimizado
+
+- Vinculos:
+    - (Recibe) Codigos iniciales de proyecto
+    - (Recibe) Rutas Heurísticas
+    - (Recibe) Resultados preliminares
+    - (Otorga) Generar y robustecer teoria de Ingenieria de variables (Criterio 2)
+    - (Otorga) Definición de modelo predictivo MLP (Criterio 2)
+    - (Recibe) Funcion para división y uso de datos para Optimizacion y Backtest (Criterio 1)
+    - (Otorga) Proceso de optimización y backtes para MLP (Criterio 2)
+    - (Recibe) Acomodo, análisis y visualización de resultados de optimización/backtest (Criterio 2)
+
+OC (R y Python)
+- Title:
+    MachineLearning for timeseries prediction: A comparisson between OLS L1L2 and LS-SVM
+- Objetives:
+    - Define mathematically a Multivariate Linear Regression Model OLS-L2L1 for classification
+    - Implement OLS-L2L1
+    - Define mathematically a Least-Squares Support Vector Machine for classification
+    - Implement LS-SVM
+- Vinculo:
+    - (Recibe) Datos de futuros continuos (USDMXN)
+    - (Recibe) Generar y robustecer teoria de Ingenieria de variables (Criterio 2)
+    - (Recibe) Funcion para división y uso de datos para Optimizacion y Backtest (Criterio 1)
+
+    - (Otorga) Generar y robustecer teoria de OLS-L1L2 (Criterio 2)
+    - (Otorga) Proceso de optimización y backtes para OLS-L1L2 (Criterio 2)
+    - (Recibe) Acomodo, análisis y visualización de resultados de optimización/backtest OLS L1L2 (Criterio 2)
+
+    - (Otorga) Generar y robustecer teoria de LS-SVM (Criterio 2)
+    - (Otorga) Proceso de optimización y backtes para LS-SVM (Criterio 2)
+    - (Recibe) Acomodo, análisis y visualización de resultados de optimización/backtest LS-SVM (Criterio2)
