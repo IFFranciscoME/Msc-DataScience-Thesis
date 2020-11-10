@@ -42,12 +42,19 @@ ohlc = vs.g_ohlc(p_ohlc=datos, p_theme=p_theme, p_dims=p_dims, p_vlines=p_vlines
 # ----------------------------------------------------------------------- ------------------------------ -- #
 
 # tabla de descripcion de datos
+datos.describe()
 
 # --------------------------------------------------------------- ingenieria de variables autoregresivas -- #
 # --------------------------------------------------------------- -------------------------------------- -- #
 
-# LaTeX: 3 formulas de ejemplo
+# funcion para generar variables autoregresivas
+datos_arf = fn.f_autoregressive_features(p_data=datos, p_nmax=30)
+
 # Visualizacion: head del DataFrame
+datos_arf.head(5)
+
+# LaTeX: 3 formulas de ejemplo
+# Pendiente
 
 # ------------------------------------------------------------------- ingenieria de variables simbolicas -- #
 # ------------------------------------------------------------------- ---------------------------------- -- #
