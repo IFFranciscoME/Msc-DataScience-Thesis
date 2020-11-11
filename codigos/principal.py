@@ -53,6 +53,15 @@ datos_arf = fn.f_autoregressive_features(p_data=datos, p_nmax=30)
 # Visualizacion: head del DataFrame
 datos_arf.head(5)
 
+# --------------------------------------------------------------------- ingenieria de variables hadamard -- #
+# --------------------------------------------------------------------- -------------------------------- -- #
+
+# funcion para generar variables con producto hadamard
+datos_had = fn.f_hadamard_features(p_data=datos_arf, p_nmax=29)
+
+# Visualizacion: head del DataFrame
+datos_had.head(5)
+
 # LaTeX: 3 formulas de ejemplo
 # Pendiente
 

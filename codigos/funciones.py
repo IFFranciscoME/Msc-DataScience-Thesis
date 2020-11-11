@@ -146,3 +146,43 @@ def f_autoregressive_features(p_data, p_nmax):
     r_features.reset_index(inplace=True, drop=True)
 
     return r_features
+
+
+# ------------------------------------------------------------------------------------ Hadamard Features -- #
+# --------------------------------------------------------------------------------------------------------- #
+
+def f_hadamard_features(p_data, p_nmax):
+    """
+    Creacion de variables haciendo un producto hadamard entre todas las variables
+
+    Parameters
+    ----------
+    p_data: pd.DataFrame
+        Con columnas OHLCV para construir los features
+
+    p_nmax: int
+        Para considerar n calculos de features (resagos y promedios moviles)
+
+    Returns
+    -------
+    r_features: pd.DataFrame
+        Con dataframe de features con producto hadamard
+
+    """
+
+    # para hacer calculos
+    n = p_nmax
+
+    for n in range(p_nmax):
+
+        # hadamard product of previously generated features
+        list_hadamard = [p_data['lag_vol_' + str(n + 1)], p_data['lag_ol_' + str(n + 1)],
+                         p_data['lag_ho_' + str(n + 1)], p_data['lag_hl_' + str(n + 1)]]
+
+        for x in list_hadamard:
+            p_data['h_' + 'lag_vol_' + str(n+1) + '_' + 'ma_vol_' + str(n+2)] = x*p_data['ma_vol_' + str(n+2)]
+            p_data['h_' + 'lag_vol_' + str(n+1) + '_' + 'ma_ol_' + str(n+2)] = x*p_data['ma_ol_' + str(n+2)]
+            p_data['h_' + 'lag_vol_' + str(n+1) + '_' + 'ma_ho_' + str(n+2)] = x*p_data['ma_ho_' + str(n+2)]
+            p_data['h_' + 'lag_vol_' + str(n+1) + '_' + 'ma_hl_' + str(n+2)] = x*p_data['ma_hl_' + str(n+2)]
+
+    return p_data
