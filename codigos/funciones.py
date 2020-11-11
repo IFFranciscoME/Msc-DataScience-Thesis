@@ -119,16 +119,16 @@ def f_autoregressive_features(p_data, p_nmax):
         data['lag_hl_' + str(n + 1)] = data['hl'].shift(n + 1)
 
         # promedio movil de open-high de ventana n
-        data['ma_vol_' + str(n + 2)] = data['volume'].rolling(n + 2).mean()
+        data['ma_vol_' + str(n + 1)] = data['volume'].rolling(n + 1).mean()
 
         # promedio movil de open-high de ventana n
-        data['ma_ol_' + str(n + 2)] = data['ol'].rolling(n + 2).mean()
+        data['ma_ol_' + str(n + 1)] = data['ol'].rolling(n + 1).mean()
 
         # promedio movil de ventana n
-        data['ma_ho_' + str(n + 2)] = data['ho'].rolling(n + 2).mean()
+        data['ma_ho_' + str(n + 1)] = data['ho'].rolling(n + 1).mean()
 
         # promedio movil de ventana n
-        data['ma_hl_' + str(n + 2)] = data['hl'].rolling(n + 2).mean()
+        data['ma_hl_' + str(n + 1)] = data['hl'].rolling(n + 1).mean()
 
     # asignar timestamp como index
     data.index = pd.to_datetime(data.index)
@@ -170,19 +170,19 @@ def f_hadamard_features(p_data, p_nmax):
 
     """
 
-    # para hacer calculos
-    n = p_nmax
-
+    # ciclo para crear una combinacion secuencial
     for n in range(p_nmax):
 
-        # hadamard product of previously generated features
-        list_hadamard = [p_data['lag_vol_' + str(n + 1)], p_data['lag_ol_' + str(n + 1)],
-                         p_data['lag_ho_' + str(n + 1)], p_data['lag_hl_' + str(n + 1)]]
+        # lista de features previos
+        list_hadamard = ['lag_vol_' + str(n + 1),
+                         'lag_ol_' + str(n + 1),
+                         'lag_ho_' + str(n + 1),
+                         'lag_hl_' + str(n + 1)]
 
+        # producto hadamard con los features previos
         for x in list_hadamard:
-            p_data['h_' + 'lag_vol_' + str(n+1) + '_' + 'ma_vol_' + str(n+2)] = x*p_data['ma_vol_' + str(n+2)]
-            p_data['h_' + 'lag_vol_' + str(n+1) + '_' + 'ma_ol_' + str(n+2)] = x*p_data['ma_ol_' + str(n+2)]
-            p_data['h_' + 'lag_vol_' + str(n+1) + '_' + 'ma_ho_' + str(n+2)] = x*p_data['ma_ho_' + str(n+2)]
-            p_data['h_' + 'lag_vol_' + str(n+1) + '_' + 'ma_hl_' + str(n+2)] = x*p_data['ma_hl_' + str(n+2)]
+            p_data['h_' + x + '_' + 'ma_ol_' + str(n + 1)] = p_data[x] * p_data['ma_ol_' + str(n + 1)]
+            p_data['h_' + x + '_' + 'ma_ho_' + str(n + 1)] = p_data[x] * p_data['ma_ho_' + str(n + 1)]
+            p_data['h_' + x + '_' + 'ma_hl_' + str(n + 1)] = p_data[x] * p_data['ma_hl_' + str(n + 1)]
 
     return p_data
