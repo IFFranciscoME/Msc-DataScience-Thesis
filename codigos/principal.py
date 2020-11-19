@@ -54,7 +54,7 @@ m_folds = fn.f_m_folds(p_data=datos, p_periodo='trimestre')
 # ------------------------------------------------------------------ ----------------------------------- -- #
 
 # -- m_folds results of feature engineering/selection & Hyperparameter Optimization processes
-m_folds_results = fn.f_FeatureModelOptimizer
+m_folds_results = fn.f_FeatureModelOptimizer()
 
 # ----------------------------------------------------------------------------- M_Folds Results Analysis -- #
 # ----------------------------------------------------------------------------- ------------------------ -- #

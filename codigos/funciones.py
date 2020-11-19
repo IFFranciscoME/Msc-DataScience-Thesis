@@ -75,10 +75,17 @@ def f_m_folds(p_data, p_periodo):
 
     Parameters
     ----------
-    p_data = datos
+    p_data : pd.DataFrame
+        DataFrame con los datos a dividir
+
+    p_periodo : str
+        'mes': Para dividir datos por periodos mensuales
+        'trimestre' para dividir datos por periodos trimestrales
 
     Returns
     -------
+    {'periodo_': pd.DataFrame}
+
     """
 
     if p_periodo == 'mes':
