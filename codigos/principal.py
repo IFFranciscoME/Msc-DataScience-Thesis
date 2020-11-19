@@ -9,7 +9,6 @@
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 
-
 import codigos.funciones as fn
 from codigos.datos import price_data
 import codigos.visualizaciones as vs
@@ -48,8 +47,8 @@ datos.describe()
 # ------------------------------------------------------------------------ Division en K-Folds mensuales -- #
 # ------------------------------------------------------------------------ ----------------------------- -- #
 
-# -- Division de periodos de datos, sin filtracion, en amplitudes de 1 mes para obtener 36 "Folds".
-m_folds = fn.f_m_folds(p_data=[])
+# -- Division de periodos de datos, sin filtracion, en amplitudes de 1 mes para obtener 12 "Folds".
+m_folds = fn.f_m_folds(p_data=datos, p_periodo='trimestre')
 
 # ------------------------------------------------------------------ Seleccion y Optimizacion Simultanea -- #
 # ------------------------------------------------------------------ ----------------------------------- -- #

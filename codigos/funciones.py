@@ -68,9 +68,30 @@ def f_transformacion(p_datos, p_trans):
 # ------------------------------------------------------- FUNCTION: Divide the data in M-Folds (montlhy) -- #
 # ------------------------------------------------------- ------------------------------------------------- #
 
-def f_m_folds(p_data):
+def f_m_folds(p_data, p_periodo):
+    """
+    Funcion para dividir los datos en m-bloques, donde m es un valor basado en tiempo:
+        m={'mensual', 'trimestral'}
 
-    return 1
+    Parameters
+    ----------
+    p_data = datos
+
+    Returns
+    -------
+    """
+
+    if p_periodo == 'mes':
+        per = list(set(time.month for time in list(p_data['timestamp'])))
+        return {'periodo_' + str(i):
+                      p_data[pd.to_datetime(p_data['timestamp']).dt.month == i].copy() for i in per}
+
+    elif p_periodo == 'trimestre':
+        per = list(set(time.quarter for time in list(p_data['timestamp'])))
+        return {'periodo_' + str(i):
+                      p_data[pd.to_datetime(p_data['timestamp']).dt.quarter == i].copy() for i in per}
+
+    return 'Error: verificar parametros de entrada'
 
 
 # ------------------------------------------------------------------------------ Autoregressive Features -- #
