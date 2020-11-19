@@ -5,12 +5,24 @@
 
 - (Otorga OC-ADA-RS) Datos de futuros continuos (Usd/Mxn)
 - (Otorga OC-ADA-RS) Ingeniería de variables autoregresivas
+- (Otorga OC-ADA-RS) Ingeniería de variables hadamard
 - (Recibe ADA) Ingeniería de variables simbolicas
-- (Otorga OC-ADA-RS) Funcion para división y uso de datos para Optimizacion y Backtest (Criterio 1)
-- (Recibe OC) Definición y optimización de OLS L1L2
-- (Recibe OC) Definición y optimización de LS-SVM
-- (Recibe ADA) Definición y optimización de MLP
-- (Otorga OC-ADA-RS) Acomodo, análisis y visualización de resultados de optimización/backtest (Criterio 2)
+- (Otorga OC-ADA-RS) Funcion: Division de datos unica 80%-20%
+
+- (Recibe OC) Definición de OLS L1L2
+- (Recibe OC) Definición de LS-SVM
+- (Recibe OC) Seleccion de variables y optimizacion de hiperparametros simultaneas para SVM
+            Division de datos unica 80%-20%
+- (Recibe OC) Seleccion de variables y optimizacion de hiperparametros simultaneas para OLS - Elastic Net
+            Division de datos unica 80%-20%
+
+- (Recibe ADA) Definición de MLP
+- (Recibe ADA) Seleccion de variables y optimizacion de hiperparametros simultaneas para MLP
+            Division de datos unica 80%-20%
+- (Recibe ADA) Seleccion de variables y optimizacion de hiperparametros simultaneas para MLP
+            Division de datos por bloques K-Fold sin Filtración para Series de Tiempo
+
+- (Otorga OC-ADA-RS) Acomodo, análisis y visualización de resultados de optimización/backtest
 
 # -- -------------------------------------------------------------------------- (RS) Regresión Simbólica -- #
 # -- -------------------------------------------------------------------------- ------------------------ -- #
@@ -31,14 +43,15 @@
     de tiempo.
 
 - Objetivos:
-    - Ingenieria de variables "autoregresivas".
-    - Ingeniería de variables "simbolicas".
-    - Importancia y selección de variables.
-    - Definir matemáticamente una red neuronal como modelo predictivo
-    - Definir matemáticamente un proceso de algoritmos genéticos
-    - Conducir proceso de optimizacion del modelo
-    - Conducir proceso de backtest del resultado del modelo optimizado
-    - Conducir un análisis a posteriori de algoritmos genéticos
+    - Ingenieria de variables "autoregresivas" (Box-Jenkins).
+    - Ingeniería de variables "simbolicas" (Algoritmos geneticos).
+    - Definir matemáticamente una red neuronal como modelo predictivo.
+    - Definir matemáticamente un proceso de algoritmos genéticos.
+
+    - Conducir proceso Cross-Validation (Bloques K-Fold sin Filtración para Series de Tiempo)
+        - Selección de variables y Optimizacion de hiperparametros simultanea (Algoritmos genéticos).
+    - Conducir proceso de selección de la configuración de parámetros moda.
+    - Conducir proceso de backtest con todos los bloques con configuración de parámetros moda.
 
 - Vinculos:
     - (Recibe TS) Datos de futuros continuos (USDMXN)
@@ -47,9 +60,11 @@
     - (Recibe TS) Funcion para división y uso de datos para Optimizacion y Backtest (Criterio 1)
     - (Recibe TS) Acomodo, análisis y visualización de resultados de optimización/backtest (Criterio 2)
     - (Recibe TS) Ingeniería de variables autoregresivas
+    - (Recibe TS) Ingeniería de variables hadamard
 
     - (Otorga TS-OC-RS) Ingeniería de variables simbolicas
-    - (Otorga TS) Definición y optimización de MLP
+    - (Otorga TS) Definición de MLP
+    - (Otorga TS) Selección de variables y Optimizacion de hiperparametros simultanea (Algoritmos genéticos).
 
 # -- ------------------------------------------------------------------------- (OC) Optimizacion Convexa -- #
 # -- ------------------------------------------------------------------------- ------------------------- -- #
@@ -59,95 +74,166 @@
     to build a classifier of the daily returns.
 
 - Objetives:
-    - Feature engineering with autoregressive variables.
-    - Feature engineering with symbolic variables.
-    - Feature importance and selection with autoregressive and symbolic variables.
+    - Feature engineering with autoregressive and moving average operations (Autoregressive variables)
+    - Feature engineering with symbolic operations and genetic programming (Symbolic variables).
+    - Feature engineering with hadamard product (Hadamard variables).
+
     - Define mathematically a Multivariate Linear Regression Model OLS-L2L1 for classification
     - Implement OLS-L2L1
     - Define mathematically a Least-Squares Support Vector Machine for classification
     - Implement LS-SVM
-    - Define metrics and perform a comparisson between models
+
+    - Conducir proceso 80% - 20% (para SVM)
+        - Selección de variables y Optimizacion de hiperparametros simultanea (Algoritmos genéticos).
+    - Conducir proceso de selección de la configuración de parámetros final.
+    - Conducir proceso de evaluacion en test con la configuración de parámetros final.
+
+    - Conducir proceso 80% - 20% (para OLS L1L2)
+    - Conducir proceso de evaluacion en test con la configuración de parámetros final.
+
+    - Define metrics for model evaluation
+    - Perform a comparisson between SVM and OLS - Elastic Net
+    - Present visualizations for each model prediction
+    - Present visualizations for model comparisson
 
 - Vinculo:
     - (Recibe TS) Datos de futuros continuos (USDMXN)
 
     - (Recibe TS) Ingeniería de variables autoregresivas
+    - (Recibe TS) Ingeniería de variables hadamard
     - (Recibe ADA) Ingeniería de variables simbólicas
     - (Recibe TS) Funcion para división y uso de datos para Optimizacion y Backtest
     - (Recibe TS) Acomodo, análisis y visualización de resultados de optimización/backtest
 
     - (Otorga) Teoria formal de modelo OLS-L1L2.
-    - (Otorga) Optimización y backtest de modelo OLS-L1L2.
+    - (Otorga) Seleccion de variables y Optimización de hiperparametros OLS - Elastic Net (80%-20%)
     - (Otorga) Teoria formal de modelo LS-SVM.
-    - (Otorga) Optimización y backtest de modelo LS-SVM.
+    - (Otorga) Seleccion de variables y Optimización de hiperparametros LS-SVM (80%-20%)
 
 # -- -------------------------------------------------------------------------------- PLAN DE DESARROLLO -- #
 # -- -------------------------------------------------------------------------------- ------------------ -- #
 
-1.- Datos de futuros continuos (Usd/Mxn)
+--- LISTO
+Datos de futuros continuos (Usd/Mxn)
 - - Proyecto que cubre: Todos
 - - Proyectos que beneficia: Todos
 
-2.- Ingeniería de variables autoregresivas
+--- LISTO
+Ingeniería de variables autoregresivas
 - - Proyecto que cubre: Todos
 - - Proyectos que beneficia: Todos
 
-3.- Teoria y heurísticas de modelo Algoritmos Genéticos
+--- LISTO
+Ingeniería de variables hadamard
+- - Proyecto que cubre: Todos
+- - Proyectos que beneficia: Todos
+
+--- LISTO
+Ingeniería de variables simbólicas (Codigo)
 - - Proyecto que cubre: ADA
 - - Proyectos que beneficia: Todos
 
-4.- Código Base de modelo Algoritmos Genéticos (Ingeniería de variables simbólicas)
+--- PENDIENTE
+Ingeniería de variables simbólicas con programacion genetica (Teoria y heurísticas)
 - - Proyecto que cubre: ADA
 - - Proyectos que beneficia: Todos
 
-5.- Código Base de modelo Algoritmos Genéticos (Optimizacion de hiperparámetros)
+--- PENDIENTE
+Seleccion de variables y optimizacion de hiperparametros con Prog Genetica (Teoria y heuristicas)
 - - Proyecto que cubre: ADA
 - - Proyectos que beneficia: ADA, TS, OC
 
-6.- Importancia y selección de variables.
-- - Proyecto que cubre: Todos
-- - Proyectos que beneficia: Todos
-
-7.- Código Base de modelo OLS-L1L2
+--- LISTO
+Código Base de modelo OLS-L1L2
 - - Proyecto que cubre: OC
 - - Proyectos que beneficia: OC, TS, RS
 
-8.- Código Base de modelo LS-SVM
+--- PENDIENTE
+Código Base de modelo LS-SVM
 - - Proyecto que cubre: OC
 - - Proyectos que beneficia: OC, TS
 
-9.- Código Base de modelo MLP
+--- PENDIENTE
+Código Base de modelo MLP
 - - Proyecto que cubre: ADA
 - - Proyectos que beneficia: TS, ADA
 
-10.- Teoria formal de modelo LS-SVM.
+--- PENDIENTE
+Teoria formal de modelo LS-SVM.
 - - Proyecto que cubre: OC
 - - Proyectos que beneficia: OC, TS
 
-11.- Teoria formal de modelo OLS-L1L2.
+--- PENDIENTE
+Teoria formal de modelo OLS-L1L2.
 - - Proyecto que cubre: OC
 - - Proyectos que beneficia: OC, TS
 
-12.- Funcion para división y uso de datos para Optimizacion y Backtest
+--- PENDIENTE
+Introduccion breve de modelo MLP.
+- - Proyecto que cubre: OC
+- - Proyectos que beneficia: OC, TS
+
+--- PENDIENTE
+Seleccion de variables y optimizacion de hiperparametros con Prog Genetica (FUNCION 80-20).
 - - Proyecto que cubre: ADA
 - - Proyectos que beneficia: Todos
 
-13.- Optimización y backtest de modelo MLP.
+--- PENDIENTE
+Seleccion de variables y optimizacion de hiperparametros con Prog Genetica (FUNCION TSBCV).
+- - Proyecto que cubre: ADA
+- - Proyectos que beneficia: Todos
+
+--- PENDIENTE
+Seleccion de variables y Optimización de hiperparametros con Prog Genetica para MLP (PROCESO 80-20).
 - - Proyecto que cubre: ADA
 - - Proyectos que beneficia: ADA, TS
 
-14.- Optimización y backtest de modelo OLS-L1L2.
+--- PENDIENTE
+Seleccion de variables y Optimización de hiperparametros con Prog Genetica para MLP (PROCESO TSBCV).
+- - Proyecto que cubre: ADA
+- - Proyectos que beneficia: ADA, TS
+
+--- PENDIENTE
+Seleccion de variables y Optimización de hiperparametros para modelo OLS-ElasticNet (PROCESO 80-20).
 - - Proyecto que cubre: OC
 - - Proyectos que beneficia: OC, TS
 
-15.- Optimización y backtest de modelo LS-SVM.
+--- PENDIENTE
+Seleccion de variables y Optimización de hiperparametros para modelo LS-SVM (PROCESO 80-20).
 - - Proyecto que cubre: OC
 - - Proyectos que beneficia: OC, TS
 
-16.- Acomodo, análisis y visualización de resultados de optimización/backtest
+--- PENDIENTE
+Seleccion de variables y Optimización de hiperparametros para modelo OLS-ElasticNet (PROCESO TSBCV).
+- - Proyecto que cubre: TS
+- - Proyectos que beneficia: TS
+
+--- PENDIENTE
+Seleccion de variables y Optimización de hiperparametros para modelo LS-SVM (PROCESO TSBCV).
+- - Proyecto que cubre: TS
+- - Proyectos que beneficia: TS
+
+--- PENDIENTE
+Acomodo, análisis y visualización de resultados de optimización/backtest
 - - Proyecto que cubre: Todos
 - - Proyectos que beneficia: Todos
 
-17.- Framework de presentacion Reveal.js
+--- PENDIENTE
+Framework de presentacion Reveal.js
 - - Proyecto que cubre: Todos
 - - Proyectos que beneficia: Todos
+
+--- PENDIENTE
+Presentacion final con reveal.js
+- - Proyecto que cubre: ADA
+- - Proyectos que beneficia: ADA
+
+--- PENDIENTE
+Presentacion final con reveal.js
+- - Proyecto que cubre: OC
+- - Proyectos que beneficia: OC
+
+--- PENDIENTE
+Presentacion final con reveal.js
+- - Proyecto que cubre: TS
+- - Proyectos que beneficia: TS

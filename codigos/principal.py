@@ -2,12 +2,13 @@
 """
 # -- --------------------------------------------------------------------------------------------------- -- #
 # -- project: A SHORT DESCRIPTION OF THE PROJECT                                                         -- #
-# -- script: principal.py : python script with the main functionality                                    -- #
+# -- script: main.py : python script with the main functionality                                         -- #
 # -- author: YOUR GITHUB USER NAME                                                                       -- #
 # -- license: GPL-3.0 License                                                                            -- #
 # -- repository: YOUR REPOSITORY URL                                                                     -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
+
 
 import codigos.funciones as fn
 from codigos.datos import price_data
@@ -44,60 +45,20 @@ ohlc = vs.g_ohlc(p_ohlc=datos, p_theme=p_theme, p_dims=p_dims, p_vlines=p_vlines
 # tabla de descripcion de datos
 datos.describe()
 
-# --------------------------------------------------------------- ingenieria de variables autoregresivas -- #
-# --------------------------------------------------------------- -------------------------------------- -- #
+# ------------------------------------------------------------------------ Division en K-Folds mensuales -- #
+# ------------------------------------------------------------------------ ----------------------------- -- #
 
-# funcion para generar variables autoregresivas
-datos_arf = fn.f_autoregressive_features(p_data=datos, p_nmax=30)
+# -- Division de periodos de datos, sin filtracion, en amplitudes de 1 mes para obtener 36 "Folds".
+m_folds = fn.f_m_folds(p_data=[])
 
-# Visualizacion: head del DataFrame
-datos_arf.head(5)
+# ------------------------------------------------------------------ Seleccion y Optimizacion Simultanea -- #
+# ------------------------------------------------------------------ ----------------------------------- -- #
 
-# --------------------------------------------------------------------- ingenieria de variables hadamard -- #
-# --------------------------------------------------------------------- -------------------------------- -- #
+# -- m_folds results of feature engineering/selection & Hyperparameter Optimization processes
+m_folds_results = fn.f_FeatureModelOptimizer
 
-# funcion para generar variables con producto hadamard
-datos_had = fn.f_hadamard_features(p_data=datos_arf, p_nmax=29)
+# ----------------------------------------------------------------------------- M_Folds Results Analysis -- #
+# ----------------------------------------------------------------------------- ------------------------ -- #
 
-# Visualizacion: head del DataFrame
-datos_had.head(5)
-
-# LaTeX: 3 formulas de ejemplo
-# Pendiente
-
-# ------------------------------------------------------------------- ingenieria de variables simbolicas -- #
-# ------------------------------------------------------------------- ---------------------------------- -- #
-
-# Lista de operaciones simbolicas
-# LaTeX: 3 formulas de ejemplo
-# Visualizacion: head del DataFrame
-
-# ----------------------------------------------------------------- importancia y seleccion de variables -- #
-# ----------------------------------------------------------------- ------------------------------------ -- #
-
-# metodo 1 para importancia de variables
-# metodo 1 para seleccion de variables
-
-# ----------------------------------------------------------------------------------- conjuntos de datos -- #
-# ----------------------------------------------------------------------------------- ------------------ -- #
-
-# Tipo 1: 1 solo data set con 80% Entrenamiento y 20% Prueba
-# Tipo 2: 1 data set por mes con 80% Entrenamiento y 20% Prueba
-
-# ---------------------------------------------------------------------------- ajuste de modelo OLS-L1L2 -- #
-# ---------------------------------------------------------------------------- ------------------------- -- #
-
-# ajuste de modelo
-# Visualizacion: Mostrar metricas de performance
-
-# ------------------------------------------------------------------------------ ajuste de modelo LS-SVM -- #
-# ------------------------------------------------------------------------------ ----------------------- -- #
-
-# ajuste de modelo
-# Visualizacion: Mostrar metricas de performance
-
-# --------------------------------------------------------------------------------- ajuste de modelo MLP -- #
-# --------------------------------------------------------------------------------- -------------------- -- #
-
-# ajuste de modelo
-# Visualizacion: Mostrar metricas de performance
+# ------------------------------------------------------------------------ M_Folds Results Visualization -- #
+# ----------------------------------------------------------------------------- ------------------------ -- #
