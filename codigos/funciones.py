@@ -10,6 +10,7 @@
 """
 
 import pandas as pd
+from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
 from sklearn.preprocessing import StandardScaler, RobustScaler, MaxAbsScaler  # estandarizacion de variables
 from gplearn.genetic import SymbolicTransformer                               # variables simbolicas
@@ -348,37 +349,41 @@ def Elastic_Net(p_data, p_params):
 def f_SVM(p_data):
 
 
+
     return 1
 
 
 # ----------------------- FUNCTION: Simultaneous Feature Engieering/Selection & Hyperparameter Optimizer -- #
 # ------------------------------------------------------- ------------------------------------------------- #
 
-def f_FeatureModelOptimizer(p_data):
+def f_FeatureModelOptimizer(p_data, p_memory, p_model):
 
     # ----------------------------------------------------------- ingenieria de variables autoregresivas -- #
     # ----------------------------------------------------------- -------------------------------------- -- #
 
     # funcion para generar variables autoregresivas
-    datos_arf = f_autoregressive_features(p_data=datos, p_nmax=7)
+    datos_arf = f_autoregressive_features(p_data=p_data, p_nmax=p_memory)
 
-    # Visualizacion: head del DataFrame
-    datos_arf.head(5)
+    # separacion de variable dependiente
+    datos_y = datos_arf['co_d'].copy()
+
+    # separacion de variable dependiente
+    datos_timestamp = datos_arf['timestamp'].copy()
+
+    # separacion de variables independientes
+    datos_arf = datos_arf.drop(['timestamp', 'co', 'co_d'], axis=1, inplace=False)
 
     # ----------------------------------------------------------------- ingenieria de variables hadamard -- #
     # ----------------------------------------------------------------- -------------------------------- -- #
 
     # funcion para generar variables con producto hadamard
-    datos_had = f_hadamard_features(p_data=datos_arf, p_nmax=29)
-
-    # Visualizacion: head del DataFrame
-    datos_had.head(5)
+    datos_had = f_hadamard_features(p_data=datos_arf, p_nmax=p_memory)
 
     # --------------------------------------------------------------- ingenieria de variables simbolicas -- #
     # --------------------------------------------------------------- ---------------------------------- -- #
 
     # Lista de operaciones simbolicas
-    fun_sym = symbolic_features(p_x=datos_had.iloc[:, 3:], p_y=datos_had.iloc[:, 2])
+    fun_sym = symbolic_features(p_x=datos_had, p_y=datos_y)
 
     # variables
     datos_sym = fun_sym['data']
@@ -387,10 +392,21 @@ def f_FeatureModelOptimizer(p_data):
     # ecuaciones de todas las variables
     equaciones = [i.__str__() for i in list(fun_sym['model'])]
 
-    # -- Para cada K Fold:
-    # -- -- Hacer proceso de ing de variables (autoregresivas (1 semana max resagos), hadamard, simbolicas)
+    # datos para utilizar en la siguiente etapa
+    datos_modelo = datos_sym.copy()
+
     # -- -- Dividir datos 80-20
+    xtrain, xtest, ytrain, ytest = train_test_split(datos_modelo, datos_y, test_size=.8, shuffle=False)
+
     # -- -- Hacer proceso de seleccion de variables y optimizacion de hiperparametros con el 80 y GP
+
+    if p_model == 'ols-elasticnet':
+        print(1)
+    if p_model == 'ls-svm':
+        print(1)
+    if p_model == 'ann-mlp':
+        print(1)
+
     # -- -- Hacer prediccion con el 20
     # -- -- Obtener metricas de desempeño del modelo
 
