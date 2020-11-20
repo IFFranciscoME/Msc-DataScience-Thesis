@@ -48,14 +48,32 @@ datos.describe()
 # ------------------------------------------------------------------------ ----------------------------- -- #
 
 # -- Division de periodos de datos, sin filtracion, en amplitudes de 1 mes para obtener 12 "Folds".
-m_folds = fn.f_m_folds(p_data=datos, p_periodo='trimestre')
+m_folds = fn.f_m_folds(p_data=datos, p_periodo='mes')
 
 # ------------------------------------------------------------------ Seleccion y Optimizacion Simultanea -- #
 # ------------------------------------------------------------------ ----------------------------------- -- #
+#  m_folds results of feature engineering/selection & Hyperparameter Optimization processes
 
-# -- m_folds results of feature engineering/selection & Hyperparameter Optimization processes
-models = ['ols-elasticnet', 'ls-svm', 'ann-mlp']
-m_folds_results = fn.f_FeatureModelOptimizer(p_data=m_folds['periodo_1'], p_memory=7, p_model=models[0])
+# data dictionary for models and their respective hyperparameter value candidates
+models = {'model_1': {'label': 'ols-elasticnet',
+                      'params': {'alpha': [0.1, 0.2, 0.5, 0.6, 0.7],
+                                 'ratio': [0.1, 0.2, 0.5, 0.6, 0.7]}},
+
+          'model_2': {'label': 'ls-svm',
+                      'params': {'c': [0.1, 0.2, 0.5, 0.6, 0.7],
+                                 'b': [0.1, 0.2, 0.5, 0.6, 0.7],
+                                 'k': [0.1, 0.2, 0.5, 0.6, 0.7]}},
+
+          'model_3': {'label': 'ann-mlp',
+                      'params': {'c': [0.1, 0.2, 0.5, 0.6, 0.7],
+                                 'b': [0.1, 0.2, 0.5, 0.6, 0.7],
+                                 'k': [0.1, 0.2, 0.5, 0.6, 0.7]}}
+          }
+
+# paralelizar esta funcion
+m_folds_results = fn.f_FeatureModelOptimizer(p_data=m_folds['periodo_1'],
+                                             p_memory=7,
+                                             p_model=models['model_1'])
 
 # ----------------------------------------------------------------------------- M_Folds Results Analysis -- #
 # ----------------------------------------------------------------------------- ------------------------ -- #

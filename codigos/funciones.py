@@ -10,10 +10,12 @@
 """
 
 import pandas as pd
+from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
 from sklearn.preprocessing import StandardScaler, RobustScaler, MaxAbsScaler  # estandarizacion de variables
 from gplearn.genetic import SymbolicTransformer                               # variables simbolicas
+from sklearn.svm import SVC
 
 
 # ------------------------------------------------------------------------------- transformacio de datos -- #
@@ -281,9 +283,10 @@ def symbolic_features(p_x, p_y):
 # -------------------------- MODEL: Multivariate Linear Regression Model with ELASTIC NET regularization -- #
 # --------------------------------------------------------------------------------------------------------- #
 
-def Elastic_Net(p_data, p_params):
+def ols_elastic_net(p_data, p_params):
     """
     Funcion para ajustar varios modelos lineales
+
     Parameters
     ----------
     p_data: dict
@@ -302,20 +305,84 @@ def Elastic_Net(p_data, p_params):
 
         p_alpha: float
                 alpha for the models
-                p_alpha = alphas[1e-3]
+                p_alpha = 0.1
 
-        p_iter: int
+        p_ratio: float
+            elastic net ratio between L1 and L2 regularization coefficients
+            p_ratio = 0.1
+
+        p_iterations: int
             Number of iterations until stop the model fit process
-            p_iter = 1e6
-
-        p_intercept: bool
-            Si se incluye o no el intercepto en el ajuste
-            p_intercept = True
+            p_iter = 200
 
     Returns
     -------
     r_models: dict
         Diccionario con modelos ajustados
+
+    Documentation
+    -------------
+    ElasticNet
+        https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.ElasticNet.html
+
+    """
+
+    # Datos de entrenamiento
+    x_train = p_data['train_x']
+    y_train = p_data['train_y']
+
+    # Datos de prueba
+    x_test = p_data['test_x']
+    y_test = p_data['test_y']
+
+    # ------------------------------------------------------------------------------ FUNCTION PARAMETERS -- #
+    # model hyperparameters
+    # alpha, l1_ratio,
+
+    # computations parameters
+    # fit_intercept, normalize, precompute, copy_X, tol, warm_start, positive, selection
+
+    # Fit model
+    en_model = ElasticNet(alpha=p_params['alpha'][0], l1_ratio=p_params['ratio'][0],
+                          max_iter=10000, fit_intercept=False, normalize=False, precompute=True,
+                          copy_X=True, tol=1e-4, warm_start=False, positive=False, random_state=123,
+                          selection='random')
+
+    # model fit
+    en_model.fit(x_train, y_train)
+
+    # fitted train values
+    p_y_train = en_model.predict(x_train)
+    p_y_train_d = [1 if i > 0 else 0 for i in p_y_train]
+    p_y_result_train = pd.DataFrame({'y_train': y_train, 'y_train_pred': p_y_train_d})
+    cm_train = confusion_matrix(p_y_result_train['y_train'], p_y_result_train['y_train_pred'])
+
+    # fitted test values
+    p_y_test = en_model.predict(x_test)
+    p_y_test_d = [1 if i > 0 else 0 for i in p_y_test]
+    p_y_result_test = pd.DataFrame({'y_test': y_test, 'y_test_pred': p_y_test_d})
+    cm_test = confusion_matrix(p_y_result_test['y_test'], p_y_result_test['y_test_pred'])
+
+    # Return the result of the model
+    r_models = {'results': {'data': {'train': p_y_result_train, 'test': p_y_result_test},
+                            'matrix': {'train': cm_train, 'test': cm_test}},
+                'model': en_model, 'intercept': en_model.intercept_, 'coef': en_model.coef_}
+
+    return r_models
+
+
+# --------------------------------------------------------- MODEL: Least Squares Support Vector Machines -- #
+# --------------------------------------------------------------------------------------------------------- #
+
+def ls_svm(p_data, p_params):
+    """
+    Parameters
+    ----------
+    p_data
+    p_params
+
+    Returns
+    -------
 
     """
 
@@ -325,30 +392,27 @@ def Elastic_Net(p_data, p_params):
     x_test = p_data['test_x']
     y_test = p_data['test_y']
 
-    p_alpha = p_params['alpha']
-    p_iter = p_params['iter']
+    svm_model = SVC(kernel='linear', C=1, gamma=1e-3)
 
-    # Fit ElasticNet regression
-    enetreg = ElasticNet(alpha=p_alpha, normalize=False, max_iter=p_iter, l1_ratio=0.5, fit_intercept=False)
-    enetreg.fit(x_train, y_train)
-    y_p_enet = enetreg.predict(x_test)
+    svm_model.fit(x_train, y_train)
 
-    # Return the result of the model
-    r_models = {'elasticnet': {'rss': sum((y_p_enet - y_test) ** 2),
-                               'predict': y_p_enet,
-                               'model': enetreg,
-                               'intercept': enetreg.intercept_,
-                               'coef': enetreg.coef_}}
-
-    return r_models
+    return 1
 
 
 # --------------------------------------------------------- MODEL: Least Squares Support Vector Machines -- #
 # --------------------------------------------------------------------------------------------------------- #
 
-def f_SVM(p_data):
+def ann_mlp(p_data, p_params):
+    """
+    Parameters
+    ----------
+    p_data
+    p_params
 
+    Returns
+    -------
 
+    """
 
     return 1
 
@@ -357,6 +421,27 @@ def f_SVM(p_data):
 # ------------------------------------------------------- ------------------------------------------------- #
 
 def f_FeatureModelOptimizer(p_data, p_memory, p_model):
+    """
+
+    Parameters
+    ----------
+    p_data: pd.DataFrame
+        con datos completos para ajustar modelos
+
+    p_memory: int
+        valor de memoria maxima para hacer calculo de variables autoregresivas
+
+    p_model: dict
+        'label' con etiqueta del modelo, 'params' llaves con parametros y listas de sus valores a optimizar
+
+    p_data = m_folds['periodo_1']
+    p_memory = 7
+    p_model = models['model_1']
+
+    Returns
+    -------
+
+    """
 
     # ----------------------------------------------------------- ingenieria de variables autoregresivas -- #
     # ----------------------------------------------------------- -------------------------------------- -- #
@@ -393,21 +478,39 @@ def f_FeatureModelOptimizer(p_data, p_memory, p_model):
     equaciones = [i.__str__() for i in list(fun_sym['model'])]
 
     # datos para utilizar en la siguiente etapa
-    datos_modelo = datos_sym.copy()
+    datos_modelo = pd.concat([datos_arf.copy(), datos_had.copy(), datos_sym.copy()], axis=1)
+    model_data = {}
 
     # -- -- Dividir datos 80-20
-    xtrain, xtest, ytrain, ytest = train_test_split(datos_modelo, datos_y, test_size=.8, shuffle=False)
+    xtrain, xtest, ytrain, ytest = train_test_split(datos_modelo, datos_y, test_size=.2, shuffle=False)
 
-    # -- -- Hacer proceso de seleccion de variables y optimizacion de hiperparametros con el 80 y GP
+    model_data['train_x'] = xtrain
+    model_data['train_y'] = ytrain
+    model_data['test_x'] = xtest
+    model_data['test_y'] = ytest
 
-    if p_model == 'ols-elasticnet':
-        print(1)
+    # Elegir valor de parametro para todos y cada uno de los parametros
+    # Correr modelo
+
+    # -- ------------------------------------------------------- OLS con regularizacion tipo Elastic Net -- #
+    if p_model['label'] == 'ols-elasticnet':
+        model_ols_elasticnet = ols_elastic_net(p_data=model_data,
+                                               p_params=p_model['params'])
+        print(model_ols_elasticnet)
+
+    # -- --------------------------------------------------------- Least Squares Support Vector Machines -- #
     if p_model == 'ls-svm':
-        print(1)
+        model_ls_svm = ls_svm(p_data=model_data,
+                              p_params=0.5)
+        print(model_ls_svm)
+
+    # -- ---------------------------------------------- Artifitial Neural Network Multi Layer Perceptron -- #
     if p_model == 'ann-mlp':
-        print(1)
+        model_ann_mlp = ann_mlp(p_data=model_data,
+                                p_params=0.5)
+        print(model_ann_mlp)
 
     # -- -- Hacer prediccion con el 20
-    # -- -- Obtener metricas de desempeño del modelo
+    # -- -- Obtener metricas de desempeño
 
     return 1
