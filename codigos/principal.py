@@ -73,7 +73,7 @@ models = {'model_1': {'label': 'ols-elasticnet',
 # paralelizar esta funcion
 m_folds_results = fn.f_FeatureModelOptimizer(p_data=m_folds['periodo_1'],
                                              p_memory=7,
-                                             p_model=models['model_1'])
+                                             p_model=models['model_3'])
 
 # ----------------------------------------------------------------------------- M_Folds Results Analysis -- #
 # ----------------------------------------------------------------------------- ------------------------ -- #

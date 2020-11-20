@@ -10,12 +10,14 @@
 """
 
 import pandas as pd
-from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
 from sklearn.preprocessing import StandardScaler, RobustScaler, MaxAbsScaler  # estandarizacion de variables
 from gplearn.genetic import SymbolicTransformer                               # variables simbolicas
+
+from sklearn.linear_model import ElasticNet
 from sklearn.svm import SVC
+from sklearn.metrics import confusion_matrix
+from sklearn.neural_network import MLPClassifier
 
 
 # ------------------------------------------------------------------------------- transformacio de datos -- #
@@ -343,7 +345,7 @@ def ols_elastic_net(p_data, p_params):
     # fit_intercept, normalize, precompute, copy_X, tol, warm_start, positive, selection
 
     # Fit model
-    en_model = ElasticNet(alpha=p_params['alpha'][0], l1_ratio=p_params['ratio'][0],
+    en_model = ElasticNet(alpha=p_params['alpha'], l1_ratio=p_params['ratio'],
                           max_iter=10000, fit_intercept=False, normalize=False, precompute=True,
                           copy_X=True, tol=1e-4, warm_start=False, positive=False, random_state=123,
                           selection='random')
@@ -376,6 +378,8 @@ def ols_elastic_net(p_data, p_params):
 
 def ls_svm(p_data, p_params):
     """
+    Least Squares Support Vector Machines
+
     Parameters
     ----------
     p_data
@@ -392,11 +396,41 @@ def ls_svm(p_data, p_params):
     x_test = p_data['test_x']
     y_test = p_data['test_y']
 
-    svm_model = SVC(kernel='linear', C=1, gamma=1e-3)
+    # ------------------------------------------------------------------------------ FUNCTION PARAMETERS -- #
+    # model hyperparameters
+    # C, kernel, degree (if kernel = poly), gamma (if kernel = {rbf, poly, sigmoid},
+    # coef0 (if kernel = {poly, sigmoid})
 
+    # computations parameters
+    # shrinking, probability, tol, cache_size, class_weight, verbose, max_iter, decision_function_shape,
+    # break_ties, random_state
+
+    # model function
+    svm_model = SVC(C=p_params['C'], kernel=p_params['kernel'], degree=p_params['degree'],
+                    gamma=p_params['gamma'], coef0=p_params['coef0'],
+                    shrinking=True, probability=False, tol=1e-3, cache_size=200, class_weight=None,
+                    verbose=False, max_iter=-1, decision_function_shape='ovr', break_ties=False,
+                    random_state=None)
+
+    # model fit
     svm_model.fit(x_train, y_train)
 
-    return 1
+    # fitted train values
+    p_y_train_d = svm_model.predict(x_train)
+    p_y_result_train = pd.DataFrame({'y_train': y_train, 'y_train_pred': p_y_train_d})
+    cm_train = confusion_matrix(p_y_result_train['y_train'], p_y_result_train['y_train_pred'])
+
+    # fitted test values
+    p_y_test_d = svm_model.predict(x_test)
+    p_y_result_test = pd.DataFrame({'y_test': y_test, 'y_test_pred': p_y_test_d})
+    cm_test = confusion_matrix(p_y_result_test['y_test'], p_y_result_test['y_test_pred'])
+
+    # Return the result of the model
+    r_models = {'results': {'data': {'train': p_y_result_train, 'test': p_y_result_test},
+                            'matrix': {'train': cm_train, 'test': cm_test}},
+                'model': svm_model, 'intercept': svm_model.intercept_, 'coef': svm_model.coef_}
+
+    return r_models
 
 
 # --------------------------------------------------------- MODEL: Least Squares Support Vector Machines -- #
@@ -414,7 +448,51 @@ def ann_mlp(p_data, p_params):
 
     """
 
-    return 1
+    x_train = p_data['train_x']
+    y_train = p_data['train_y']
+
+    x_test = p_data['test_x']
+    y_test = p_data['test_y']
+
+    # ------------------------------------------------------------------------------ FUNCTION PARAMETERS -- #
+    # model hyperparameters
+    # hidden_layer_sizes, activation, solver, alpha, learning_rate,
+
+    # batch_size, learning_rate_init, power_t, max_iter, shuffle, random_state, tol, verbose,
+    # warm_start, momentum, nesterovs_momentum, early_stopping, validation_fraction
+
+    # computations parameters
+
+    mlp_model = MLPClassifier(hidden_layer_sizes=p_params['hidden_layer_sizes'],
+                              activation=p_params['activation'], alpha=p_params['alpha'],
+                              batch_size=p_params['batch_size'],
+                              learning_rate=p_params['learning_rate'],
+                              learning_rate_init=p_params['learning_rate_init'],
+
+                              solver='sgd', power_t=0.5, max_iter=200, shuffle=False, random_state=None,
+                              tol=0.0001, verbose=False, warm_start=False, momentum=0.9,
+                              nesterovs_momentum=True, early_stopping=False, validation_fraction=0.1,
+                              n_iter_no_change=10)
+
+    # model fit
+    mlp_model.fit(x_train, y_train)
+
+    # fitted train values
+    p_y_train_d = mlp_model.predict(x_train)
+    p_y_result_train = pd.DataFrame({'y_train': y_train, 'y_train_pred': p_y_train_d})
+    cm_train = confusion_matrix(p_y_result_train['y_train'], p_y_result_train['y_train_pred'])
+
+    # fitted test values
+    p_y_test_d = mlp_model.predict(x_test)
+    p_y_result_test = pd.DataFrame({'y_test': y_test, 'y_test_pred': p_y_test_d})
+    cm_test = confusion_matrix(p_y_result_test['y_test'], p_y_result_test['y_test_pred'])
+
+    # Return the result of the model
+    r_models = {'results': {'data': {'train': p_y_result_train, 'test': p_y_result_test},
+                            'matrix': {'train': cm_train, 'test': cm_test}},
+                'model': mlp_model}
+
+    return r_models
 
 
 # ----------------------- FUNCTION: Simultaneous Feature Engieering/Selection & Hyperparameter Optimizer -- #
@@ -489,28 +567,62 @@ def f_FeatureModelOptimizer(p_data, p_memory, p_model):
     model_data['test_x'] = xtest
     model_data['test_y'] = ytest
 
-    # Elegir valor de parametro para todos y cada uno de los parametros
-    # Correr modelo
+    # input for genetic algorithm process
+    ga_params = p_model['params']
 
     # -- ------------------------------------------------------- OLS con regularizacion tipo Elastic Net -- #
     if p_model['label'] == 'ols-elasticnet':
-        model_ols_elasticnet = ols_elastic_net(p_data=model_data,
-                                               p_params=p_model['params'])
-        print(model_ols_elasticnet)
+
+        # -- Genetic Algorithm Function -- #
+
+        # output of genetic algorithm
+        chromosome_eval = {'alpha': 0.1, 'ratio': 0.5}
+
+        # model evaluation
+        model_ols_elasticnet = ols_elastic_net(p_data=model_data, p_params=chromosome_eval)
+
+        # model result
+        r_model_ols_elasticnet = model_ols_elasticnet
+
+        # return of function
+        return r_model_ols_elasticnet
 
     # -- --------------------------------------------------------- Least Squares Support Vector Machines -- #
-    if p_model == 'ls-svm':
-        model_ls_svm = ls_svm(p_data=model_data,
-                              p_params=0.5)
-        print(model_ls_svm)
+    elif p_model['label'] == 'ls-svm':
 
-    # -- ---------------------------------------------- Artifitial Neural Network Multi Layer Perceptron -- #
-    if p_model == 'ann-mlp':
-        model_ann_mlp = ann_mlp(p_data=model_data,
-                                p_params=0.5)
-        print(model_ann_mlp)
+        # -- Genetic Algorithm Function -- #
+
+        # output of genetic algorithm
+        chromosome_eval = {'C': 1, 'kernel': 'linear', 'degree': 1, 'gamma': 1e-3, 'coef0': 1}
+
+        # model evaluation
+        model_ls_svm = ls_svm(p_data=model_data, p_params=chromosome_eval)
+
+        # model result
+        r_model_ls_svm = model_ls_svm
+
+        # return of function
+        return r_model_ls_svm
+
+    # -- ----------------------------------------------- Artifitial Neural Network MultiLayer Perceptron -- #
+    elif p_model['label'] == 'ann-mlp':
+
+        # -- Genetic Algorithm Function -- #
+
+        # output of genetic algorithm
+        chromosome_eval = {'hidden_layer_sizes': 100, 'activation': 'relu', 'alpha': 0.0001,
+                           'batch_size': 'auto', 'learning_rate': 'constant', 'learning_rate_init': 0.001}
+
+        # model evaluation
+        model_ann_mlp = ann_mlp(p_data=model_data, p_params=chromosome_eval)
+
+        # model result
+        r_model_ls_svm = model_ann_mlp
+
+        # return of function
+        return r_model_ls_svm
 
     # -- -- Hacer prediccion con el 20
     # -- -- Obtener metricas de desempeño
 
-    return 1
+    return 'error, sin modelo seleccionado'
