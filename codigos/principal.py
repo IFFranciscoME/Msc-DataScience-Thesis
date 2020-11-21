@@ -50,9 +50,11 @@ datos.describe()
 # -- Division de periodos de datos, sin filtracion, en amplitudes de 1 mes para obtener 12 "Folds".
 m_folds = fn.f_m_folds(p_data=datos, p_periodo='mes')
 
+# -- generacion de features
+m_folds_features = fn.genetic_programed_features(p_data=m_folds['periodo_1'], p_memory=7)
+
 # ------------------------------------------------------------------ Seleccion y Optimizacion Simultanea -- #
 # ------------------------------------------------------------------ ----------------------------------- -- #
-#  m_folds results of feature engineering/selection & Hyperparameter Optimization processes
 
 # data dictionary for models and their respective hyperparameter value candidates
 models = {'model_1': {'label': 'ols-elasticnet',
@@ -68,8 +70,8 @@ models = {'model_1': {'label': 'ols-elasticnet',
                                        1.5, 1.1, 1, 0.8, 0.5]}},
 
           'model_3': {'label': 'ann-mlp',
-                      'params': {'hidden_layer_sizes': [(5,), (20, ), (5, 5), (20, 20), (50, ),
-                                                        (5,), (10, ), (5, 5), (10, 10), (20, )],
+                      'params': {'hidden_layer_sizes': [(10, ), (20, ), (5, 5), (20, 20), (50, ),
+                                                        (10, ), (10, ), (5, 5), (10, 10), (20, )],
                                  'activationb': ['relu', 'relu', 'relu', 'relu', 'relu',
                                                  'logistic', 'logistic', 'logistic', 'logistic', 'logistic'],
                                  'alpha': [0.2, 0.1, 0.01, 0.001, 0.0001,
@@ -81,13 +83,16 @@ models = {'model_1': {'label': 'ols-elasticnet',
                                                         0.2, 0.1, 0.01, 0.001, 0.0001]}}
           }
 
-# paralelizar esta funcion
-m_folds_features = fn.genetic_programed_features(p_data=m_folds['periodo_1'], p_memory=7)
-
-m_fold_models = fn.genetic_algo_optimisation(p_data=m_folds_features, p_model=models['model_3'])
-
 # ----------------------------------------------------------------------------- M_Folds Results Analysis -- #
 # ----------------------------------------------------------------------------- ------------------------ -- #
 
+m_fold_models = fn.genetic_algo_optimisation(p_data=m_folds_features, p_model=models['model_3'])
+
+# % de aciertos en entrenamiento
+print(m_fold_models['results']['matrix']['train'][0, 0]/len(m_folds_features['train_y']))
+
+# % de aciertos en prueba
+print(m_fold_models['results']['matrix']['test'][0, 0]/len(m_folds_features['test_y']))
+
 # ------------------------------------------------------------------------ M_Folds Results Visualization -- #
-# ----------------------------------------------------------------------------- ------------------------ -- #
+# ------------------------------------------------------------------------ ----------------------------- -- #
