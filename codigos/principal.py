@@ -82,9 +82,9 @@ models = {'model_1': {'label': 'ols-elasticnet',
           }
 
 # paralelizar esta funcion
-m_folds_results = fn.f_FeatureModelOptimizer(p_data=m_folds['periodo_1'],
-                                             p_memory=7,
-                                             p_model=models['model_3'])
+m_folds_features = fn.genetic_programed_features(p_data=m_folds['periodo_1'], p_memory=7)
+
+m_fold_models = fn.genetic_algo_optimisation(p_data=m_folds_features, p_model=models['model_3'])
 
 # ----------------------------------------------------------------------------- M_Folds Results Analysis -- #
 # ----------------------------------------------------------------------------- ------------------------ -- #

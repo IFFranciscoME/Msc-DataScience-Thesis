@@ -19,6 +19,15 @@ from sklearn.svm import SVC
 from sklearn.metrics import confusion_matrix
 from sklearn.neural_network import MLPClassifier
 
+import random
+from deap import base
+from deap import creator
+from deap import tools
+from deap import algorithms
+
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import roc_auc_score
+
 
 # ------------------------------------------------------------------------------- transformacio de datos -- #
 # --------------------------------------------------------------------------------- -------------------- -- #
@@ -508,26 +517,29 @@ def ann_mlp(p_data, p_params):
 # ----------------------- FUNCTION: Simultaneous Feature Engieering/Selection & Hyperparameter Optimizer -- #
 # ------------------------------------------------------- ------------------------------------------------- #
 
-def f_FeatureModelOptimizer(p_data, p_memory, p_model):
+def genetic_programed_features(p_data, p_memory):
     """
+    El uso de programacion genetica para generar variables independientes simbolicas
 
     Parameters
     ----------
     p_data: pd.DataFrame
         con datos completos para ajustar modelos
+        p_data = m_folds['periodo_1']
 
     p_memory: int
         valor de memoria maxima para hacer calculo de variables autoregresivas
-
-    p_model: dict
-        'label' con etiqueta del modelo, 'params' llaves con parametros y listas de sus valores a optimizar
-
-    p_data = m_folds['periodo_1']
-    p_memory = 7
-    p_model = models['model_1']
+        p_memory = 7
 
     Returns
     -------
+    model_data: dict
+        {'train_x': pd.DataFrame, 'train_y': pd.DataFrame, 'test_x': pd.DataFrame, 'test_y': pd.DataFrame}
+
+    References
+    ----------
+    https://stackoverflow.com/questions/3819977/
+    what-are-the-differences-between-genetic-algorithms-and-genetic-programming
 
     """
 
@@ -572,13 +584,47 @@ def f_FeatureModelOptimizer(p_data, p_memory, p_model):
     # -- -- Dividir datos 80-20
     xtrain, xtest, ytrain, ytest = train_test_split(datos_modelo, datos_y, test_size=.2, shuffle=False)
 
+    # division de datos
     model_data['train_x'] = xtrain
     model_data['train_y'] = ytrain
     model_data['test_x'] = xtest
     model_data['test_y'] = ytest
 
-    # input for genetic algorithm process
-    ga_params = p_model['params']
+    return model_data
+
+
+# -------------------------------------------------------------------------- FUNCTION: Genetic Algorithm -- #
+# ------------------------------------------------------- ------------------------------------------------- #
+
+def genetic_algo_optimisation(p_data, p_model):
+    """
+    El uso de algoritmos geneticos para optimizacion de hiperparametros de varios modelos
+
+    Parameters
+    ----------
+    p_model: dict
+        'label' con etiqueta del modelo, 'params' llaves con parametros y listas de sus valores a optimizar
+
+    p_data: pd.DataFrame
+        data frame con datos del m_fold
+
+    Returns
+    -------
+    r_model_ols_elasticnet: dict
+        resultados de modelo OLS con regularizacion elastic net
+
+    r_model_ls_svm: dict
+        resultados de modelo Least Squares Support Vector Machine
+
+    r_model_ann_mlp: dict
+        resultados de modelo Red Neuronal Artificial tipo perceptron multicapa
+
+    References
+    ----------
+    https://stackoverflow.com/questions/3819977/
+    what-are-the-differences-between-genetic-algorithms-and-genetic-programming
+
+    """
 
     # -- ------------------------------------------------------- OLS con regularizacion tipo Elastic Net -- #
     if p_model['label'] == 'ols-elasticnet':
@@ -589,7 +635,7 @@ def f_FeatureModelOptimizer(p_data, p_memory, p_model):
         chromosome_eval = {'alpha': 0.1, 'ratio': 0.5}
 
         # model evaluation
-        model_ols_elasticnet = ols_elastic_net(p_data=model_data, p_params=chromosome_eval)
+        model_ols_elasticnet = ols_elastic_net(p_data=p_data, p_params=chromosome_eval)
 
         # model result
         r_model_ols_elasticnet = model_ols_elasticnet
@@ -606,7 +652,7 @@ def f_FeatureModelOptimizer(p_data, p_memory, p_model):
         chromosome_eval = {'C': 1, 'kernel': 'linear', 'gamma': 1e-3}
 
         # model evaluation
-        model_ls_svm = ls_svm(p_data=model_data, p_params=chromosome_eval)
+        model_ls_svm = ls_svm(p_data=p_data, p_params=chromosome_eval)
 
         # model result
         r_model_ls_svm = model_ls_svm
@@ -624,15 +670,12 @@ def f_FeatureModelOptimizer(p_data, p_memory, p_model):
                            'batch_size': 'auto', 'learning_rate': 'constant', 'learning_rate_init': 0.001}
 
         # model evaluation
-        model_ann_mlp = ann_mlp(p_data=model_data, p_params=chromosome_eval)
+        model_ann_mlp = ann_mlp(p_data=p_data, p_params=chromosome_eval)
 
         # model result
-        r_model_ls_svm = model_ann_mlp
+        r_model_ann_mlp = model_ann_mlp
 
         # return of function
-        return r_model_ls_svm
-
-    # -- -- Hacer prediccion con el 20
-    # -- -- Obtener metricas de desempeño
+        return r_model_ann_mlp
 
     return 'error, sin modelo seleccionado'
