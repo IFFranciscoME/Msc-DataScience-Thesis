@@ -10,23 +10,18 @@
 """
 
 import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, RobustScaler, MaxAbsScaler  # estandarizacion de variables
-from gplearn.genetic import SymbolicTransformer                               # variables simbolicas
+import numpy as np
+import random
 
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, RobustScaler, MaxAbsScaler
 from sklearn.linear_model import ElasticNet
 from sklearn.svm import SVC
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, roc_curve, auc
 from sklearn.neural_network import MLPClassifier
 
-import random
-from deap import base
-from deap import creator
-from deap import tools
-from deap import algorithms
-
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import roc_auc_score
+from gplearn.genetic import SymbolicTransformer
+from deap import base, creator, tools, algorithms
 
 
 # ------------------------------------------------------------------------------- transformacio de datos -- #
@@ -355,7 +350,7 @@ def ols_elastic_net(p_data, p_params):
 
     # Fit model
     en_model = ElasticNet(alpha=p_params['alpha'], l1_ratio=p_params['ratio'],
-                          max_iter=10000, fit_intercept=False, normalize=False, precompute=True,
+                          max_iter=50000, fit_intercept=False, normalize=False, precompute=True,
                           copy_X=True, tol=1e-4, warm_start=False, positive=False, random_state=123,
                           selection='random')
 
@@ -626,22 +621,91 @@ def genetic_algo_optimisation(p_data, p_model):
 
     """
 
+    creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+    creator.create("Individual", list, fitness=creator.FitnessMax)
+    toolbox = base.Toolbox()
+
+    # Possible parameter values
+
     # -- ------------------------------------------------------- OLS con regularizacion tipo Elastic Net -- #
     if p_model['label'] == 'ols-elasticnet':
 
         # -- Genetic Algorithm Function -- #
 
-        # output of genetic algorithm
-        chromosome_eval = {'alpha': 0.1, 'ratio': 0.5}
+        # define how each gene will be generated (e.g. criterion is a random choice from the criterion list).
+        toolbox.register("attr_alpha", random.choice, p_model['params']['alpha'])
+        toolbox.register("attr_ratio", random.choice, p_model['params']['ratio'])
 
-        # model evaluation
-        model_ols_elasticnet = ols_elastic_net(p_data=p_data, p_params=chromosome_eval)
+        # This is the order in which genes will be combined to create a chromosome
+        n_cycles = 1
+        toolbox.register("individual",
+                         tools.initCycle, creator.Individual,
+                         (toolbox.attr_alpha, toolbox.attr_ratio), n=n_cycles)
 
-        # model result
-        r_model_ols_elasticnet = model_ols_elasticnet
+        # population definition
+        toolbox.register("population",
+                         tools.initRepeat, list, toolbox.individual)
 
-        # return of function
-        return r_model_ols_elasticnet
+        # -------------------------------------------------------------------------- funcion de mutacion -- #
+        def mutate(individual):
+
+            # select which parameter to mutate
+            gene = random.randint(0, len(p_model['params'])-1)
+
+            if gene == 0:
+                individual[0] = random.choice(p_model['params']['alpha'])
+            elif gene == 1:
+                individual[1] = random.choice(p_model['params']['ratio'])
+            return individual
+
+        # ------------------------------------------------------------------------ funcion de evaluacion -- #
+        def evaluate(individual):
+
+            # output of genetic algorithm
+            chromosome = {'alpha': individual[0], 'ratio': individual[1]}
+
+            # for manual/debugging and testing
+            # chromosome = {'alpha': 0.7, 'ratio': 0.7}
+
+            # model results
+            model = ols_elastic_net(p_data=p_data, p_params=chromosome)
+
+            # fit measeure (success rate)
+            fit = (model['results']['matrix']['train'][0, 0] + model['results']['matrix']['train'][1, 1]) /\
+                  len(model['results']['data']['train'])
+
+            # ROC y AUC -- Pendientes
+            # fpr, tpr, threshold = roc_curve(y_test, p_y_test_d)
+            # roc_auc = auc(fpr, tpr)
+
+            return fit,
+
+        toolbox.register("mate", tools.cxOnePoint)
+        toolbox.register("mutate", mutate)
+        toolbox.register("select", tools.selTournament, tournsize=10)
+        toolbox.register("evaluate", evaluate)
+
+        population_size = 100
+        crossover_probability = 0.75
+        mutation_probability = 0.05
+        number_of_generations = 100
+
+        pop = toolbox.population(n=population_size)
+        hof = tools.HallOfFame(10)
+        stats = tools.Statistics(lambda ind: ind.fitness.values)
+        stats.register("avg", np.mean)
+        stats.register("std", np.std)
+        stats.register("min", np.min)
+        stats.register("max", np.max)
+
+        try:
+            pop, log = algorithms.eaSimple(pop, toolbox, cxpb=crossover_probability, stats=stats,
+                                           mutpb=mutation_probability, ngen=number_of_generations,
+                                           halloffame=hof, verbose=True)
+        except ValueError as ve:
+            print('ValueError ignorado: ', ve)
+
+        return hof
 
     # -- --------------------------------------------------------- Least Squares Support Vector Machines -- #
     elif p_model['label'] == 'ls-svm':

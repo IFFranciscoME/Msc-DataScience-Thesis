@@ -58,8 +58,8 @@ m_folds_features = fn.genetic_programed_features(p_data=m_folds['periodo_1'], p_
 
 # data dictionary for models and their respective hyperparameter value candidates
 models = {'model_1': {'label': 'ols-elasticnet',
-                      'params': {'alpha': [0.1, 0.2, 0.5, 0.6, 0.7],
-                                 'ratio': [0.1, 0.2, 0.5, 0.6, 0.7]}},
+                      'params': {'alpha': [0.01, 0.05, 0.1, 0.2, 0.5, 0.6, 0.8, 1.10, 1.50, 2.50],
+                                 'ratio': [0.0, 0.05, 0.10, 0.20, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00]}},
 
           'model_2': {'label': 'ls-svm',
                       'params': {'kernel': ['linear', 'linear', 'linear', 'linear', 'linear',
@@ -86,13 +86,7 @@ models = {'model_1': {'label': 'ols-elasticnet',
 # ----------------------------------------------------------------------------- M_Folds Results Analysis -- #
 # ----------------------------------------------------------------------------- ------------------------ -- #
 
-m_fold_models = fn.genetic_algo_optimisation(p_data=m_folds_features, p_model=models['model_3'])
-
-# % de aciertos en entrenamiento
-print(m_fold_models['results']['matrix']['train'][0, 0]/len(m_folds_features['train_y']))
-
-# % de aciertos en prueba
-print(m_fold_models['results']['matrix']['test'][0, 0]/len(m_folds_features['test_y']))
+hof_model_param = fn.genetic_algo_optimisation(p_data=m_folds_features, p_model=models['model_1'])
 
 # ------------------------------------------------------------------------ M_Folds Results Visualization -- #
 # ------------------------------------------------------------------------ ----------------------------- -- #
