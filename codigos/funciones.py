@@ -322,8 +322,8 @@ def ols_elastic_net(p_data, p_params):
     r_models: dict
         Diccionario con modelos ajustados
 
-    Documentation
-    -------------
+    References
+    ----------
     ElasticNet
         https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.ElasticNet.html
 
@@ -388,6 +388,10 @@ def ls_svm(p_data, p_params):
     Returns
     -------
 
+    References
+    ----------
+    https://scikit-learn.org/stable/modules/svm.html#
+
     """
 
     x_train = p_data['train_x']
@@ -406,11 +410,11 @@ def ls_svm(p_data, p_params):
     # break_ties, random_state
 
     # model function
-    svm_model = SVC(C=p_params['C'], kernel=p_params['kernel'], degree=p_params['degree'],
-                    gamma=p_params['gamma'], coef0=p_params['coef0'],
-                    shrinking=True, probability=False, tol=1e-3, cache_size=200, class_weight=None,
-                    verbose=False, max_iter=-1, decision_function_shape='ovr', break_ties=False,
-                    random_state=None)
+    svm_model = SVC(C=p_params['C'], kernel=p_params['kernel'], gamma=p_params['gamma'],
+
+                    degree=3, coef0=0, shrinking=True, probability=False, tol=1e-3, cache_size=2000,
+                    class_weight=None, verbose=False, max_iter=-1, decision_function_shape='ovr',
+                    break_ties=False, random_state=None)
 
     # model fit
     svm_model.fit(x_train, y_train)
@@ -438,6 +442,8 @@ def ls_svm(p_data, p_params):
 
 def ann_mlp(p_data, p_params):
     """
+    Artificial Neural Network, particularly, a MultiLayer Perceptron for Supervised Classification
+
     Parameters
     ----------
     p_data
@@ -445,6 +451,10 @@ def ann_mlp(p_data, p_params):
 
     Returns
     -------
+
+    References
+    ----------
+    https://scikit-learn.org/stable/modules/neural_networks_supervised.html#neural-networks-supervised
 
     """
 
@@ -465,12 +475,12 @@ def ann_mlp(p_data, p_params):
 
     mlp_model = MLPClassifier(hidden_layer_sizes=p_params['hidden_layer_sizes'],
                               activation=p_params['activation'], alpha=p_params['alpha'],
-                              batch_size=p_params['batch_size'],
                               learning_rate=p_params['learning_rate'],
                               learning_rate_init=p_params['learning_rate_init'],
 
-                              solver='sgd', power_t=0.5, max_iter=200, shuffle=False, random_state=None,
-                              tol=0.0001, verbose=False, warm_start=False, momentum=0.9,
+                              batch_size='auto', solver='sgd', power_t=0.5,
+                              max_iter=200, shuffle=False,
+                              random_state=None, tol=0.0001, verbose=False, warm_start=False, momentum=0.9,
                               nesterovs_momentum=True, early_stopping=False, validation_fraction=0.1,
                               n_iter_no_change=10)
 
@@ -593,7 +603,7 @@ def f_FeatureModelOptimizer(p_data, p_memory, p_model):
         # -- Genetic Algorithm Function -- #
 
         # output of genetic algorithm
-        chromosome_eval = {'C': 1, 'kernel': 'linear', 'degree': 1, 'gamma': 1e-3, 'coef0': 1}
+        chromosome_eval = {'C': 1, 'kernel': 'linear', 'gamma': 1e-3}
 
         # model evaluation
         model_ls_svm = ls_svm(p_data=model_data, p_params=chromosome_eval)

@@ -60,14 +60,25 @@ models = {'model_1': {'label': 'ols-elasticnet',
                                  'ratio': [0.1, 0.2, 0.5, 0.6, 0.7]}},
 
           'model_2': {'label': 'ls-svm',
-                      'params': {'c': [0.1, 0.2, 0.5, 0.6, 0.7],
-                                 'b': [0.1, 0.2, 0.5, 0.6, 0.7],
-                                 'k': [0.1, 0.2, 0.5, 0.6, 0.7]}},
+                      'params': {'kernel': ['linear', 'linear', 'linear', 'linear', 'linear',
+                                            'rbf', 'rbf', 'rbf', 'rbf', 'rbf'],
+                                 'gamma': [10, 1, 0.1, 0.01, 0.001,
+                                           10, 1, 0.1, 0.01, 0.001],
+                                 'C': [1.5, 1.1, 1, 0.8, 0.5,
+                                       1.5, 1.1, 1, 0.8, 0.5]}},
 
           'model_3': {'label': 'ann-mlp',
-                      'params': {'c': [0.1, 0.2, 0.5, 0.6, 0.7],
-                                 'b': [0.1, 0.2, 0.5, 0.6, 0.7],
-                                 'k': [0.1, 0.2, 0.5, 0.6, 0.7]}}
+                      'params': {'hidden_layer_sizes': [(5,), (20, ), (5, 5), (20, 20), (50, ),
+                                                        (5,), (10, ), (5, 5), (10, 10), (20, )],
+                                 'activationb': ['relu', 'relu', 'relu', 'relu', 'relu',
+                                                 'logistic', 'logistic', 'logistic', 'logistic', 'logistic'],
+                                 'alpha': [0.2, 0.1, 0.01, 0.001, 0.0001,
+                                           0.2, 0.1, 0.01, 0.001, 0.0001],
+                                 'learning_rate': ['constant', 'constant', 'constant', 'constant', 'constant',
+                                                   'adaptive', 'adaptive', 'adaptive', 'adaptive',
+                                                   'adaptive'],
+                                 'learning_rate_init': [0.2, 0.1, 0.01, 0.001, 0.0001,
+                                                        0.2, 0.1, 0.01, 0.001, 0.0001]}}
           }
 
 # paralelizar esta funcion
