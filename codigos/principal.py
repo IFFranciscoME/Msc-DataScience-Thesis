@@ -76,19 +76,21 @@ models = {'model_1': {'label': 'ols-elasticnet',
                                                      0.2, 0.1, 0.01, 0.001, 0.0001]}}
           }
 
-# ----------------------------------------------------------------------------- M_Folds Results Analysis -- #
-# ----------------------------------------------------------------------------- ------------------------ -- #
+# -------------------------------------------------------------------------------------- M_Folds Results -- #
+# -------------------------------------------------------------------------------------- --------------- -- #
 
 # -- todos los resultados
 memory_palace = {j: {i: {'pop': [], 'logs': [], 'hof': []} for i in m_folds} for j in models}
 
-# -- generacion de features
-m_folds_features = fn.genetic_programed_features(p_data=m_folds['periodo_2'], p_memory=7)
+for period in m_folds:
+    print('period: ', period)
 
-# -- resultados de optimizacion
-hof_model_param = fn.genetic_algo_optimisation(p_data=m_folds_features, p_model=models['model_1'])
+    for model in models:
+        print('model: ', model)
 
-# -- Guardar hall of fame de 10 por cada fold
-
-# ------------------------------------------------------------------------ M_Folds Results Visualization -- #
-# ------------------------------------------------------------------------ ----------------------------- -- #
+        # -- generacion de features
+        m_folds_features = fn.genetic_programed_features(p_data=m_folds[period], p_memory=7)
+        # -- resultados de optimizacion
+        hof_model_param = fn.genetic_algo_optimisation(p_data=m_folds_features, p_model=models[model])
+        # -- Guardar hall of fame de 10 por cada fold
+        memory_palace[model][period] = hof_model_param
