@@ -267,7 +267,7 @@ def symbolic_features(p_x, p_y):
                                 metric='pearson', parsimony_coefficient=0.001,
                                 p_crossover=0.4, p_subtree_mutation=0.2, p_hoist_mutation=0.1,
                                 p_point_mutation=0.3, p_point_replace=.05,
-                                verbose=1, random_state=None, n_jobs=-1, feature_names=p_x.columns,
+                                verbose=False, random_state=None, n_jobs=-1, feature_names=p_x.columns,
                                 warm_start=True)
 
     # resultado de ajuste con la funcion SymbolicTransformer
@@ -350,8 +350,8 @@ def ols_elastic_net(p_data, p_params):
 
     # Fit model
     en_model = ElasticNet(alpha=p_params['alpha'], l1_ratio=p_params['ratio'],
-                          max_iter=50000, fit_intercept=False, normalize=False, precompute=True,
-                          copy_X=True, tol=1e-4, warm_start=False, positive=False, random_state=123,
+                          max_iter=70000, fit_intercept=False, normalize=False, precompute=True,
+                          copy_X=True, tol=1e-3, warm_start=False, positive=False, random_state=123,
                           selection='random')
 
     # model fit
@@ -414,9 +414,9 @@ def ls_svm(p_data, p_params):
     # break_ties, random_state
 
     # model function
-    svm_model = SVC(C=p_params['C'], kernel=p_params['kernel'], gamma=p_params['gamma'],
+    svm_model = SVC(C=p_params['c'], kernel=p_params['kernel'], gamma=p_params['gamma'],
 
-                    degree=3, coef0=0, shrinking=True, probability=False, tol=1e-3, cache_size=2000,
+                    degree=3, shrinking=True, probability=False, tol=1e-3, cache_size=2000,
                     class_weight=None, verbose=False, max_iter=-1, decision_function_shape='ovr',
                     break_ties=False, random_state=None)
 
@@ -436,7 +436,7 @@ def ls_svm(p_data, p_params):
     # Return the result of the model
     r_models = {'results': {'data': {'train': p_y_result_train, 'test': p_y_result_test},
                             'matrix': {'train': cm_train, 'test': cm_test}},
-                'model': svm_model, 'intercept': svm_model.intercept_, 'coef': svm_model.coef_}
+                'model': svm_model, 'intercept': svm_model.intercept_}
 
     return r_models
 
@@ -477,14 +477,13 @@ def ann_mlp(p_data, p_params):
 
     # computations parameters
 
-    mlp_model = MLPClassifier(hidden_layer_sizes=p_params['hidden_layer_sizes'],
+    mlp_model = MLPClassifier(hidden_layer_sizes=p_params['hidden_layers'],
                               activation=p_params['activation'], alpha=p_params['alpha'],
-                              learning_rate=p_params['learning_rate'],
-                              learning_rate_init=p_params['learning_rate_init'],
+                              learning_rate=p_params['learning_r'],
+                              learning_rate_init=p_params['learning_r_init'],
 
-                              batch_size='auto', solver='sgd', power_t=0.5,
-                              max_iter=200, shuffle=False,
-                              random_state=None, tol=0.0001, verbose=False, warm_start=False, momentum=0.9,
+                              batch_size='auto', solver='sgd', power_t=0.5, max_iter=10000, shuffle=False,
+                              random_state=None, tol=1e-3, verbose=False, warm_start=False, momentum=0.9,
                               nesterovs_momentum=True, early_stopping=False, validation_fraction=0.1,
                               n_iter_no_change=10)
 
@@ -616,38 +615,43 @@ def genetic_algo_optimisation(p_data, p_model):
 
     References
     ----------
+    https://github.com/deap/deap
+
     https://stackoverflow.com/questions/3819977/
     what-are-the-differences-between-genetic-algorithms-and-genetic-programming
 
     """
 
-    creator.create("FitnessMax", base.Fitness, weights=(1.0,))
-    creator.create("Individual", list, fitness=creator.FitnessMax)
-    toolbox = base.Toolbox()
-
-    # Possible parameter values
-
     # -- ------------------------------------------------------- OLS con regularizacion tipo Elastic Net -- #
     if p_model['label'] == 'ols-elasticnet':
 
-        # -- Genetic Algorithm Function -- #
+        # borrar clases previas si existen
+        try:
+            del creator.FitnessMax_en
+            del creator.Individual_en
+        except AttributeError:
+            pass
+
+        # inicializar ga
+        creator.create("FitnessMax_en", base.Fitness, weights=(1.0,))
+        creator.create("Individual_en", list, fitness=creator.FitnessMax_en)
+        toolbox_en = base.Toolbox()
 
         # define how each gene will be generated (e.g. criterion is a random choice from the criterion list).
-        toolbox.register("attr_alpha", random.choice, p_model['params']['alpha'])
-        toolbox.register("attr_ratio", random.choice, p_model['params']['ratio'])
+        toolbox_en.register("attr_alpha", random.choice, p_model['params']['alpha'])
+        toolbox_en.register("attr_ratio", random.choice, p_model['params']['ratio'])
 
         # This is the order in which genes will be combined to create a chromosome
         n_cycles = 1
-        toolbox.register("individual",
-                         tools.initCycle, creator.Individual,
-                         (toolbox.attr_alpha, toolbox.attr_ratio), n=n_cycles)
+        toolbox_en.register("individual_en", tools.initCycle, creator.Individual_en,
+                            (toolbox_en.attr_alpha, toolbox_en.attr_ratio),
+                            n=n_cycles)
 
         # population definition
-        toolbox.register("population",
-                         tools.initRepeat, list, toolbox.individual)
+        toolbox_en.register("population", tools.initRepeat, list, toolbox_en.individual_en)
 
-        # -------------------------------------------------------------------------- funcion de mutacion -- #
-        def mutate(individual):
+        # ----------------------------------------------------- funcion de mutacion para OLS Elastic Net -- #
+        def mutate_en(individual):
 
             # select which parameter to mutate
             gene = random.randint(0, len(p_model['params'])-1)
@@ -658,8 +662,8 @@ def genetic_algo_optimisation(p_data, p_model):
                 individual[1] = random.choice(p_model['params']['ratio'])
             return individual
 
-        # ------------------------------------------------------------------------ funcion de evaluacion -- #
-        def evaluate(individual):
+        # --------------------------------------------------- funcion de evaluacion para OLS Elastic Net -- #
+        def evaluate_en(individual):
 
             # output of genetic algorithm
             chromosome = {'alpha': individual[0], 'ratio': individual[1]}
@@ -680,17 +684,19 @@ def genetic_algo_optimisation(p_data, p_model):
 
             return fit,
 
-        toolbox.register("mate", tools.cxOnePoint)
-        toolbox.register("mutate", mutate)
-        toolbox.register("select", tools.selTournament, tournsize=10)
-        toolbox.register("evaluate", evaluate)
+        toolbox_en.register("mate", tools.cxOnePoint)
+        toolbox_en.register("mutate", mutate_en)
+        toolbox_en.register("select", tools.selTournament, tournsize=10)
+        toolbox_en.register("evaluate", evaluate_en)
 
-        population_size = 100
-        crossover_probability = 0.75
-        mutation_probability = 0.05
-        number_of_generations = 100
+        population_size = 1000
+        crossover_probability = 0.7
+        mutation_probability = 0.01
+        number_of_generations = 5
+        number_of_individuals = 5
+        number_of_childrens = 5
 
-        pop = toolbox.population(n=population_size)
+        pop = toolbox_en.population(n=population_size)
         hof = tools.HallOfFame(10)
         stats = tools.Statistics(lambda ind: ind.fitness.values)
         stats.register("avg", np.mean)
@@ -698,48 +704,210 @@ def genetic_algo_optimisation(p_data, p_model):
         stats.register("min", np.min)
         stats.register("max", np.max)
 
-        try:
-            pop, log = algorithms.eaSimple(pop, toolbox, cxpb=crossover_probability, stats=stats,
-                                           mutpb=mutation_probability, ngen=number_of_generations,
-                                           halloffame=hof, verbose=True)
-        except ValueError as ve:
-            print('ValueError ignorado: ', ve)
+        # ga algorithjm
+        pop, log = algorithms.eaMuPlusLambda(population=pop, toolbox=toolbox_en, stats=stats,
+                                             cxpb=crossover_probability, mutpb=mutation_probability,
+                                             ngen=number_of_generations,
+                                             mu=number_of_individuals, lambda_=number_of_childrens,
+                                             halloffame=hof, verbose=False)
 
-        return hof
+        return {'pop': pop, 'logs': log, 'hof': hof}
 
     # -- --------------------------------------------------------- Least Squares Support Vector Machines -- #
     elif p_model['label'] == 'ls-svm':
 
-        # -- Genetic Algorithm Function -- #
+        # borrar clases previas si existen
+        try:
+            del creator.FitnessMax_svm
+            del creator.Individual_svm
+        except AttributeError:
+            pass
 
-        # output of genetic algorithm
-        chromosome_eval = {'C': 1, 'kernel': 'linear', 'gamma': 1e-3}
+        # inicializar ga
+        creator.create("FitnessMax_svm", base.Fitness, weights=(1.0, ))
+        creator.create("Individual_svm", list, fitness=creator.FitnessMax_svm)
+        toolbox_svm = base.Toolbox()
 
-        # model evaluation
-        model_ls_svm = ls_svm(p_data=p_data, p_params=chromosome_eval)
+        # define how each gene will be generated (e.g. criterion is a random choice from the criterion list).
+        toolbox_svm.register("attr_c", random.choice, p_model['params']['c'])
+        toolbox_svm.register("attr_kernel", random.choice, p_model['params']['kernel'])
+        toolbox_svm.register("attr_gamma", random.choice, p_model['params']['gamma'])
 
-        # model result
-        r_model_ls_svm = model_ls_svm
+        # This is the order in which genes will be combined to create a chromosome
+        n_cycles = 1
+        toolbox_svm.register("individual_svm", tools.initCycle, creator.Individual_svm,
+                             (toolbox_svm.attr_c, toolbox_svm.attr_kernel, toolbox_svm.attr_gamma),
+                             n=n_cycles)
 
-        # return of function
-        return r_model_ls_svm
+        # population definition
+        toolbox_svm.register("population", tools.initRepeat, list, toolbox_svm.individual_svm)
+
+        # -------------------------------------------------------------- funcion de mutacion para LS SVM -- #
+        def mutate_svm(individual):
+
+            # select which parameter to mutate
+            gene = random.randint(0, len(p_model['params']) - 1)
+
+            if gene == 0:
+                individual[0] = random.choice(p_model['params']['c'])
+            elif gene == 1:
+                individual[1] = random.choice(p_model['params']['kernel'])
+            elif gene == 2:
+                individual[2] = random.choice(p_model['params']['gamma'])
+            return individual
+
+        # ------------------------------------------------------------ funcion de evaluacion para LS SVM -- #
+        def evaluate_svm(individual):
+
+            # output of genetic algorithm
+            chromosome = {'c': individual[0], 'kernel': individual[1], 'gamma': individual[2]}
+
+            # for manual/debugging and testing
+            # chromosome = {'c': 1.5, 'kernel': 'linear', 'gamma': 10}
+
+            # model results
+            model = ls_svm(p_data=p_data, p_params=chromosome)
+
+            # fit measeure (success rate)
+            fit = (model['results']['matrix']['train'][0, 0] + model['results']['matrix']['train'][1, 1]) / \
+                  len(model['results']['data']['train'])
+
+            # ROC y AUC -- Pendientes
+            # fpr, tpr, threshold = roc_curve(y_test, p_y_test_d)
+            # roc_auc = auc(fpr, tpr)
+
+            return fit,
+
+        toolbox_svm.register("mate", tools.cxOnePoint)
+        toolbox_svm.register("mutate", mutate_svm)
+        toolbox_svm.register("select", tools.selTournament, tournsize=10)
+        toolbox_svm.register("evaluate", evaluate_svm)
+
+        population_size = 1000
+        crossover_probability = 0.7
+        mutation_probability = 0.01
+        number_of_generations = 5
+        number_of_individuals = 5
+        number_of_childrens = 5
+
+        pop = toolbox_svm.population(n=population_size)
+        hof = tools.HallOfFame(10)
+        stats = tools.Statistics(lambda ind: ind.fitness.values)
+        stats.register("avg", np.mean)
+        stats.register("std", np.std)
+        stats.register("min", np.min)
+        stats.register("max", np.max)
+
+        # ga algorithjm
+        pop, log = algorithms.eaMuPlusLambda(population=pop, toolbox=toolbox_svm, stats=stats,
+                                             cxpb=crossover_probability, mutpb=mutation_probability,
+                                             ngen=number_of_generations,
+                                             mu=number_of_individuals, lambda_=number_of_childrens,
+                                             halloffame=hof, verbose=False)
+
+        return {'population': pop, 'logs': log, 'hof': hof}
 
     # -- ----------------------------------------------- Artifitial Neural Network MultiLayer Perceptron -- #
     elif p_model['label'] == 'ann-mlp':
 
-        # -- Genetic Algorithm Function -- #
+        # borrar clases previas si existen
+        try:
+            del creator.FitnessMax_mlp
+            del creator.Individual_mlp
+        except AttributeError:
+            pass
 
-        # output of genetic algorithm
-        chromosome_eval = {'hidden_layer_sizes': 100, 'activation': 'relu', 'alpha': 0.0001,
-                           'batch_size': 'auto', 'learning_rate': 'constant', 'learning_rate_init': 0.001}
+        # inicializar ga
+        creator.create("FitnessMax_mlp", base.Fitness, weights=(1.0,))
+        creator.create("Individual_mlp", list, fitness=creator.FitnessMax_mlp)
+        toolbox_mlp = base.Toolbox()
 
-        # model evaluation
-        model_ann_mlp = ann_mlp(p_data=p_data, p_params=chromosome_eval)
+        # define how each gene will be generated (e.g. criterion is a random choice from the criterion list).
+        toolbox_mlp.register("attr_hidden_layers", random.choice, p_model['params']['hidden_layers'])
+        toolbox_mlp.register("attr_activation", random.choice, p_model['params']['activation'])
+        toolbox_mlp.register("attr_alpha", random.choice, p_model['params']['alpha'])
+        toolbox_mlp.register("attr_learning_r", random.choice, p_model['params']['learning_r'])
+        toolbox_mlp.register("attr_learning_r_init", random.choice, p_model['params']['learning_r_init'])
 
-        # model result
-        r_model_ann_mlp = model_ann_mlp
+        # This is the order in which genes will be combined to create a chromosome
+        n_cycles = 1
+        toolbox_mlp.register("individual_mlp", tools.initCycle, creator.Individual_mlp,
+                             (toolbox_mlp.attr_hidden_layers,
+                              toolbox_mlp.attr_activation,
+                              toolbox_mlp.attr_alpha,
+                              toolbox_mlp.attr_learning_r,
+                              toolbox_mlp.attr_learning_r_init),
+                             n=n_cycles)
 
-        # return of function
-        return r_model_ann_mlp
+        # population definition
+        toolbox_mlp.register("population", tools.initRepeat, list, toolbox_mlp.individual_mlp)
+
+        # -------------------------------------------------------------- funcion de mutacion para LS SVM -- #
+        def mutate_mlp(individual):
+
+            # select which parameter to mutate
+            gene = random.randint(0, len(p_model['params']) - 1)
+
+            if gene == 0:
+                individual[0] = random.choice(p_model['params']['hidden_layers'])
+            elif gene == 1:
+                individual[1] = random.choice(p_model['params']['activation'])
+            elif gene == 2:
+                individual[2] = random.choice(p_model['params']['alpha'])
+            elif gene == 3:
+                individual[3] = random.choice(p_model['params']['learning_r'])
+            elif gene == 4:
+                individual[4] = random.choice(p_model['params']['learning_r_init'])
+            return individual
+
+        # ------------------------------------------------------------ funcion de evaluacion para LS SVM -- #
+        def evaluate_mlp(individual):
+
+            # output of genetic algorithm
+            chromosome = {'hidden_layers': individual[0], 'activation': individual[1],
+                          'alpha': individual[2], 'learning_r': individual[3],
+                          'learning_r_init': individual[4]}
+
+            # model results
+            model = ann_mlp(p_data=p_data, p_params=chromosome)
+
+            # fit measeure (success rate)
+            fit = (model['results']['matrix']['train'][0, 0] + model['results']['matrix']['train'][1, 1]) / \
+                  len(model['results']['data']['train'])
+
+            # ROC y AUC -- Pendientes
+            # fpr, tpr, threshold = roc_curve(y_test, p_y_test_d)
+            # roc_auc = auc(fpr, tpr)
+
+            return fit,
+
+        toolbox_mlp.register("mate", tools.cxOnePoint)
+        toolbox_mlp.register("mutate", mutate_mlp)
+        toolbox_mlp.register("select", tools.selTournament, tournsize=10)
+        toolbox_mlp.register("evaluate", evaluate_mlp)
+
+        population_size = 1000
+        crossover_probability = 0.7
+        mutation_probability = 0.01
+        number_of_generations = 5
+        number_of_individuals = 5
+        number_of_childrens = 5
+
+        pop = toolbox_mlp.population(n=population_size)
+        hof = tools.HallOfFame(10)
+        stats = tools.Statistics(lambda ind: ind.fitness.values)
+        stats.register("avg", np.mean)
+        stats.register("std", np.std)
+        stats.register("min", np.min)
+        stats.register("max", np.max)
+
+        # ga algorithjm
+        pop, log = algorithms.eaMuPlusLambda(population=pop, toolbox=toolbox_mlp, stats=stats,
+                                             cxpb=crossover_probability, mutpb=mutation_probability,
+                                             ngen=number_of_generations,
+                                             mu=number_of_individuals, lambda_=number_of_childrens,
+                                             halloffame=hof, verbose=False)
+
+        return {'population': pop, 'logs': log, 'hof': hof}
 
     return 'error, sin modelo seleccionado'
