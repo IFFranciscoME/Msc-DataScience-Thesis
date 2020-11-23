@@ -62,7 +62,8 @@ models = {'model_1': {'label': 'ols-elasticnet',
                       'params': {'c': [1.5, 1.1, 1, 0.8, 0.5, 1.5, 1.1, 1, 0.8, 0.5],
                                  'kernel': ['linear', 'linear', 'linear', 'linear', 'linear',
                                             'rbf', 'rbf', 'rbf', 'rbf', 'rbf'],
-                                 'gamma': [10, 1, 0.1, 0.01, 0.001, 10, 1, 0.1, 0.01, 0.001]}},
+                                 'gamma': ['scale', 'scale', 'scale', 'scale', 'scale',
+                                           'auto', 'auto', 'auto', 'auto', 'auto']}},
 
           'model_3': {'label': 'ann-mlp',
                       'params': {'hidden_layers': [(10, ), (20, ), (5, 5), (20, 20), (50, ),
@@ -80,17 +81,26 @@ models = {'model_1': {'label': 'ols-elasticnet',
 # -------------------------------------------------------------------------------------- --------------- -- #
 
 # -- todos los resultados
-memory_palace = {j: {i: {'pop': [], 'logs': [], 'hof': []} for i in m_folds} for j in models}
+memory_palace = {j: {i: {'pop': [], 'logs': [], 'hof': [], 'e_hof': []} for i in m_folds} for j in models}
 
-for period in m_folds:
-    print('period: ', period)
-
-    for model in models:
-        print('model: ', model)
+for model in models:
+    for period in m_folds:
+        # period = 'periodo_2'
+        print('Corriendo el modelo: ', models[model]['label'])
+        print('Corriendo el periodo: ', period)
 
         # -- generacion de features
-        m_folds_features = fn.genetic_programed_features(p_data=m_folds[period], p_memory=7)
+        m_features = fn.genetic_programed_features(p_data=m_folds[period], p_memory=7)
+
         # -- resultados de optimizacion
-        hof_model_param = fn.genetic_algo_optimisation(p_data=m_folds_features, p_model=models[model])
-        # -- Guardar hall of fame de 10 por cada fold
-        memory_palace[model][period] = hof_model_param
+        hof_model = fn.genetic_algo_optimisation(p_data=m_features, p_model=models[model])
+
+        # -- evaluacion de modelo para cada modelo y cada periodo de todos los Hall of Fame
+        for i in range(0, len(list(hof_model['hof']))):
+            hof_eval = fn.evaluaciones_periodo(p_features=m_features,
+                                               p_model=model,
+                                               p_optim_data=hof_model['hof'])
+            memory_palace[model][period]['e_hof'].append(hof_eval)
+
+# -- --------------------------------------------------------------------------------------- Data Tables -- #
+# -- --------------------------------------------------------------------------------------- ----------- -- #
