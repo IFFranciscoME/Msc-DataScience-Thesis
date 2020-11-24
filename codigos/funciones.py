@@ -16,9 +16,9 @@ import warnings
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, RobustScaler, MaxAbsScaler
-from sklearn.linear_model import ElasticNet
+from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, accuracy_score
 from sklearn.neural_network import MLPClassifier
 from sklearn.utils.testing import ignore_warnings
 from sklearn.exceptions import ConvergenceWarning
@@ -294,7 +294,7 @@ def symbolic_features(p_x, p_y):
 # -------------------------- MODEL: Multivariate Linear Regression Model with ELASTIC NET regularization -- #
 # --------------------------------------------------------------------------------------------------------- #
 
-def ols_elastic_net(p_data, p_params):
+def logistic_net(p_data, p_params):
     """
     Funcion para ajustar varios modelos lineales
 
@@ -354,10 +354,9 @@ def ols_elastic_net(p_data, p_params):
     # fit_intercept, normalize, precompute, copy_X, tol, warm_start, positive, selection
 
     # Fit model
-    en_model = ElasticNet(alpha=p_params['alpha'], l1_ratio=p_params['ratio'],
-                          max_iter=70000, fit_intercept=False, normalize=False, precompute=True,
-                          copy_X=True, tol=1e-3, warm_start=False, positive=False, random_state=123,
-                          selection='random')
+    en_model = LogisticRegression(l1_ratio=p_params['ratio'], C=p_params['c'], tol=1e-3,
+                                  penalty='elasticnet', solver='saga', multi_class='ovr', n_jobs=-1,
+                                  max_iter=1000, fit_intercept=False)
 
     # model fit
     en_model.fit(x_train, y_train)
@@ -366,18 +365,41 @@ def ols_elastic_net(p_data, p_params):
     p_y_train = en_model.predict(x_train)
     p_y_train_d = [1 if i > 0 else 0 for i in p_y_train]
     p_y_result_train = pd.DataFrame({'y_train': y_train, 'y_train_pred': p_y_train_d})
+    # Confussion matrix
     cm_train = confusion_matrix(p_y_result_train['y_train'], p_y_result_train['y_train_pred'])
+    # Probabilities of class in train data
+    train_probs = en_model.predict_proba(x_train)
+
+    # Accuracy rate
+    acc_train = accuracy_score(y_train, p_y_train_d)
+    # True Positive Rate
+    tpr_train = cm_train[0][0] / (cm_train[0][0] + cm_train[1][0])
+    # False Positive Rate
+    fpr_train = cm_train[0][1] / (cm_train[0][1] + cm_train[1][1])
 
     # fitted test values
     p_y_test = en_model.predict(x_test)
     p_y_test_d = [1 if i > 0 else 0 for i in p_y_test]
     p_y_result_test = pd.DataFrame({'y_test': y_test, 'y_test_pred': p_y_test_d})
     cm_test = confusion_matrix(p_y_result_test['y_test'], p_y_result_test['y_test_pred'])
+    # Probabilities of class in test data
+    test_probs = en_model.predict_proba(x_test)
+
+    # Accuracy rate
+    acc_test = accuracy_score(y_test, p_y_test_d)
+    # True Positive Rate
+    tpr_test = cm_test[0][0] / (cm_test[0][0] + cm_test[1][0])
+    # False Positive Rate
+    fpr_test = cm_test[0][1] / (cm_test[0][1] + cm_test[1][1])
 
     # Return the result of the model
     r_models = {'results': {'data': {'train': p_y_result_train, 'test': p_y_result_test},
                             'matrix': {'train': cm_train, 'test': cm_test}},
-                'model': en_model, 'intercept': en_model.intercept_, 'coef': en_model.coef_}
+                'model': en_model, 'intercept': en_model.intercept_, 'coef': en_model.coef_,
+                'metrics': {'train': {'acc': acc_train, 'tpr': tpr_train, 'fpr': fpr_train,
+                                      'probs': train_probs},
+                            'test': {'acc': acc_test, 'tpr': tpr_test, 'fpr': fpr_test,
+                                     'probs': test_probs}}}
 
     return r_models
 
@@ -421,7 +443,7 @@ def ls_svm(p_data, p_params):
     # model function
     svm_model = SVC(C=p_params['c'], kernel=p_params['kernel'], gamma=p_params['gamma'],
 
-                    shrinking=True, probability=False, tol=1e-5, cache_size=4000,
+                    shrinking=True, probability=True, tol=1e-5, cache_size=4000,
                     class_weight=None, verbose=False, max_iter=100000, decision_function_shape='ovr',
                     break_ties=False, random_state=None)
 
@@ -432,16 +454,38 @@ def ls_svm(p_data, p_params):
     p_y_train_d = svm_model.predict(x_train)
     p_y_result_train = pd.DataFrame({'y_train': y_train, 'y_train_pred': p_y_train_d})
     cm_train = confusion_matrix(p_y_result_train['y_train'], p_y_result_train['y_train_pred'])
+    # Probabilities of class in train data
+    train_probs = svm_model.predict_proba(x_train)
+
+    # Accuracy rate
+    acc_train = accuracy_score(y_train, p_y_train_d)
+    # True Positive Rate
+    tpr_train = cm_train[0][0] / (cm_train[0][0] + cm_train[1][0])
+    # False Positive Rate
+    fpr_train = cm_train[0][1] / (cm_train[0][1] + cm_train[1][1])
 
     # fitted test values
     p_y_test_d = svm_model.predict(x_test)
     p_y_result_test = pd.DataFrame({'y_test': y_test, 'y_test_pred': p_y_test_d})
     cm_test = confusion_matrix(p_y_result_test['y_test'], p_y_result_test['y_test_pred'])
+    # Probabilities of class in test data
+    test_probs = svm_model.predict_proba(x_test)
+
+    # Accuracy rate
+    acc_test = accuracy_score(y_test, p_y_test_d)
+    # True Positive Rate
+    tpr_test = cm_test[0][0] / (cm_test[0][0] + cm_test[1][0])
+    # False Positive Rate
+    fpr_test = cm_test[0][1] / (cm_test[0][1] + cm_test[1][1])
 
     # Return the result of the model
     r_models = {'results': {'data': {'train': p_y_result_train, 'test': p_y_result_test},
                             'matrix': {'train': cm_train, 'test': cm_test}},
-                'model': svm_model, 'intercept': svm_model.intercept_}
+                'model': svm_model,
+                'metrics': {'train': {'acc': acc_train, 'tpr': tpr_train, 'fpr': fpr_train,
+                                      'probs': train_probs},
+                            'test': {'acc': acc_test, 'tpr': tpr_test, 'fpr': fpr_test,
+                                     'probs': test_probs}}}
 
     return r_models
 
@@ -480,8 +524,7 @@ def ann_mlp(p_data, p_params):
     # batch_size, learning_rate_init, power_t, max_iter, shuffle, random_state, tol, verbose,
     # warm_start, momentum, nesterovs_momentum, early_stopping, validation_fraction
 
-    # computations parameters
-
+    # model function
     mlp_model = MLPClassifier(hidden_layer_sizes=p_params['hidden_layers'],
                               activation=p_params['activation'], alpha=p_params['alpha'],
                               learning_rate=p_params['learning_r'],
@@ -499,16 +542,38 @@ def ann_mlp(p_data, p_params):
     p_y_train_d = mlp_model.predict(x_train)
     p_y_result_train = pd.DataFrame({'y_train': y_train, 'y_train_pred': p_y_train_d})
     cm_train = confusion_matrix(p_y_result_train['y_train'], p_y_result_train['y_train_pred'])
+    # Probabilities of class in train data
+    train_probs = mlp_model.predict_proba(x_train)
+
+    # Accuracy rate
+    acc_train = accuracy_score(y_train, p_y_train_d)
+    # True Positive Rate
+    tpr_train = cm_train[0][0] / (cm_train[0][0] + cm_train[1][0])
+    # False Positive Rate
+    fpr_train = cm_train[0][1] / (cm_train[0][1] + cm_train[1][1])
 
     # fitted test values
     p_y_test_d = mlp_model.predict(x_test)
     p_y_result_test = pd.DataFrame({'y_test': y_test, 'y_test_pred': p_y_test_d})
     cm_test = confusion_matrix(p_y_result_test['y_test'], p_y_result_test['y_test_pred'])
+    # Probabilities of class in test data
+    test_probs = mlp_model.predict_proba(x_test)
+
+    # Accuracy rate
+    acc_test = accuracy_score(y_test, p_y_test_d)
+    # True Positive Rate
+    tpr_test = cm_test[0][0] / (cm_test[0][0] + cm_test[1][0])
+    # False Positive Rate
+    fpr_test = cm_test[0][1] / (cm_test[0][1] + cm_test[1][1])
 
     # Return the result of the model
     r_models = {'results': {'data': {'train': p_y_result_train, 'test': p_y_result_test},
                             'matrix': {'train': cm_train, 'test': cm_test}},
-                'model': mlp_model}
+                'model': mlp_model,
+                'metrics': {'train': {'acc': acc_train, 'tpr': tpr_train, 'fpr': fpr_train,
+                                      'probs': train_probs},
+                            'test': {'acc': acc_test, 'tpr': tpr_test, 'fpr': fpr_test,
+                                     'probs': test_probs}}}
 
     return r_models
 
@@ -644,24 +709,37 @@ def genetic_algo_optimisation(p_data, p_model):
         toolbox_en = base.Toolbox()
 
         # define how each gene will be generated (e.g. criterion is a random choice from the criterion list).
-        toolbox_en.register("attr_alpha", random.choice, p_model['params']['alpha'])
         toolbox_en.register("attr_ratio", random.choice, p_model['params']['ratio'])
+        toolbox_en.register("attr_c", random.choice, p_model['params']['c'])
 
         # This is the order in which genes will be combined to create a chromosome
         toolbox_en.register("Individual_en", tools.initCycle, creator.Individual_en,
-                            (toolbox_en.attr_alpha, toolbox_en.attr_ratio), n=1)
+                            (toolbox_en.attr_ratio, toolbox_en.attr_c), n=1)
 
         # population definition
         toolbox_en.register("population", tools.initRepeat, list, toolbox_en.Individual_en)
+
+        # -------------------------------------------------------------- funcion de mutacion para LS SVM -- #
+        def mutate_en(individual):
+
+            # select which parameter to mutate
+            gene = random.randint(0, len(p_model['params']) - 1)
+
+            if gene == 0:
+                individual[0] = random.choice(p_model['params']['ratio'])
+            elif gene == 1:
+                individual[1] = random.choice(p_model['params']['c'])
+
+            return individual,
 
         # --------------------------------------------------- funcion de evaluacion para OLS Elastic Net -- #
         def evaluate_en(eva_individual):
 
             # output of genetic algorithm
-            chromosome = {'alpha': eva_individual[0], 'ratio': eva_individual[1]}
+            chromosome = {'ratio': eva_individual[0], 'c': eva_individual[1]}
 
             # model results
-            model = ols_elastic_net(p_data=p_data, p_params=chromosome)
+            model = logistic_net(p_data=p_data, p_params=chromosome)
 
             # True positives in train data
             train_tp = model['results']['matrix']['train'][0, 0]
@@ -683,7 +761,7 @@ def genetic_algo_optimisation(p_data, p_model):
             return model_fit,
 
         toolbox_en.register("mate", tools.cxOnePoint)
-        toolbox_en.register("mutate", tools.mutShuffleIndexes, indpb=0.10)
+        toolbox_en.register("mutate", mutate_en)
         toolbox_en.register("select", tools.selTournament, tournsize=10)
         toolbox_en.register("evaluate", evaluate_en)
 
@@ -931,9 +1009,9 @@ def evaluaciones_periodo(p_features, p_optim_data, p_model):
     for params in list(p_optim_data):
 
         if p_model == 'model_1':
-            parameters = {'alpha': params[0], 'ratio': params[1]}
+            parameters = {'ratio': params[0], 'c': params[1]}
 
-            return ols_elastic_net(p_data=p_features, p_params=parameters)
+            return logistic_net(p_data=p_features, p_params=parameters)
 
         elif p_model == 'model_2':
             parameters = {'c': params[0], 'kernel': params[1], 'gamma': params[2]}
