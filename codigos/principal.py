@@ -12,6 +12,7 @@
 import codigos.funciones as fn
 from codigos.datos import price_data
 import codigos.visualizaciones as vs
+from codigos.datos import plot_1
 
 # primeras pruebas sera con 1 solo periodo
 data = price_data[list(price_data.keys())[9]]
@@ -25,18 +26,12 @@ datos = data
 # ------------------------------------------------------------------------------- visualizacion de datos -- #
 # ------------------------------------------------------------------------------- ---------------------- -- #
 
-# grafica OHLC
-p_theme = {'color_1': '#ABABAB', 'color_2': '#ABABAB', 'color_3': '#ABABAB', 'font_color_1': '#ABABAB',
-           'font_size_1': 12, 'font_size_2': 16}
-p_dims = {'width': 1450, 'height': 800}
-p_vlines = [datos['timestamp'].head(1), datos['timestamp'].tail(1)]
-p_labels = {'title': 'Main title', 'x_title': 'x axis title', 'y_title': 'y axis title'}
-
-# cargar funcion importada desde GIST de visualizaciones
-ohlc = vs.g_ohlc(p_ohlc=datos, p_theme=p_theme, p_dims=p_dims, p_vlines=p_vlines, p_labels=p_labels)
+# cargar funcion importada de visualizaciones
+ohlc = vs.g_ohlc(p_ohlc=datos,
+                 p_theme=plot_1['p_theme'], p_dims=plot_1['p_dims'], p_labels=plot_1['p_labels'])
 
 # mostrar grafica
-# ohlc.show()
+ohlc.show()
 
 # ----------------------------------------------------------------------- analisis exploratorio de datos -- #
 # ----------------------------------------------------------------------- ------------------------------ -- #
@@ -74,33 +69,75 @@ models = {'model_1': {'label': 'ols-elasticnet',
                                  'learning_r': ['constant', 'constant', 'constant', 'constant', 'constant',
                                                 'adaptive', 'adaptive', 'adaptive', 'adaptive', 'adaptive'],
                                  'learning_r_init': [0.2, 0.1, 0.01, 0.001, 0.0001,
-                                                     0.2, 0.1, 0.01, 0.001, 0.0001]}}
-          }
+                                                     0.2, 0.1, 0.01, 0.001, 0.0001]}}}
 
 # -------------------------------------------------------------------------------------- M_Folds Results -- #
 # -------------------------------------------------------------------------------------- --------------- -- #
 
-# -- todos los resultados
+# Objeto para almacenar todos los datos
 memory_palace = {j: {i: {'pop': [], 'logs': [], 'hof': [], 'e_hof': []} for i in m_folds} for j in models}
 
+# -- Ciclo para evaluar todos los resultados
 for model in models:
     for period in m_folds:
-        # period = 'periodo_2'
-        print('Corriendo el modelo: ', models[model]['label'])
-        print('Corriendo el periodo: ', period)
-
-        # -- generacion de features
+        # generacion de features
         m_features = fn.genetic_programed_features(p_data=m_folds[period], p_memory=7)
-
-        # -- resultados de optimizacion
+        # resultados de optimizacion
         hof_model = fn.genetic_algo_optimisation(p_data=m_features, p_model=models[model])
-
         # -- evaluacion de modelo para cada modelo y cada periodo de todos los Hall of Fame
         for i in range(0, len(list(hof_model['hof']))):
+            # evaluar modelo
             hof_eval = fn.evaluaciones_periodo(p_features=m_features,
                                                p_model=model,
                                                p_optim_data=hof_model['hof'])
+            # guardar evaluaciones de todos los cromosomas del Hall of Fame
             memory_palace[model][period]['e_hof'].append(hof_eval)
 
 # -- --------------------------------------------------------------------------------------- Data Tables -- #
 # -- --------------------------------------------------------------------------------------- ----------- -- #
+
+# -- Obtener 3 cromosomas (individuos) para cada modelo
+
+# -- caso 1
+# El cromosoma de todos los HOF de todos los periodos que produjo el menor accuracy
+
+# -- caso 2
+# El cromosoma de todos los HOF de todos los periodos que produjo el mayor accuracy
+
+# -- caso 3
+# El cromosoma que mas se repitio en todos los HOF de todos los periodos
+
+# Utilizar cada uno de los 3 cromosomas y hacer un backtest de todos los periodos
+# Obtener metricas descriptivas del backtest
+
+# -- ----------------------------------------------------------------------- Visualizacion de resultados -- #
+# -- ----------------------------------------------------------------------- --------------------------- -- #
+
+# -- TABLA: Caso 1
+# Modelo 1 + Matriz de Confusion para Caso 1 (Original) y para Caso 1 (Total)
+# Modelo 2 + Matriz de Confusion para Caso 1 (Original) y para Caso 1 (Total)
+# Modelo 3 + Matriz de Confusion para Caso 1 (Original) y para Caso 1 (Total)
+
+# -- TABLA: Caso 2
+# Modelo 1 + Matriz de Confusion para Caso 2 (Original) y para Caso 2 (Total)
+# Modelo 2 + Matriz de Confusion para Caso 2 (Original) y para Caso 2 (Total)
+# Modelo 3 + Matriz de Confusion para Caso 2 (Original) y para Caso 2 (Total)
+
+# -- TABLA: Caso 3
+# Modelo 1 + Matriz de Confusion para Caso 3 (Original) y para Caso 3 (Total)
+# Modelo 2 + Matriz de Confusion para Caso 3 (Original) y para Caso 3 (Total)
+# Modelo 3 + Matriz de Confusion para Caso 3 (Original) y para Caso 3 (Total)
+
+# -- GRAFICA ASERTIVIDAD : DATOS + 3 MODELOS
+# grafica de barras, de 4 renglones:
+# -- 1er renglon barras verticales de clase original en el tiempo
+# -- 2do renglon barras verticales de clase pronosticada con modelo 1
+# -- 3er renglon barras verticales de clase pronosticada con modelo 2
+# -- 4to renglon barras verticales de clase pronosticada con modelo 3
+
+# -- -------------------------------------------------------------------- BackTest de Sistema de trading -- #
+# -- -------------------------------------------------------------------- ------------------------------ -- #
+
+# incorporar valores para criterio 3 y 4
+# Criterio 3 (25 y 50)
+# Criterio 4 (1% del capital)

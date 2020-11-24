@@ -18,9 +18,8 @@ pio.renderers.default = "browser"
 # -- -------------------------------------------------------- PLOT: OHLC Price Chart with Vertical Lines -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 
-def g_ohlc(p_ohlc, p_theme, p_dims, p_vlines=None, p_labels=None):
+def g_ohlc(p_ohlc, p_theme, p_dims, p_labels=None):
     """
-
     Timeseries Candlestick with OHLC prices and figures for trades indicator
 
     Requirements
@@ -37,8 +36,6 @@ def g_ohlc(p_ohlc, p_theme, p_dims, p_vlines=None, p_labels=None):
         with the theme for the visualizations
     p_dims: dict
         with sizes for visualizations
-    p_vlines: list
-        with the dates where to visualize the vertical lines, format = pd.to_datetime('2020-01-01 22:15:00')
     p_labels: dict
         with main title and both x and y axes
 
@@ -52,8 +49,7 @@ def g_ohlc(p_ohlc, p_theme, p_dims, p_vlines=None, p_labels=None):
     p_ohlc = price_data
     p_theme = p_theme
     p_dims = p_dims
-    p_vlines = [pd.to_datetime('2020-01-01 22:35:00'), pd.to_datetime('2020-01-01 22:15:00')]
-    p_labels = {'title': 'Main title', 'x_title': 'x axis title', 'y_title': 'y axis title'}
+
     """
 
     # default value for lables to use in main title, and both x and y axis
@@ -100,17 +96,6 @@ def g_ohlc(p_ohlc, p_theme, p_dims, p_vlines=None, p_labels=None):
     fig_g_ohlc.layout.autosize = True
     fig_g_ohlc.layout.width = p_dims['width']
     fig_g_ohlc.layout.height = p_dims['height']
-
-    # Dynamically add vertical lines according to the provided list of x dates.
-    shapes_list = list()
-    for i in p_vlines:
-        shapes_list.append({'type': 'line', 'fillcolor': p_theme['color_1'],
-                            'line': {'color': p_theme['color_1'], 'dash': 'dashdot'},
-                            'x0': i, 'x1': i, 'xref': 'x',
-                            'y0': min(p_ohlc['low']), 'y1': max(p_ohlc['high']), 'yref': 'y'})
-
-    # Update layout
-    fig_g_ohlc.update_layout(shapes=shapes_list)
 
     # Update layout for the background
     fig_g_ohlc.update_layout(paper_bgcolor='white', plot_bgcolor='white',

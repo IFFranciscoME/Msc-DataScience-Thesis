@@ -59,3 +59,13 @@ for file_f in files_f:
     years_f = set([str(datadate.year) for datadate in list(data_f['timestamp'])])
     for year_f in years_f:
         price_data['MP_D_' + year_f] = data_f
+
+
+# ----------------------------------------------------------------------------- Temas para visualizacion -- #
+# ----------------------------------------------------------------------------- ------------------------ -- #
+
+# grafica OHLC
+plot_1 = dict(p_theme={'color_1': '#ABABAB', 'color_2': '#ABABAB', 'color_3': '#ABABAB',
+                       'font_color_1': '#ABABAB', 'font_size_1': 12, 'font_size_2': 16},
+              p_dims={'width': 1450, 'height': 800},
+              p_labels={'title': 'Main title', 'x_title': 'x axis title', 'y_title': 'y axis title'})
