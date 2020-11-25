@@ -114,3 +114,28 @@ def g_ohlc(p_ohlc, p_theme, p_dims, p_labels=None):
                                legend=go.layout.Legend(x=.3, y=-.15, orientation='h', font=dict(size=15)))
 
     return fig_g_ohlc
+
+
+# -- ----------------------------------------------------------------------------------- PLOT: ROC + ACU -- #
+# -- --------------------------------------------------------------------------------------------------- -- #
+
+p_fpr = casos['model_1']['auc_max']['data']['metrics']['test']['fpr']
+p_tpr = casos['model_1']['auc_max']['data']['metrics']['test']['tpr']
+p_auc = casos['model_1']['auc_max']['data']['metrics']['test']['auc']
+p_modelo = 'Logistic Regression'
+if p_modelo == 'model_1':
+    modelo = 'Logistic Regression + Elastic Net'
+elif p_modelo == 'model_2':
+    modelo = 'Suppor Vector Machines'
+elif p_modelo == 'model_3':
+    modelo = 'Multilayer Perceptron'
+
+
+def g_roc_auc(p_fpr, p_tpr, p_auc, p_modelo):
+
+    fig = go.Figure()
+    fig.add_shape(type='line', line=dict(width=3, dash='dash', color='grey'), x0=0, x1=1, y0=0, y1=1)
+    fig.add_trace(go.Scatter(x=p_fpr, y=p_tpr, name=modelo,
+                             mode='lines', line=dict(width=3)))
+
+    fig.show()

@@ -18,7 +18,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, RobustScaler, MaxAbsScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
-from sklearn.metrics import confusion_matrix, accuracy_score
+from sklearn.metrics import confusion_matrix, accuracy_score, roc_auc_score, roc_curve
 from sklearn.neural_network import MLPClassifier
 from sklearn.utils.testing import ignore_warnings
 from sklearn.exceptions import ConvergenceWarning
@@ -266,13 +266,13 @@ def symbolic_features(p_x, p_y):
 
     # funcion de generacion de variables simbolicas
     model = SymbolicTransformer(function_set=["sub", "add", 'inv', 'mul', 'div', 'abs', 'log'],
-                                population_size=5000, hall_of_fame=100, n_components=30,
-                                generations=30, tournament_size=20,  stopping_criteria=.05,
-                                const_range=None, init_method='half and half', init_depth=(4, 12),
-                                metric='pearson', parsimony_coefficient=0.001,
-                                p_crossover=0.4, p_subtree_mutation=0.2, p_hoist_mutation=0.1,
-                                p_point_mutation=0.3, p_point_replace=.05,
-                                verbose=False, random_state=None, n_jobs=-1, feature_names=p_x.columns,
+                                population_size=5000, hall_of_fame=100, n_components=20,
+                                generations=50, tournament_size=20,  stopping_criteria=.65,
+                                const_range=None, init_method='half and half', init_depth=(4, 16),
+                                metric='pearson', parsimony_coefficient=0.01,
+                                p_crossover=0.4, p_subtree_mutation=0.3, p_hoist_mutation=0.1,
+                                p_point_mutation=0.2, p_point_replace=.05,
+                                verbose=1, random_state=None, n_jobs=-1, feature_names=p_x.columns,
                                 warm_start=True)
 
     # resultado de ajuste con la funcion SymbolicTransformer
@@ -362,44 +362,42 @@ def logistic_net(p_data, p_params):
     en_model.fit(x_train, y_train)
 
     # fitted train values
-    p_y_train = en_model.predict(x_train)
-    p_y_train_d = [1 if i > 0 else 0 for i in p_y_train]
+    p_y_train_d = en_model.predict(x_train)
     p_y_result_train = pd.DataFrame({'y_train': y_train, 'y_train_pred': p_y_train_d})
     # Confussion matrix
     cm_train = confusion_matrix(p_y_result_train['y_train'], p_y_result_train['y_train_pred'])
     # Probabilities of class in train data
-    train_probs = en_model.predict_proba(x_train)
+    probs_train = en_model.predict_proba(x_train)
 
     # Accuracy rate
-    acc_train = accuracy_score(y_train, p_y_train_d)
-    # True Positive Rate
-    tpr_train = cm_train[0][0] / (cm_train[0][0] + cm_train[1][0])
-    # False Positive Rate
-    fpr_train = cm_train[0][1] / (cm_train[0][1] + cm_train[1][1])
+    acc_train = accuracy_score(list(y_train), p_y_train_d)
+    # False Positive Rate, True Positive Rate, Thresholds
+    fpr_train, tpr_train, thresholds_train = roc_curve(list(y_train), probs_train[:, 1], pos_label=1)
+    # Area Under the Curve (ROC) for train data
+    auc_train = roc_auc_score(list(y_train), probs_train[:, 1])
 
     # fitted test values
-    p_y_test = en_model.predict(x_test)
-    p_y_test_d = [1 if i > 0 else 0 for i in p_y_test]
+    p_y_test_d = en_model.predict(x_test)
     p_y_result_test = pd.DataFrame({'y_test': y_test, 'y_test_pred': p_y_test_d})
     cm_test = confusion_matrix(p_y_result_test['y_test'], p_y_result_test['y_test_pred'])
     # Probabilities of class in test data
-    test_probs = en_model.predict_proba(x_test)
+    probs_test = en_model.predict_proba(x_test)
 
     # Accuracy rate
-    acc_test = accuracy_score(y_test, p_y_test_d)
-    # True Positive Rate
-    tpr_test = cm_test[0][0] / (cm_test[0][0] + cm_test[1][0])
-    # False Positive Rate
-    fpr_test = cm_test[0][1] / (cm_test[0][1] + cm_test[1][1])
+    acc_test = accuracy_score(list(y_test), p_y_test_d)
+    # False Positive Rate, True Positive Rate, Thresholds
+    fpr_test, tpr_test, thresholds_test = roc_curve(list(y_test), probs_test[:, 1], pos_label=1)
+    # Area Under the Curve (ROC) for train data
+    auc_test = roc_auc_score(list(y_test), probs_test[:, 1])
 
     # Return the result of the model
     r_models = {'results': {'data': {'train': p_y_result_train, 'test': p_y_result_test},
                             'matrix': {'train': cm_train, 'test': cm_test}},
                 'model': en_model, 'intercept': en_model.intercept_, 'coef': en_model.coef_,
                 'metrics': {'train': {'acc': acc_train, 'tpr': tpr_train, 'fpr': fpr_train,
-                                      'probs': train_probs},
+                                      'probs': probs_train, 'auc': auc_train},
                             'test': {'acc': acc_test, 'tpr': tpr_test, 'fpr': fpr_test,
-                                     'probs': test_probs}}}
+                                     'probs': probs_test, 'auc': auc_test}}}
 
     return r_models
 
@@ -455,37 +453,37 @@ def ls_svm(p_data, p_params):
     p_y_result_train = pd.DataFrame({'y_train': y_train, 'y_train_pred': p_y_train_d})
     cm_train = confusion_matrix(p_y_result_train['y_train'], p_y_result_train['y_train_pred'])
     # Probabilities of class in train data
-    train_probs = svm_model.predict_proba(x_train)
+    probs_train = svm_model.predict_proba(x_train)
 
     # Accuracy rate
-    acc_train = accuracy_score(y_train, p_y_train_d)
-    # True Positive Rate
-    tpr_train = cm_train[0][0] / (cm_train[0][0] + cm_train[1][0])
-    # False Positive Rate
-    fpr_train = cm_train[0][1] / (cm_train[0][1] + cm_train[1][1])
+    acc_train = accuracy_score(list(y_train), p_y_train_d)
+    # False Positive Rate, True Positive Rate, Thresholds
+    fpr_train, tpr_train, thresholds_train = roc_curve(list(y_train), probs_train[:, 1], pos_label=1)
+    # Area Under the Curve (ROC) for train data
+    auc_train = roc_auc_score(list(y_train), probs_train[:, 1])
 
     # fitted test values
     p_y_test_d = svm_model.predict(x_test)
     p_y_result_test = pd.DataFrame({'y_test': y_test, 'y_test_pred': p_y_test_d})
     cm_test = confusion_matrix(p_y_result_test['y_test'], p_y_result_test['y_test_pred'])
     # Probabilities of class in test data
-    test_probs = svm_model.predict_proba(x_test)
+    probs_test = svm_model.predict_proba(x_test)
 
     # Accuracy rate
-    acc_test = accuracy_score(y_test, p_y_test_d)
-    # True Positive Rate
-    tpr_test = cm_test[0][0] / (cm_test[0][0] + cm_test[1][0])
-    # False Positive Rate
-    fpr_test = cm_test[0][1] / (cm_test[0][1] + cm_test[1][1])
+    acc_test = accuracy_score(list(y_test), p_y_test_d)
+    # False Positive Rate, True Positive Rate, Thresholds
+    fpr_test, tpr_test, thresholds_test = roc_curve(list(y_test), probs_test[:, 1], pos_label=1)
+    # Area Under the Curve (ROC) for train data
+    auc_test = roc_auc_score(list(y_test), probs_test[:, 1])
 
     # Return the result of the model
     r_models = {'results': {'data': {'train': p_y_result_train, 'test': p_y_result_test},
                             'matrix': {'train': cm_train, 'test': cm_test}},
                 'model': svm_model,
                 'metrics': {'train': {'acc': acc_train, 'tpr': tpr_train, 'fpr': fpr_train,
-                                      'probs': train_probs},
+                                      'probs': probs_train, 'auc': auc_train},
                             'test': {'acc': acc_test, 'tpr': tpr_test, 'fpr': fpr_test,
-                                     'probs': test_probs}}}
+                                     'probs': probs_test, 'auc': auc_test}}}
 
     return r_models
 
@@ -543,37 +541,37 @@ def ann_mlp(p_data, p_params):
     p_y_result_train = pd.DataFrame({'y_train': y_train, 'y_train_pred': p_y_train_d})
     cm_train = confusion_matrix(p_y_result_train['y_train'], p_y_result_train['y_train_pred'])
     # Probabilities of class in train data
-    train_probs = mlp_model.predict_proba(x_train)
+    probs_train = mlp_model.predict_proba(x_train)
 
     # Accuracy rate
-    acc_train = accuracy_score(y_train, p_y_train_d)
-    # True Positive Rate
-    tpr_train = cm_train[0][0] / (cm_train[0][0] + cm_train[1][0])
-    # False Positive Rate
-    fpr_train = cm_train[0][1] / (cm_train[0][1] + cm_train[1][1])
+    acc_train = accuracy_score(list(y_train), p_y_train_d)
+    # False Positive Rate, True Positive Rate, Thresholds
+    fpr_train, tpr_train, thresholds_train = roc_curve(list(y_train), probs_train[:, 1], pos_label=1)
+    # Area Under the Curve (ROC) for train data
+    auc_train = roc_auc_score(list(y_train), probs_train[:, 1])
 
     # fitted test values
     p_y_test_d = mlp_model.predict(x_test)
     p_y_result_test = pd.DataFrame({'y_test': y_test, 'y_test_pred': p_y_test_d})
     cm_test = confusion_matrix(p_y_result_test['y_test'], p_y_result_test['y_test_pred'])
     # Probabilities of class in test data
-    test_probs = mlp_model.predict_proba(x_test)
+    probs_test = mlp_model.predict_proba(x_test)
 
     # Accuracy rate
-    acc_test = accuracy_score(y_test, p_y_test_d)
-    # True Positive Rate
-    tpr_test = cm_test[0][0] / (cm_test[0][0] + cm_test[1][0])
-    # False Positive Rate
-    fpr_test = cm_test[0][1] / (cm_test[0][1] + cm_test[1][1])
+    acc_test = accuracy_score(list(y_test), p_y_test_d)
+    # False Positive Rate, True Positive Rate, Thresholds
+    fpr_test, tpr_test, thresholds_test = roc_curve(list(y_test), probs_test[:, 1], pos_label=1)
+    # Area Under the Curve (ROC) for test data
+    auc_test = roc_auc_score(list(y_test), probs_test[:, 1])
 
     # Return the result of the model
     r_models = {'results': {'data': {'train': p_y_result_train, 'test': p_y_result_test},
                             'matrix': {'train': cm_train, 'test': cm_test}},
                 'model': mlp_model,
                 'metrics': {'train': {'acc': acc_train, 'tpr': tpr_train, 'fpr': fpr_train,
-                                      'probs': train_probs},
+                                      'probs': probs_train, 'auc': auc_train},
                             'test': {'acc': acc_test, 'tpr': tpr_test, 'fpr': fpr_test,
-                                     'probs': test_probs}}}
+                                     'probs': probs_test, 'auc': auc_test}}}
 
     return r_models
 
@@ -694,7 +692,7 @@ def genetic_algo_optimisation(p_data, p_model):
 
     # -- ------------------------------------------------------- OLS con regularizacion tipo Elastic Net -- #
     # ----------------------------------------------------------------------------------------------------- #
-    if p_model['label'] == 'ols-elasticnet':
+    if p_model['label'] == 'logistic-elasticnet':
 
         # borrar clases previas si existen
         try:

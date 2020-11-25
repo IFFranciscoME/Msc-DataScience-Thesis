@@ -12,13 +12,10 @@
 import codigos.funciones as fn
 from codigos.datos import price_data
 import codigos.visualizaciones as vs
-from codigos.datos import plot_1
-from sklearn.metrics import roc_curve
-import matplotlib.pyplot as plt
-import pandas as pd
+from codigos.datos import plot_1, models
 
 # primeras pruebas sera con 1 solo periodo
-data = price_data[list(price_data.keys())[2]]
+data = price_data[list(price_data.keys())[9]]
 
 # ---------------------------------------------------------------------------------- datos para proyecto -- #
 # ---------------------------------------------------------------------------------- ------------------- -- #
@@ -41,39 +38,13 @@ ohlc = vs.g_ohlc(p_ohlc=datos,
 # ----------------------------------------------------------------------- ------------------------------ -- #
 
 # tabla de descripcion de datos
-datos.describe()
+# datos.describe()
 
 # ------------------------------------------------------------------------ Division en K-Folds mensuales -- #
 # ------------------------------------------------------------------------ ----------------------------- -- #
 
 # -- Division de periodos de datos, sin filtracion, en amplitudes de 1 mes para obtener 12 "Folds".
 m_folds = fn.f_m_folds(p_data=datos, p_periodo='trimestre')
-
-# --------------------------------------------------------------------------- Hyperparametros de modelos -- #
-# --------------------------------------------------------------------------- -------------------------- -- #
-
-# data dictionary for models and their respective hyperparameter value candidates
-models = {'model_1': {'label': 'ols-elasticnet',
-                      'params': {'ratio': [0.05, 0.10, 0.20, 0.30, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00],
-                                 'c': [1.5, 1.1, 1, 0.8, 0.5, 1.5, 1.1, 1, 0.8, 0.5]}},
-
-          'model_2': {'label': 'ls-svm',
-                      'params': {'c': [1.5, 1.1, 1, 0.8, 0.5, 1.5, 1.1, 1, 0.8, 0.5],
-                                 'kernel': ['linear', 'linear', 'linear', 'linear', 'linear',
-                                            'rbf', 'rbf', 'rbf', 'rbf', 'rbf'],
-                                 'gamma': ['scale', 'scale', 'scale', 'scale', 'scale',
-                                           'auto', 'auto', 'auto', 'auto', 'auto']}},
-
-          'model_3': {'label': 'ann-mlp',
-                      'params': {'hidden_layers': [(10, ), (20, ), (5, 5), (20, 20), (50, ),
-                                                   (10, ), (10, ), (5, 5), (10, 10), (20, )],
-                                 'activation': ['relu', 'relu', 'relu', 'relu', 'relu',
-                                                'logistic', 'logistic', 'logistic', 'logistic', 'logistic'],
-                                 'alpha': [0.2, 0.1, 0.01, 0.001, 0.0001, 0.2, 0.1, 0.01, 0.001, 0.0001],
-                                 'learning_r': ['constant', 'constant', 'constant', 'constant', 'constant',
-                                                'adaptive', 'adaptive', 'adaptive', 'adaptive', 'adaptive'],
-                                 'learning_r_init': [0.2, 0.1, 0.01, 0.001, 0.0001,
-                                                     0.2, 0.1, 0.01, 0.001, 0.0001]}}}
 
 # -------------------------------------------------------------------------------------- M_Folds Results -- #
 # -------------------------------------------------------------------------------------- --------------- -- #
@@ -99,46 +70,47 @@ for model in models:
             # guardar evaluaciones de todos los individuos del Hall of Fame
             memory_palace[model][period]['e_hof'].append(hof_eval)
 
-# -- --------------------------------------------------------------------------------------- Data Tables -- #
-# -- --------------------------------------------------------------------------------------- ----------- -- #
 
-# ROC y AUC de cada modelo con scores de todos los periodos
+# -- --------------------------------------------------------------------------- 3 Casos Representativos -- #
+# -- --------------------------------------------------------------------------- ----------------------- -- #
+# -- Funcion de casos representativos
 
-# ROC y AUC de cada modelo con scores por años
+# diccionario para almacenar resultados de busqueda
+casos = {j: {i: {'data': {}} for i in ['auc_min', 'auc_max', 'mode']} for j in models}
 
-# -- Obtener 3 individuos para cada modelo
+# ciclo para busqueda de auc_min y auc_max
+for model in models:
+    auc_min = 1
+    auc_max = 0
+    for period in m_folds:
+        for i in range(0, 10):
+            # -- caso 1
+            # El individuo de todos los HOF de todos los periodos que produjo la minima AUC
+            if memory_palace[model][period]['e_hof'][i]['metrics']['test']['auc'] < auc_min:
+                auc_min = memory_palace[model][period]['e_hof'][i]['metrics']['test']['auc']
+                casos[model]['auc_min']['data'] = memory_palace[model][period]['e_hof'][i]
+            # -- caso 2
+            # El individuo de todos los HOF de todos los periodos que produjo la maxima AUC
+            elif memory_palace[model][period]['e_hof'][i]['metrics']['test']['auc'] > auc_max:
+                auc_max = memory_palace[model][period]['e_hof'][i]['metrics']['test']['auc']
+                casos[model]['auc_max']['data'] = memory_palace[model][period]['e_hof'][i]
 
-# -- caso 1
-# El individuo de todos los HOF de todos los periodos que produjo el menor accuracy
 
-model = 'model_3'
-# fpr_s = []
-# tpr_s = []
-# for periodo in m_folds:
-#     # periodo = 'periodo_1'
-#     fpr_s.append(memory_palace[model][periodo]['e_hof'][0]['metrics']['train']['fpr'])
-#     tpr_s.append(memory_palace[model][periodo]['e_hof'][0]['metrics']['train']['tpr'])
+# -- -------------------------------------------------------------------------- Caracterizacion de casos -- #
+# -- -------------------------------------------------------------------------- ------------------------ -- #
 
-prob_1 = memory_palace[model]['periodo_1']['e_hof'][0]['metrics']['test']['probs'][:, 1]
-y_test = memory_palace[model]['periodo_1']['e_hof'][0]['results']['data']['test']['y_test']
+# Hacer este proceso para todos los modelos
+# Paso 1: Encontrar el individuo en todos los HOF de todos los periodos que cumpla con la regla
+# Paso 2: Extraer todos los datos disponibles del individuo y modelo elegido
+# Paso 3: Mostrar grafica de precios OHLC del periodo (Train y Test del periodo)
+# Paso 4: Mostrar grafica resumen del individuo encontrado (ROC + AUC + Modelo + Periodo)
+# Paso 5: Mostrar grafica de barras con Clases Verdaderas y Clases ajustadas (Train y Test del periodo)
+# Paso 6: Mostrar tabla con parametros del modelo
 
-fpr, tpr, _ = roc_curve(y_test, prob_1, pos_label=1)
-plt.plot(fpr, tpr, color='orange', label='ROC')
-plt.plot([0, 1], [0, 1], color='darkblue', linestyle='--')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-plt.title('Receiver Operating Characteristic (ROC) Curve')
-plt.legend()
-plt.show()
+# -- ------------------------------------------------------------------------- Backtest global de modelo -- #
+# -- ------------------------------------------------------------------------- ------------------------- -- #
 
-# -- caso 2
-# El individuo de todos los HOF de todos los periodos que produjo el mayor accuracy
-
-# -- caso 3
-# El individuo que mas se repitio en todos los HOF de todos los periodos
-
-# Utilizar cada uno de los 3 individuo y hacer un backtest de todos los periodos
-# Obtener metricas descriptivas del backtest
+# Utilizar cada uno de los 3 individuo y hacer un backtest, con todos los modelos, para todos los periodos
 
 # -- ----------------------------------------------------------------------- Visualizacion de resultados -- #
 # -- ----------------------------------------------------------------------- --------------------------- -- #
@@ -158,7 +130,7 @@ plt.show()
 # Modelo 2 + Matriz de Confusion para Caso 3 (Original) y para Caso 3 (Total)
 # Modelo 3 + Matriz de Confusion para Caso 3 (Original) y para Caso 3 (Total)
 
-# -- GRAFICA ASERTIVIDAD : DATOS + 3 MODELOS
+# -- GRAFICA PRECISION : DATOS + 3 MODELOS
 # grafica de barras, de 4 renglones:
 # -- 1er renglon barras verticales de clase original en el tiempo
 # -- 2do renglon barras verticales de clase pronosticada con modelo 1

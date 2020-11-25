@@ -68,3 +68,31 @@ plot_1 = dict(p_theme={'color_1': '#ABABAB', 'color_2': '#ABABAB', 'color_3': '#
                        'font_color_1': '#ABABAB', 'font_size_1': 12, 'font_size_2': 16},
               p_dims={'width': 1450, 'height': 800},
               p_labels={'title': 'Main title', 'x_title': 'x axis title', 'y_title': 'y axis title'})
+
+
+# --------------------------------------------------------------------------- Hyperparametros de modelos -- #
+# --------------------------------------------------------------------------- -------------------------- -- #
+
+# data dictionary for models and their respective hyperparameter value candidates
+models = {'model_1': {'label': 'logistic-elasticnet',
+                      'params': {'ratio': [0.05, 0.10, 0.20, 0.30, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00],
+                                 'c': [1.5, 1.1, 1, 0.8, 0.5, 1.5, 1.1, 1, 0.8, 0.5]}},
+
+          'model_2': {'label': 'ls-svm',
+                      'params': {'c': [1.5, 1.1, 1, 0.8, 0.5, 1.5, 1.1, 1, 0.8, 0.5],
+                                 'kernel': ['linear', 'linear', 'linear', 'linear', 'linear',
+                                            'rbf', 'rbf', 'rbf', 'rbf', 'rbf'],
+                                 'gamma': ['scale', 'scale', 'scale', 'scale', 'scale',
+                                           'auto', 'auto', 'auto', 'auto', 'auto']}},
+
+          'model_3': {'label': 'ann-mlp',
+                      'params': {'hidden_layers': [(10, ), (20, ), (5, 5), (20, 20), (50, ),
+                                                   (10, ), (10, ), (5, 5), (10, 10), (20, )],
+                                 'activation': ['relu', 'relu', 'relu', 'relu', 'relu',
+                                                'logistic', 'logistic', 'logistic', 'logistic', 'logistic'],
+                                 'alpha': [0.2, 0.1, 0.01, 0.001, 0.0001, 0.2, 0.1, 0.01, 0.001, 0.0001],
+                                 'learning_r': ['constant', 'constant', 'constant', 'constant', 'constant',
+                                                'adaptive', 'adaptive', 'adaptive', 'adaptive', 'adaptive'],
+                                 'learning_r_init': [0.2, 0.1, 0.01, 0.001, 0.0001,
+                                                     0.2, 0.1, 0.01, 0.001, 0.0001]}}}
+
