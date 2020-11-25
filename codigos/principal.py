@@ -34,7 +34,7 @@ ohlc = vs.g_ohlc(p_ohlc=datos,
                  p_theme=plot_1['p_theme'], p_dims=plot_1['p_dims'], p_labels=plot_1['p_labels'])
 
 # mostrar grafica
-# ohlc.show()
+ohlc.show()
 
 # ----------------------------------------------------------------------- analisis exploratorio de datos -- #
 # ----------------------------------------------------------------------- ------------------------------ -- #
@@ -128,6 +128,21 @@ for model in models:
 # ------------------------------------------------------------ Hacer una GRAFICA para todos los periodos -- #
 # -- TITULO: Separacion de datos
 # precios OHLC de todos los periodos con lineas verticales de separacion de periodos de m_folds
+
+# construccion de fechas para lineas verticales de division de cada fold
+fechas_folds = []
+for fold in m_folds:
+    fechas_folds.append(m_folds[fold]['timestamp'].iloc[0])
+    fechas_folds.append(m_folds[fold]['timestamp'].iloc[-1])
+
+# grafica OHLC
+ohlc = vs.g_ohlc(p_ohlc=datos,
+                 p_theme=plot_1['p_theme'], p_dims=plot_1['p_dims'], p_labels=plot_1['p_labels'],
+                 p_vlines=fechas_folds)
+
+# mostrar grafica
+ohlc.show()
+
 
 # -- PRIORIDAD 2
 # ------------------------------------------------------------ Hacer una GRAFICA para todos los periodos -- #
