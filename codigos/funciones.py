@@ -418,7 +418,8 @@ def logistic_net(p_data, p_params):
                 'metrics': {'train': {'acc': acc_train, 'tpr': tpr_train, 'fpr': fpr_train,
                                       'probs': probs_train, 'auc': auc_train},
                             'test': {'acc': acc_test, 'tpr': tpr_test, 'fpr': fpr_test,
-                                     'probs': probs_test, 'auc': auc_test}}}
+                                     'probs': probs_test, 'auc': auc_test}},
+                'params': p_params}
 
     return r_models
 
@@ -504,7 +505,8 @@ def ls_svm(p_data, p_params):
                 'metrics': {'train': {'acc': acc_train, 'tpr': tpr_train, 'fpr': fpr_train,
                                       'probs': probs_train, 'auc': auc_train},
                             'test': {'acc': acc_test, 'tpr': tpr_test, 'fpr': fpr_test,
-                                     'probs': probs_test, 'auc': auc_test}}}
+                                     'probs': probs_test, 'auc': auc_test}},
+                'params': p_params}
 
     return r_models
 
@@ -592,7 +594,8 @@ def ann_mlp(p_data, p_params):
                 'metrics': {'train': {'acc': acc_train, 'tpr': tpr_train, 'fpr': fpr_train,
                                       'probs': probs_train, 'auc': auc_train},
                             'test': {'acc': acc_test, 'tpr': tpr_test, 'fpr': fpr_test,
-                                     'probs': probs_test, 'auc': auc_test}}}
+                                     'probs': probs_test, 'auc': auc_test}},
+                'params': p_params}
 
     return r_models
 

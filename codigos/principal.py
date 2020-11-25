@@ -17,7 +17,7 @@ import pandas as pd
 
 # primeras pruebas sera con 1 solo periodo
 data = price_data[list(price_data.keys())[9]]
-data_complete = pd.concat([price_data[list(price_data.keys())[8]], price_data[list(price_data.keys())[9]]])
+# data_complete = pd.concat([price_data[list(price_data.keys())[8]], price_data[list(price_data.keys())[9]]])
 
 # ---------------------------------------------------------------------------------- datos para proyecto -- #
 # ---------------------------------------------------------------------------------- ------------------- -- #
@@ -46,7 +46,7 @@ ohlc = vs.g_ohlc(p_ohlc=datos,
 # ------------------------------------------------------------------------ ----------------------------- -- #
 
 # -- Division de periodos de datos, sin filtracion, en amplitudes de 1 mes para obtener 12 "Folds".
-m_folds = fn.f_m_folds(p_data=data_complete, p_periodo='trimestre')
+m_folds = fn.f_m_folds(p_data=data, p_periodo='trimestre')
 
 # -------------------------------------------------------------------------------------- M_Folds Results -- #
 # -------------------------------------------------------------------------------------- --------------- -- #
@@ -101,8 +101,25 @@ for model in models:
 # -- ------------------------------------------------------------------------- Backtest global de modelo -- #
 # -- ------------------------------------------------------------------------- ------------------------- -- #
 
-# Utilizar cada uno de los 2 individuos y hacer un backtest, con todos los modelos, para todos los periodos
-# min_AUC y max_AUC
+# Evaluation of auc_min and auc_max cases in all the models
+global_models = {model: {'auc_min': {}, 'auc_max': {}} for model in models}
+cases = ['auc_min', 'auc_max']
+
+# Global features (whole dataset)
+global_features = fn.genetic_programed_features(p_data=data, p_memory=7)
+
+# Evaluate all global cases
+for model in models:
+    for case in cases:
+        if model == 'model_1':
+            global_models[model][case] = fn.logistic_net(p_data=global_features,
+                                                         p_params=casos[model][case]['data']['params'])
+        elif model == 'model_2':
+            global_models[model][case] = fn.ls_svm(p_data=global_features,
+                                                   p_params=casos[model][case]['data']['params'])
+        elif model == 'model_3':
+            global_models[model][case] = fn.ann_mlp(p_data=global_features,
+                                                    p_params=casos[model][case]['data']['params'])
 
 # -- ----------------------------------------------------------------------- Visualizacion de resultados -- #
 # -- ----------------------------------------------------------------------- --------------------------- -- #
