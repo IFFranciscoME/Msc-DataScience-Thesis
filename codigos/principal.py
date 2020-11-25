@@ -13,9 +13,11 @@ import codigos.funciones as fn
 from codigos.datos import price_data
 import codigos.visualizaciones as vs
 from codigos.datos import plot_1, models
+import pandas as pd
 
 # primeras pruebas sera con 1 solo periodo
 data = price_data[list(price_data.keys())[9]]
+data_complete = pd.concat([price_data[list(price_data.keys())[8]], price_data[list(price_data.keys())[9]]])
 
 # ---------------------------------------------------------------------------------- datos para proyecto -- #
 # ---------------------------------------------------------------------------------- ------------------- -- #
@@ -44,7 +46,7 @@ ohlc = vs.g_ohlc(p_ohlc=datos,
 # ------------------------------------------------------------------------ ----------------------------- -- #
 
 # -- Division de periodos de datos, sin filtracion, en amplitudes de 1 mes para obtener 12 "Folds".
-m_folds = fn.f_m_folds(p_data=datos, p_periodo='trimestre')
+m_folds = fn.f_m_folds(p_data=data_complete, p_periodo='trimestre')
 
 # -------------------------------------------------------------------------------------- M_Folds Results -- #
 # -------------------------------------------------------------------------------------- --------------- -- #
@@ -96,46 +98,60 @@ for model in models:
                 casos[model]['auc_max']['data'] = memory_palace[model][period]['e_hof'][i]
 
 
-# -- -------------------------------------------------------------------------- Caracterizacion de casos -- #
-# -- -------------------------------------------------------------------------- ------------------------ -- #
-
-# Hacer este proceso para todos los modelos
-# Paso 1: Encontrar el individuo en todos los HOF de todos los periodos que cumpla con la regla
-# Paso 2: Extraer todos los datos disponibles del individuo y modelo elegido
-# Paso 3: Mostrar grafica de precios OHLC del periodo (Train y Test del periodo)
-# Paso 4: Mostrar grafica resumen del individuo encontrado (ROC + AUC + Modelo + Periodo)
-# Paso 5: Mostrar grafica de barras con Clases Verdaderas y Clases ajustadas (Train y Test del periodo)
-# Paso 6: Mostrar tabla con parametros del modelo
-
 # -- ------------------------------------------------------------------------- Backtest global de modelo -- #
 # -- ------------------------------------------------------------------------- ------------------------- -- #
 
-# Utilizar cada uno de los 3 individuo y hacer un backtest, con todos los modelos, para todos los periodos
+# Utilizar cada uno de los 2 individuos y hacer un backtest, con todos los modelos, para todos los periodos
+# min_AUC y max_AUC
 
 # -- ----------------------------------------------------------------------- Visualizacion de resultados -- #
 # -- ----------------------------------------------------------------------- --------------------------- -- #
 
-# -- TABLA: Caso 1
-# Modelo 1 + Matriz de Confusion para Caso 1 (Original) y para Caso 1 (Total)
-# Modelo 2 + Matriz de Confusion para Caso 1 (Original) y para Caso 1 (Total)
-# Modelo 3 + Matriz de Confusion para Caso 1 (Original) y para Caso 1 (Total)
+# -- PRIORIDAD 1
+# ------------------------------------------------------------ Hacer una GRAFICA para todos los periodos -- #
+# -- TITULO: Separacion de datos
+# precios OHLC de todos los periodos con lineas verticales de separacion de periodos de m_folds
 
-# -- TABLA: Caso 2
-# Modelo 1 + Matriz de Confusion para Caso 2 (Original) y para Caso 2 (Total)
-# Modelo 2 + Matriz de Confusion para Caso 2 (Original) y para Caso 2 (Total)
-# Modelo 3 + Matriz de Confusion para Caso 2 (Original) y para Caso 2 (Total)
+# -- PRIORIDAD 2
+# ------------------------------------------------------------ Hacer una GRAFICA para todos los periodos -- #
+# -- TITULO: Clases Observadas Vs Clases Ajustadas
+# Para todos los datos, grafica de barras con Clases Verdaderas y Clases ajustadas.
+# Renglon 1: Clases originales
+# Renglon 2: Clases ajustadas con el 1er modelo utilizando los parametros del individuo max AUC global
+# Renglon 3: Clases ajustadas con el 2do modelo utilizando los parametros del individuo max AUC global
+# Renglon 4: Clases ajustadas con el 3er modelo utilizando los parametros del individuo max AUC global
 
-# -- TABLA: Caso 3
-# Modelo 1 + Matriz de Confusion para Caso 3 (Original) y para Caso 3 (Total)
-# Modelo 2 + Matriz de Confusion para Caso 3 (Original) y para Caso 3 (Total)
-# Modelo 3 + Matriz de Confusion para Caso 3 (Original) y para Caso 3 (Total)
+# -- PRIORIDAD 3
+# ------------------------------------ Hacer una GRAFICA con AUC_prom por modelo para todos los periodos -- #
+# -- TITULO: Comparativa de Estabilidad de AUC entre modelos
+# con los HoF de cada periodo, calcular promedio AUC_min y AUC_max. Mostrar en una linea los valores
+# para todos los periodos, se tendran 3 lineas, 1 por modelo
+# ejex: Periodo
+# ejey: valor de AUC promedio por modelo (3 modelos)
 
-# -- GRAFICA PRECISION : DATOS + 3 MODELOS
-# grafica de barras, de 4 renglones:
-# -- 1er renglon barras verticales de clase original en el tiempo
-# -- 2do renglon barras verticales de clase pronosticada con modelo 1
-# -- 3er renglon barras verticales de clase pronosticada con modelo 2
-# -- 4to renglon barras verticales de clase pronosticada con modelo 3
+# -- PRIORIDAD 4
+# --------------------------------------------------------------------- Hacer una TABLA para cada modelo -- #
+# -- TITULO: Estabilidad de hyperparametros de modelo
+# Para cada periodo, de los HoF, mostrar los parametros del individuo con mayor max AUC.
+# columnas: 01_2018 | 02_2018 | ... | nn_yyyy |
+# renglones: max AUC  + parametros del modelo
+
+# -- PRIORIDAD 5
+# ------------------------------------------------------- hacer una GRAFICA por periodo para cada modelo -- #
+# --- TITULO: Desempeño de poblacion de configuraciones para + 'Nombre de modelo' en periodo + 'periodo'
+# Mostrar en gris las ROC de los 10 individuos en el HoF, mostrar la ROC con max AUC y min AUC con color
+# diferente
+# ejex: FPR
+# ejey: TPR
+# leyenda: max AUC, min AUC
+
+# -- PRIORIDAD 5
+# -------------------------------------------------------------- hacer una TABLA para todos los periodos -- #
+# -- TITULO: DESEMPEÑO GENERAL DE MODELOS
+# Para todos los periodos, para los 3 modelos, para individuos con Max AUC y Min AUC por periodo, mostrar
+# todos los parametros de cada caso.
+# columnas: modelo_1_min | modelo_1_max | modelo_2_min | modelo_2_max | modelo_3_min | Modelo_3_max |
+# renglones: matriz de confusion vertical + acc + auc
 
 # -- -------------------------------------------------------------------- BackTest de Sistema de trading -- #
 # -- -------------------------------------------------------------------- ------------------------------ -- #

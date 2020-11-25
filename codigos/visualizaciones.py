@@ -119,23 +119,53 @@ def g_ohlc(p_ohlc, p_theme, p_dims, p_labels=None):
 # -- ----------------------------------------------------------------------------------- PLOT: ROC + ACU -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 
-p_fpr = casos['model_1']['auc_max']['data']['metrics']['test']['fpr']
-p_tpr = casos['model_1']['auc_max']['data']['metrics']['test']['tpr']
-p_auc = casos['model_1']['auc_max']['data']['metrics']['test']['auc']
-p_modelo = 'Logistic Regression'
-if p_modelo == 'model_1':
-    modelo = 'Logistic Regression + Elastic Net'
-elif p_modelo == 'model_2':
-    modelo = 'Suppor Vector Machines'
-elif p_modelo == 'model_3':
-    modelo = 'Multilayer Perceptron'
+def g_roc_auc(p_fpr, p_tpr, p_auc, p_modelo, p_theme, p_dims):
 
+    # p_fpr = casos['model_1']['auc_max']['data']['metrics']['test']['fpr']
+    # p_tpr = casos['model_1']['auc_max']['data']['metrics']['test']['tpr']
+    # p_auc = casos['model_1']['auc_max']['data']['metrics']['test']['auc']
+    # p_modelo = 'Logistic Regression'
 
-def g_roc_auc(p_fpr, p_tpr, p_auc, p_modelo):
-
+    # if p_modelo == 'model_1':
+    #     modelo = 'Logistic Regression + Elastic Net'
+    # elif p_modelo == 'model_2':
+    #     modelo = 'Suppor Vector Machines'
+    # elif p_modelo == 'model_3':
+    #     modelo = 'Multilayer Perceptron'
+    #
     fig = go.Figure()
     fig.add_shape(type='line', line=dict(width=3, dash='dash', color='grey'), x0=0, x1=1, y0=0, y1=1)
     fig.add_trace(go.Scatter(x=p_fpr, y=p_tpr, name=modelo,
                              mode='lines', line=dict(width=3)))
 
+    # Layout for margin, and both x and y axes
+    fig_g_ohlc.update_layout(
+        margin=go.layout.Margin(l=50, r=50, b=20, t=50, pad=20),
+        xaxis=dict(title_text=p_labels['x_title'], rangeslider=dict(visible=False)),
+        yaxis=dict(title_text=p_labels['y_title']))
+
+    # Color and font type for text in axes
+    fig_g_ohlc.update_layout(
+        xaxis=dict(titlefont=dict(color=p_theme['color_1']),
+                   tickfont=dict(color=p_theme['color_1'],
+                                 size=p_theme['font_size_1'])),
+        yaxis=dict(zeroline=False, automargin=True,
+                   titlefont=dict(color=p_theme['color_1']),
+                   tickfont=dict(color=p_theme['color_1'],
+                                 size=p_theme['font_size_1']),
+                   showgrid=True))
+
+    # Size of final plot according to desired dimensions
+    fig_g_ohlc.layout.autosize = True
+    fig_g_ohlc.layout.width = p_dims['width']
+    fig_g_ohlc.layout.height = p_dims['height']
+
+    # Update layout for the background
+    fig_g_ohlc.update_layout(paper_bgcolor='white', plot_bgcolor='white',
+                             yaxis=dict(tickvals=y0_ticks_vals, zeroline=False, automargin=True,
+                                        tickfont=dict(color='grey', size=p_theme['font_size_1'])),
+                             xaxis=dict(tickfont=dict(color='grey', size=p_theme['font_size_1'])))
+
     fig.show()
+
+    return 1

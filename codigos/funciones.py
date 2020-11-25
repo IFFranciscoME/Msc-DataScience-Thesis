@@ -102,16 +102,37 @@ def f_m_folds(p_data, p_periodo):
 
     """
 
+    # For monthly separation of the data
     if p_periodo == 'mes':
-        per = list(set(time.month for time in list(p_data['timestamp'])))
-        return {'periodo_' + str(i):
-                      p_data[pd.to_datetime(p_data['timestamp']).dt.month == i].copy() for i in per}
+        # List of months in the dataset
+        months = list(set(time.month for time in list(p_data['timestamp'])))
+        # List of years in the dataset
+        years = list(set(time.year for time in list(p_data['timestamp'])))
+        m_data = {}
+        # New key for every month_year
+        for j in years:
+            m_data.update({'q_' + str('0') + str(i) + '_' + str(j) if i <= 9 else str(i) + '_' + str(j):
+                               p_data[(pd.to_datetime(p_data['timestamp']).dt.month == i) &
+                                      (pd.to_datetime(p_data['timestamp']).dt.year == j)]
+                           for i in months})
+        return m_data
 
+    # For quarterly separation of the data
     elif p_periodo == 'trimestre':
-        per = list(set(time.quarter for time in list(p_data['timestamp'])))
-        return {'periodo_' + str(i):
-                      p_data[pd.to_datetime(p_data['timestamp']).dt.quarter == i].copy() for i in per}
+        # List of quarters in the dataset
+        quarters = list(set(time.quarter for time in list(p_data['timestamp'])))
+        # List of years in the dataset
+        years = list(set(time.year for time in list(p_data['timestamp'])))
+        q_data = {}
+        # New key for every quarter_year
+        for j in years:
+            q_data.update({'m_' + str('0') + str(i) + '_' + str(j) if i <= 9 else str(i) + '_' + str(j):
+                               p_data[(pd.to_datetime(p_data['timestamp']).dt.quarter == i) &
+                                      (pd.to_datetime(p_data['timestamp']).dt.year == j)]
+                           for i in quarters})
+        return q_data
 
+    # In the case a different label has been receieved
     return 'Error: verificar parametros de entrada'
 
 
