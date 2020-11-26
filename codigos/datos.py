@@ -69,6 +69,18 @@ plot_1 = dict(p_theme={'color_1': '#ABABAB', 'color_2': '#ABABAB', 'color_3': '#
               p_dims={'width': 1450, 'height': 800},
               p_labels={'title': 'Main title', 'x_title': 'x axis title', 'y_title': 'y axis title'})
 
+# grafica OHLC + Lineas Verticales para M-Folds
+plot_2 = dict(p_theme={'color_1': '#ABABAB', 'color_2': '#ABABAB', 'color_3': '#ABABAB',
+                       'font_color_1': '#ABABAB', 'font_size_1': 12, 'font_size_2': 16},
+              p_dims={'width': 1450, 'height': 800},
+              p_labels={'title': 'Main title', 'x_title': 'x axis title', 'y_title': 'y axis title'})
+
+# Barras de Clasificaciones Observadas Vs Clasificaciones de modelo
+plot_3 = dict(p_theme={'color_1': '#ABABAB', 'color_2': '#ABABAB', 'color_3': '#ABABAB',
+                       'font_color_1': '#ABABAB', 'font_size_1': 12, 'font_size_2': 16},
+              p_dims={'width': 1450, 'height': 800},
+              p_labels={'title': 'Main title', 'x_title': 'x axis title', 'y_title': 'y axis title'})
+
 
 # --------------------------------------------------------------------------- Hyperparametros de modelos -- #
 # --------------------------------------------------------------------------- -------------------------- -- #

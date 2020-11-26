@@ -10,6 +10,7 @@
 """
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 import plotly.io as pio
 pio.renderers.default = "browser"
@@ -129,6 +130,89 @@ def g_ohlc(p_ohlc, p_theme, p_dims, p_labels, p_vlines):
                                legend=go.layout.Legend(x=.3, y=-.15, orientation='h', font=dict(size=15)))
 
     return fig_g_ohlc
+
+
+# -- --------------------------------------------------------------------- PLOT: Stacked Horizontal Bars -- #
+# -- --------------------------------------------------------------------------------------------------- -- #
+
+def g_relative_bars(p_x, p_y0, p_y1, p_theme, p_dims):
+    """
+    Generates a plot with two bars (two series of values) and two horizontal lines (medians of each
+    series)
+
+    Requirements
+    ------------
+    numpy
+    pandas
+    plotly
+
+    Parameters
+    ----------
+    p_x : list
+        lista con fechas o valores en el eje de x
+
+    p_y0: dict
+        values for upper bar plot
+        {data: y0 component to plot (left axis), color: for this data, type: line/dash/dash-dot,
+        size: for this data, n_ticks: number of ticks for this axis}
+
+    p_y1: dict
+        values for lower bar plot
+        {data: y0 component to plot (right axis), color: for this data, type: line/dash/dash-dot,
+        size: for this data, n_ticks: number of ticks for this axis}
+
+    p_theme: dict
+        colors and font sizes
+        {'color_1': '#ABABAB', 'color_2': '#ABABAB', 'color_3': '#ABABAB', 'font_color_1': '#ABABAB',
+        'font_size_1': 12, 'font_size_2': 16}
+
+    p_dims: dict
+        final dimensions of the plot as a file
+        {'width': width in pixels, 'heigth': height in pixels}
+
+    Returns
+    -------
+    fig_relative_bars: plotly
+        Object with plotly generating code for the plot
+
+    """
+
+    # instantiate a figure object
+    fig_relative_bars = go.Figure()
+
+    # Add lower bars
+    fig_relative_bars.add_trace(go.Bar(name='Prediccion de Modelo', x=p_x, y=p_y1,
+                                       marker_color='red',
+                                       marker_line_color='red',
+                                       marker_line_width=1, opacity=0.99))
+
+    # Add upper bars
+    fig_relative_bars.add_trace(go.Bar(name='Observacion', x=p_x, y=p_y0,
+                                       marker_color=p_theme['color_1'],
+                                       marker_line_color=p_theme['color_1'],
+                                       marker_line_width=1, opacity=0.99))
+
+    # Update layout for the background
+    fig_relative_bars.update_layout(paper_bgcolor='white',
+                                    yaxis=dict(tickvals=[-1, 0, 1], zeroline=True, automargin=True,
+                                               tickfont=dict(color='grey', size=p_theme['font_size_1'])),
+                                    xaxis=dict(tickfont=dict(color='grey', size=p_theme['font_size_1'])))
+
+    # Update layout for the y axis
+    fig_relative_bars.update_yaxes(showgrid=False, range=[-1.2, 1.2])
+
+    # Legend format
+    fig_relative_bars.update_layout(paper_bgcolor='white', plot_bgcolor='white', barmode='overlay',
+                                    legend=go.layout.Legend(x=.41, y=-.10, orientation='h',
+                                                            font=dict(size=14, color='grey')),
+                                    margin=go.layout.Margin(l=50, r=50, b=50, t=50, pad=10))
+
+    # Final plot dimensions
+    fig_relative_bars.layout.autosize = True
+    fig_relative_bars.layout.width = p_dims['width']
+    fig_relative_bars.layout.height = p_dims['height']
+
+    return fig_relative_bars
 
 
 # -- ----------------------------------------------------------------------------------- PLOT: ROC + ACU -- #
