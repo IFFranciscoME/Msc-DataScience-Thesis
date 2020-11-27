@@ -12,20 +12,26 @@
 import codigos.funciones as fn
 from codigos.datos import price_data
 import codigos.visualizaciones as vs
-from codigos.datos import plot_1, models
+from codigos.datos import plot_1, models, dimensiones
 import pandas as pd
 import numpy as np
 
 # primeras pruebas sera con 1 solo periodo
-data = price_data[list(price_data.keys())[9]]
-# data_complete = pd.concat([price_data[list(price_data.keys())[8]], price_data[list(price_data.keys())[9]]])
+data_complete = price_data[list(price_data.keys())[9]]
+
+# # datos completos de los ultimos 10 años
+# data_complete = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
+#                            price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
+#                            price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]],
+#                            price_data[list(price_data.keys())[6]], price_data[list(price_data.keys())[7]],
+#                            price_data[list(price_data.keys())[8]], price_data[list(price_data.keys())[9]]])
 
 # ---------------------------------------------------------------------------------- datos para proyecto -- #
 # ---------------------------------------------------------------------------------- ------------------- -- #
 
 # datos iniciales para hacer pruebas
 # datos = data.iloc[0:129]
-datos = data
+datos = data_complete
 
 # ------------------------------------------------------------------------------- visualizacion de datos -- #
 # ------------------------------------------------------------------------------- ---------------------- -- #
@@ -48,7 +54,7 @@ ohlc = vs.g_ohlc(p_ohlc=datos,
 # ------------------------------------------------------------------------ ----------------------------- -- #
 
 # -- Division de periodos de datos, sin filtracion, en amplitudes de 1 mes para obtener 12 "Folds".
-m_folds = fn.f_m_folds(p_data=data, p_periodo='trimestre')
+m_folds = fn.f_m_folds(p_data=datos, p_periodo='trimestre')
 
 # -------------------------------------------------------------------------------------- M_Folds Results -- #
 # -------------------------------------------------------------------------------------- --------------- -- #
@@ -59,11 +65,24 @@ memory_palace = {j: {i: {'pop': [], 'logs': [], 'hof': [], 'e_hof': []} for i in
 # -- Ciclo para evaluar todos los resultados
 for model in models:
     for period in m_folds:
+
+        print('\n')
+        print('--------------------')
         print('modelo: ', model)
         print('periodo: ', period)
+        print('--------------------')
+        print('\n')
+        print('----------------------- Ingenieria de Variables por Periodo ------------------------')
+        print('----------------------- ----------------------------------- ------------------------')
+
         # generacion de features
         m_features = fn.genetic_programed_features(p_data=m_folds[period], p_memory=7)
+
         # resultados de optimizacion
+        print('\n')
+        print('--------------------- Optimizacion de hiperparametros por Periodo ------------------')
+        print('--------------------- ------------------------------------------- ------------------')
+
         hof_model = fn.genetic_algo_optimisation(p_data=m_features, p_model=models[model])
         # -- evaluacion de modelo para cada modelo y cada periodo de todos los Hall of Fame
         for i in range(0, len(list(hof_model['hof']))):
@@ -122,8 +141,8 @@ for model in models:
 global_models = {model: {'auc_min': {}, 'auc_max': {}} for model in models}
 cases = ['auc_min', 'auc_max']
 
-# Global features (whole dataset)
-global_features = fn.genetic_programed_features(p_data=data, p_memory=7)
+# Global features (CORRECCION: )
+global_features = fn.genetic_programed_features(p_data=datos, p_memory=7)
 
 # Evaluate all global cases
 for model in models:
@@ -176,7 +195,7 @@ model_data = global_models['model_1']['auc_min']['results']['data']
 pred_class = list(model_data['train']['y_train_pred']) + list(model_data['test']['y_test_pred'])
 pred_class = [-1 if x == 0 else 1 for x in pred_class]
 
-x_series = list(data['timestamp'])
+x_series = list(datos['timestamp'])
 plot_3 = vs.g_relative_bars(p_x=x_series, p_y0=obs_class, p_y1=pred_class,
                             p_theme=plot_1['p_theme'], p_dims=plot_1['p_dims'])
 
@@ -191,13 +210,15 @@ plot_3 = vs.g_relative_bars(p_x=x_series, p_y0=obs_class, p_y1=pred_class,
 # ejex: Periodo
 # ejey: valor de AUC promedio por modelo (3 modelos)
 
-minmax_auc_test = {i: {'mins': [], 'maxs': []} for i in models}
+minmax_auc_test = {i: {'x_period': [], 'y_mins': [], 'y_maxs': []} for i in models}
 
 for model in models:
-    minmax_auc_test[model]['mins'] = [casos['model_1']['hof_metrics']['data'][periodo]['auc_min']
-                                      for periodo in list(casos['model_1']['hof_metrics']['data'].keys())]
-    minmax_auc_test[model]['maxs'] = [casos['model_1']['hof_metrics']['data'][periodo]['auc_max']
-                                      for periodo in list(casos['model_1']['hof_metrics']['data'].keys())]
+    minmax_auc_test[model]['x_period'] = list(casos[model]['hof_metrics']['data'].keys())
+
+    minmax_auc_test[model]['y_mins'] = [casos[model]['hof_metrics']['data'][periodo]['auc_min']
+                                        for periodo in list(casos[model]['hof_metrics']['data'].keys())]
+    minmax_auc_test[model]['y_maxs'] = [casos[model]['hof_metrics']['data'][periodo]['auc_max']
+                                        for periodo in list(casos[model]['hof_metrics']['data'].keys())]
 
 # Hacer grafica
 
@@ -209,7 +230,7 @@ for model in models:
 # renglones: max AUC  + parametros del modelo
 
 data_stables = {model: {'df_auc_max': {period: {} for period in m_folds},
-                'df_auc_min': {}} for model in models}
+                        'df_auc_min': {period: {} for period in m_folds}} for model in models}
 
 period_max_auc = {model: {period: {} for period in m_folds} for model in models}
 period_min_auc = {model: {period: {} for period in m_folds} for model in models}
@@ -240,7 +261,7 @@ pd.DataFrame(period_min_auc['model_3']).T
 # renglones: matriz de confusion vertical + acc + auc
 
 # -- -------------------------------------------------------------------- BackTest de Sistema de trading -- #
-# -- -------------------------------------------------------------------- ------------------------------ -- #
+# ---------------------------------------------------------------------- ------------------------------ -- #
 
 # incorporar valores para criterio 3 y 4
 # Criterio 3 (25 y 50)

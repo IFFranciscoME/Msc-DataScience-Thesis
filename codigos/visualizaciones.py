@@ -218,6 +218,92 @@ def g_relative_bars(p_x, p_y0, p_y1, p_theme, p_dims):
 # -- ----------------------------------------------------------------------------------- PLOT: ROC + ACU -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 
+def g_timeseries_auc(p_data_auc, p_theme, p_dims):
+
+    p_theme = theme_plot_4
+    p_data_auc = minmax_auc_test
+
+    fig_ts_auc = go.Figure()
+    fig_ts_auc.update_layout(
+        title=dict(x=0.5, text='Grafica 3:' + '<b> ' + p_theme['p_labels']['title'] + ' </b>'),
+        xaxis=dict(title_text=p_theme['p_labels']['x_title'],
+                   tickfont=dict(color='grey', size=p_theme['p_theme']['font_axis'])),
+        yaxis=dict(title_text=p_theme['p_labels']['y_title'],
+                   tickfont=dict(color='grey', size=p_theme['p_theme']['font_axis'])))
+
+    fig_ts_auc.add_trace(go.Scatter(x=p_data_auc['model_1']['x_period'],
+                                    y=p_data_auc['model_1']['y_mins'],
+
+                                    line=dict(color='blue', width=3),
+                                    marker=dict(color='blue', size=9),
+                                    name='LogReg + Elastic Net (min)',
+                                    mode='markers+lines'))
+
+    fig_ts_auc.add_trace(go.Scatter(x=p_data_auc['model_1']['x_period'], fillcolor='blue',
+                                    y=p_data_auc['model_1']['y_maxs'],
+
+                                    line=dict(color='blue', width=3),
+                                    marker=dict(color='blue', size=9),
+                                    name='LogReg + Elastic Net (max)',
+                                    mode='markers+lines'))
+
+    fig_ts_auc.add_trace(go.Scatter(x=p_data_auc['model_2']['x_period'],
+                                    y=p_data_auc['model_2']['y_mins'],
+
+                                    line=dict(color='red', width=3),
+                                    marker=dict(color='red', size=9),
+                                    name='LS-SVM (min)',
+                                    mode='markers+lines'))
+
+    fig_ts_auc.add_trace(go.Scatter(x=p_data_auc['model_2']['x_period'],
+                                    y=p_data_auc['model_2']['y_maxs'],
+
+                                    line=dict(color='red', width=3),
+                                    marker=dict(color='red', size=9),
+                                    name='LS-SVM (max)',
+                                    mode='markers+lines'))
+
+    fig_ts_auc.add_trace(go.Scatter(x=p_data_auc['model_3']['x_period'],
+                                    y=p_data_auc['model_3']['y_mins'],
+
+                                    line=dict(color='green', width=3),
+                                    marker=dict(color='green', size=9),
+                                    name='ANN-MLP (min)',
+                                    mode='markers+lines'))
+
+    fig_ts_auc.add_trace(go.Scatter(x=p_data_auc['model_3']['x_period'],
+                                    y=p_data_auc['model_3']['y_maxs'],
+
+                                    line=dict(color='green', width=3),
+                                    marker=dict(color='green', size=9),
+                                    name='ANN-MLP (min)',
+                                    mode='markers+lines'))
+
+    # Update layout for the background
+    fig_ts_auc.update_layout(paper_bgcolor='white', title_font_size=p_theme['p_theme']['font_title'],
+                             yaxis=dict(tickvals=np.arange(0, 1.1, 0.1), zeroline=False, automargin=True,
+                                        titlefont=dict(size=p_theme['p_theme']['font_axis']+4)),
+                             xaxis=dict(titlefont=dict(size=p_theme['p_theme']['font_axis']+4)))
+
+    # Formato para titulo
+    fig_ts_auc.update_layout(legend=go.layout.Legend(x=.1, y=-0.13, orientation='h',
+                                                     bordercolor='dark grey',
+                                                     borderwidth=1,
+                                                     font=dict(size=16)))
+
+    # Formato de tamanos
+    fig_ts_auc.layout.autosize = True
+    fig_ts_auc.layout.width = p_theme['p_dims']['width']
+    fig_ts_auc.layout.height = p_theme['p_dims']['height']
+
+    fig_ts_auc.show()
+
+    return 1
+
+
+# -- ----------------------------------------------------------------------------------- PLOT: ROC + ACU -- #
+# -- --------------------------------------------------------------------------------------------------- -- #
+
 def g_roc_auc(p_fpr, p_tpr, p_auc, p_modelo, p_theme, p_dims):
 
     # p_fpr = casos['model_1']['auc_max']['data']['metrics']['test']['fpr']
