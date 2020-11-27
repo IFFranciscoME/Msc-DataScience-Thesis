@@ -12,7 +12,7 @@
 import codigos.funciones as fn
 from codigos.datos import price_data
 import codigos.visualizaciones as vs
-from codigos.datos import plot_1, models, dimensiones
+from codigos.datos import models, theme_plot_1, theme_plot_2, theme_plot_3, theme_plot_4
 import pandas as pd
 import numpy as np
 
@@ -221,6 +221,8 @@ for model in models:
                                         for periodo in list(casos[model]['hof_metrics']['data'].keys())]
 
 # Hacer grafica
+
+plot_4 = g_timeseries_auc(p_data_auc=0, p_theme=theme_plot_4)
 
 # -- PRIORIDAD 4
 # --------------------------------------------------------------------- Hacer una TABLA para cada modelo -- #

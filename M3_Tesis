@@ -237,3 +237,14 @@ Presentacion final con reveal.js
 Presentacion final con reveal.js
 - - Proyecto que cubre: TS
 - - Proyectos que beneficia: TS
+
+# CITAS
+@inproceedings{inproceedings,
+author = {De Rainville, François-Michel and Fortin, Félix-Antoine and Gardner, Marc-André and Parizeau, Marc and Gagné, Christian},
+year = {2012},
+month = {07},
+pages = {85-92},
+title = {DEAP: A Python framework for Evolutionary Algorithms},
+journal = {GECCO'12 - Proceedings of the 14th International Conference on Genetic and Evolutionary Computation Companion},
+doi = {10.1145/2330784.2330799}
+}

@@ -218,10 +218,26 @@ def g_relative_bars(p_x, p_y0, p_y1, p_theme, p_dims):
 # -- ----------------------------------------------------------------------------------- PLOT: ROC + ACU -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 
-def g_timeseries_auc(p_data_auc, p_theme, p_dims):
+def g_timeseries_auc(p_data_auc, p_theme):
+    """
+    Plot para series de tiempo de las AUC de los modelos
 
-    p_theme = theme_plot_4
-    p_data_auc = minmax_auc_test
+    Parameters
+    ----------
+    p_data_auc:dict
+        Diccionario con datos para plot de series de tiempo AUC
+        p_data_auc = minmax_auc_test
+
+    p_theme: dict
+        Diccionario con informacion de tema para plot
+        p_theme = theme_plot_4
+
+    Returns
+    -------
+    fig_ts_auc: plotly
+        Objeto tipo plotly para utilizar con .show()
+
+    """
 
     fig_ts_auc = go.Figure()
     fig_ts_auc.update_layout(
