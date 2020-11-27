@@ -114,4 +114,3 @@ models = {'model_1': {'label': 'logistic-elasticnet',
                                                 'adaptive', 'adaptive', 'adaptive', 'adaptive', 'adaptive'],
                                  'learning_r_init': [0.2, 0.1, 0.01, 0.001, 0.0001,
                                                      0.2, 0.1, 0.01, 0.001, 0.0001]}}}
-

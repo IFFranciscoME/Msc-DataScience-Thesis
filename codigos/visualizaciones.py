@@ -252,7 +252,7 @@ def g_timeseries_auc(p_data_auc, p_theme):
 
                                     line=dict(color='blue', width=3),
                                     marker=dict(color='blue', size=9),
-                                    name='LogReg + Elastic Net (min)',
+                                    name='logistic-elasticnet (min)',
                                     mode='markers+lines'))
 
     fig_ts_auc.add_trace(go.Scatter(x=p_data_auc['model_1']['x_period'], fillcolor='blue',
@@ -260,7 +260,7 @@ def g_timeseries_auc(p_data_auc, p_theme):
 
                                     line=dict(color='blue', width=3),
                                     marker=dict(color='blue', size=9),
-                                    name='LogReg + Elastic Net (max)',
+                                    name='logistic-elasticnet (max)',
                                     mode='markers+lines'))
 
     fig_ts_auc.add_trace(go.Scatter(x=p_data_auc['model_2']['x_period'],
@@ -268,7 +268,7 @@ def g_timeseries_auc(p_data_auc, p_theme):
 
                                     line=dict(color='red', width=3),
                                     marker=dict(color='red', size=9),
-                                    name='LS-SVM (min)',
+                                    name='ls-svm (min)',
                                     mode='markers+lines'))
 
     fig_ts_auc.add_trace(go.Scatter(x=p_data_auc['model_2']['x_period'],
@@ -276,7 +276,7 @@ def g_timeseries_auc(p_data_auc, p_theme):
 
                                     line=dict(color='red', width=3),
                                     marker=dict(color='red', size=9),
-                                    name='LS-SVM (max)',
+                                    name='ls-svm (max)',
                                     mode='markers+lines'))
 
     fig_ts_auc.add_trace(go.Scatter(x=p_data_auc['model_3']['x_period'],
@@ -284,7 +284,7 @@ def g_timeseries_auc(p_data_auc, p_theme):
 
                                     line=dict(color='green', width=3),
                                     marker=dict(color='green', size=9),
-                                    name='ANN-MLP (min)',
+                                    name='ann-mlp (min)',
                                     mode='markers+lines'))
 
     fig_ts_auc.add_trace(go.Scatter(x=p_data_auc['model_3']['x_period'],
@@ -292,7 +292,7 @@ def g_timeseries_auc(p_data_auc, p_theme):
 
                                     line=dict(color='green', width=3),
                                     marker=dict(color='green', size=9),
-                                    name='ANN-MLP (min)',
+                                    name='ann-mlp (min)',
                                     mode='markers+lines'))
 
     # Update layout for the background

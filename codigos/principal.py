@@ -16,14 +16,18 @@ from codigos.datos import models, theme_plot_1, theme_plot_2, theme_plot_3, them
 import pandas as pd
 
 # Datos con un solo periodo
-datos = price_data[list(price_data.keys())[9]]
+# datos = price_data[list(price_data.keys())[9]]
 
-# Datos con todos los periodos
-# data_complete = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
-#                            price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
-#                            price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]],
-#                            price_data[list(price_data.keys())[6]], price_data[list(price_data.keys())[7]],
-#                            price_data[list(price_data.keys())[8]], price_data[list(price_data.keys())[9]]])
+datos = pd.concat([price_data[list(price_data.keys())[6]],
+                   price_data[list(price_data.keys())[7]], price_data[list(price_data.keys())[8]],
+                   price_data[list(price_data.keys())[9]], price_data[list(price_data.keys())[10]]])
+
+# # Datos con todos los periodos
+# datos = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
+#                    price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
+#                    price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]],
+#                    price_data[list(price_data.keys())[6]], price_data[list(price_data.keys())[7]],
+#                    price_data[list(price_data.keys())[8]], price_data[list(price_data.keys())[9]]])
 
 # --------------------------------------------------------------- PLOT 1: PRECIOS OHLC DE FUTURO USD/MXN -- #
 # --------------------------------------------------------------- -------------------------------------- -- #
@@ -47,6 +51,8 @@ table_1 = datos.describe()
 # Division de periodos de datos, sin filtracion
 # en amplitudes de 'trimestre' para obtener 4 folds por cada año
 m_folds = fn.f_m_folds(p_data=datos, p_periodo='trimestre')
+# eliminar el ultimo trimestre por que estara incompleto
+m_folds.pop('q_04_2020', None)
 
 # -------------------------------------------------------- PROCESO: Feratures - Train/Optimizatio - Test -- #
 # -------------------------------------------------------- --------------------------------------------- -- #
@@ -54,15 +60,20 @@ m_folds = fn.f_m_folds(p_data=datos, p_periodo='trimestre')
 # Objeto para almacenar todos los datos
 memory_palace = {j: {i: {'pop': [], 'logs': [], 'hof': [], 'e_hof': []} for i in m_folds} for j in models}
 
+# Diccionario con nombres de modelos
+models_names = {'model_1': 'logistic-elasticnet',
+                'model_2': 'ls-svm',
+                'model_3': 'ann-mlp'}
+
 # -- Ciclo para evaluar todos los resultados
 for model in models:
     for period in m_folds:
 
         print('\n')
-        print('--------------------')
-        print('modelo: ', model)
+        print('----------------------------')
+        print('modelo: ', models_names[model])
         print('periodo: ', period)
-        print('--------------------')
+        print('----------------------------')
         print('\n')
         print('----------------------- Ingenieria de Variables por Periodo ------------------------')
         print('----------------------- ----------------------------------- ------------------------')
@@ -259,3 +270,18 @@ table_2 = {'model_1': {'max': pd.DataFrame(period_max_auc['model_1']),
 # incorporar valores para criterio 3 y 4
 # Criterio 3 (25 y 50)
 # Criterio 4 (1% del capital)
+
+
+# -- ----------------------------------------------------------------------- Guardar Objetos Importantes -- #
+# -------------------------------------------------------------------------- --------------------------- -- #
+
+# import pickle
+#
+# pickle_data = {'datos': datos, 'table_1': table_1, 'm_folds': m_folds, 'memory_palace':memory_palace,
+#                'models_names': models_names, 'auc_cases': auc_cases, 'global_cases': global_cases,
+#                'global_features': global_features, 'model_data': model_data,
+#                'minmax_auc_test': minmax_auc_test}
+#
+# PIK = "pickle.dat"
+# with open(PIK, "wb") as f:
+#     pickle.dump(pickle_data, f)
