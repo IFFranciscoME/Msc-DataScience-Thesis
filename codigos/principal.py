@@ -197,6 +197,8 @@ plot_3 = vs.g_relative_bars(p_x=x_series, p_y0=obs_class, p_y1=pred_class,
 
 # mostrar grafica
 # plot_3.show()
+# plot_3.write_html('presentacion/plot_1.html', full_html=True, include_plotlyjs='cdn')
+
 
 # -- PRIORIDAD 3
 # ------------------------------------ Hacer una GRAFICA con AUC_prom por modelo para todos los periodos -- #

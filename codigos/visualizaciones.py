@@ -13,7 +13,15 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.io as pio
+import chart_studio
+import chart_studio.plotly as py
 pio.renderers.default = "browser"
+
+# -- ------------------------------------------------------------------------------- CREDENCIALES PLOTLY -- #
+# -- --------------------------------------------------------------------------------------------------- -- #
+
+chart_studio.tools.set_credentials_file(username='IFFranciscoME', api_key='Wv3JHvYz5h5jHGpuxvJQ')
+chart_studio.tools.set_config_file(world_readable=True, sharing='public')
 
 
 # -- -------------------------------------------------------- PLOT: OHLC Price Chart with Vertical Lines -- #
@@ -302,7 +310,7 @@ def g_timeseries_auc(p_data_auc, p_theme):
                              xaxis=dict(titlefont=dict(size=p_theme['p_theme']['font_axis']+4)))
 
     # Formato para titulo
-    fig_ts_auc.update_layout(legend=go.layout.Legend(x=.1, y=-0.13, orientation='h',
+    fig_ts_auc.update_layout(legend=go.layout.Legend(x=.1, y=-0.21, orientation='h',
                                                      bordercolor='dark grey',
                                                      borderwidth=1,
                                                      font=dict(size=16)))
@@ -312,9 +320,13 @@ def g_timeseries_auc(p_data_auc, p_theme):
     fig_ts_auc.layout.width = p_theme['p_dims']['width']
     fig_ts_auc.layout.height = p_theme['p_dims']['height']
 
-    fig_ts_auc.show()
+    # Para generar el plot y visualizarlo en explorador
+    # fig_ts_auc.show()
 
-    return 1
+    # Para generar el plot con URL en chart studio
+    # py.plot(fig_ts_auc)
+
+    return fig_ts_auc
 
 
 # -- ----------------------------------------------------------------------------------- PLOT: ROC + ACU -- #
