@@ -15,25 +15,18 @@ import codigos.visualizaciones as vs
 from codigos.datos import models, theme_plot_1, theme_plot_2, theme_plot_3, theme_plot_4
 import pandas as pd
 
-# primeras pruebas sera con 1 solo periodo
-data_complete = price_data[list(price_data.keys())[9]]
+# Datos con un solo periodo
+datos = price_data[list(price_data.keys())[9]]
 
-# # datos completos de los ultimos 10 años
+# Datos con todos los periodos
 # data_complete = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
 #                            price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
 #                            price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]],
 #                            price_data[list(price_data.keys())[6]], price_data[list(price_data.keys())[7]],
 #                            price_data[list(price_data.keys())[8]], price_data[list(price_data.keys())[9]]])
 
-# ---------------------------------------------------------------------------------- datos para proyecto -- #
-# ---------------------------------------------------------------------------------- ------------------- -- #
-
-# datos iniciales para hacer pruebas
-# datos = data.iloc[0:129]
-datos = data_complete
-
-# ------------------------------------------------------------------------------- visualizacion de datos -- #
-# ------------------------------------------------------------------------------- ---------------------- -- #
+# --------------------------------------------------------------- PLOT 1: PRECIOS OHLC DE FUTURO USD/MXN -- #
+# --------------------------------------------------------------- -------------------------------------- -- #
 
 # cargar funcion importada de visualizaciones
 plot_1 = vs.g_ohlc(p_ohlc=datos, p_theme=theme_plot_1['p_theme'], p_dims=theme_plot_1['p_dims'],
@@ -42,20 +35,21 @@ plot_1 = vs.g_ohlc(p_ohlc=datos, p_theme=theme_plot_1['p_theme'], p_dims=theme_p
 # mostrar grafica
 # plot_1.show()
 
-# ----------------------------------------------------------------------- analisis exploratorio de datos -- #
+# ----------------------------------------------------------------------- Analisis exploratorio de datos -- #
 # ----------------------------------------------------------------------- ------------------------------ -- #
 
 # tabla de descripcion de datos
-# datos.describe()
+table_1 = datos.describe()
 
-# ------------------------------------------------------------------------ Division en K-Folds mensuales -- #
-# ------------------------------------------------------------------------ ----------------------------- -- #
+# --------------------------------------------------------------------- Division en K-Folds por periodos -- #
+# --------------------------------------------------------------------- -------------------------------- -- #
 
-# -- Division de periodos de datos, sin filtracion, en amplitudes de 1 mes para obtener 12 "Folds".
+# Division de periodos de datos, sin filtracion
+# en amplitudes de 'trimestre' para obtener 4 folds por cada año
 m_folds = fn.f_m_folds(p_data=datos, p_periodo='trimestre')
 
-# -------------------------------------------------------------------------------------- M_Folds Results -- #
-# -------------------------------------------------------------------------------------- --------------- -- #
+# -------------------------------------------------------- PROCESO: Feratures - Train/Optimizatio - Test -- #
+# -------------------------------------------------------- --------------------------------------------- -- #
 
 # Objeto para almacenar todos los datos
 memory_palace = {j: {i: {'pop': [], 'logs': [], 'hof': [], 'e_hof': []} for i in m_folds} for j in models}
@@ -85,19 +79,17 @@ for model in models:
         # -- evaluacion de modelo para cada modelo y cada periodo de todos los Hall of Fame
         for i in range(0, len(list(hof_model['hof']))):
             # evaluar modelo
-            hof_eval = fn.evaluaciones_periodo(p_features=m_features,
-                                               p_model=model,
+            hof_eval = fn.evaluaciones_periodo(p_features=m_features, p_model=model,
                                                p_optim_data=hof_model['hof'])
             # guardar evaluaciones de todos los individuos del Hall of Fame
             memory_palace[model][period]['e_hof'].append(hof_eval)
 
-
-# -- --------------------------------------------------------------------------- 3 Casos Representativos -- #
+# -- -------------------------------------------------------------------- RESULTS: AUC Min and Max cases -- #
 # -- --------------------------------------------------------------------------- ----------------------- -- #
 # -- Funcion de casos representativos
 
 # diccionario para almacenar resultados de busqueda
-casos = {j: {i: {'data': {}} for i in ['auc_min', 'auc_max', 'hof_metrics']} for j in models}
+auc_cases = {j: {i: {'data': {}} for i in ['auc_min', 'auc_max', 'hof_metrics']} for j in models}
 
 # ciclo para busqueda de auc_min y auc_max
 for model in models:
@@ -106,7 +98,7 @@ for model in models:
     auc_max_params = {}
     auc_min_params = {}
     for period in m_folds:
-        casos[model]['hof_metrics']['data'][period] = {}
+        auc_cases[model]['hof_metrics']['data'][period] = {}
         auc_s = []
         for i in range(0, 10):
             auc_s.append(memory_palace[model][period]['e_hof'][i]['metrics']['test']['auc'])
@@ -115,53 +107,47 @@ for model in models:
             # El individuo de todos los HOF de todos los periodos que produjo la minima AUC
             if memory_palace[model][period]['e_hof'][i]['metrics']['test']['auc'] < auc_min:
                 auc_min = memory_palace[model][period]['e_hof'][i]['metrics']['test']['auc']
-                casos[model]['auc_min']['data'] = memory_palace[model][period]['e_hof'][i]
+                auc_cases[model]['auc_min']['data'] = memory_palace[model][period]['e_hof'][i]
                 auc_min_params = memory_palace[model][period]['e_hof'][i]['params']
 
             # -- caso 2
             # El individuo de todos los HOF de todos los periodos que produjo la maxima AUC
             elif memory_palace[model][period]['e_hof'][i]['metrics']['test']['auc'] > auc_max:
                 auc_max = memory_palace[model][period]['e_hof'][i]['metrics']['test']['auc']
-                casos[model]['auc_max']['data'] = memory_palace[model][period]['e_hof'][i]
+                auc_cases[model]['auc_max']['data'] = memory_palace[model][period]['e_hof'][i]
                 auc_max_params = memory_palace[model][period]['e_hof'][i]['params']
 
         # Guardar info por periodo
-        casos[model]['hof_metrics']['data'][period]['auc_s'] = auc_s
-        casos[model]['hof_metrics']['data'][period]['auc_max'] = auc_max
-        casos[model]['hof_metrics']['data'][period]['auc_max_params'] = auc_max_params
-        casos[model]['hof_metrics']['data'][period]['auc_min'] = auc_min
-        casos[model]['hof_metrics']['data'][period]['auc_min_params'] = auc_min_params
+        auc_cases[model]['hof_metrics']['data'][period]['auc_s'] = auc_s
+        auc_cases[model]['hof_metrics']['data'][period]['auc_max'] = auc_max
+        auc_cases[model]['hof_metrics']['data'][period]['auc_max_params'] = auc_max_params
+        auc_cases[model]['hof_metrics']['data'][period]['auc_min'] = auc_min
+        auc_cases[model]['hof_metrics']['data'][period]['auc_min_params'] = auc_min_params
 
-# -- ------------------------------------------------------------------------- Backtest global de modelo -- #
-# -- ------------------------------------------------------------------------- ------------------------- -- #
+# -- --------------------------------------------------------------- RESULTS: Global AUC Min & Max Cases -- #
+# -- --------------------------------------------------------------- ----------------------------------- -- #
 
 # Evaluation of auc_min and auc_max cases in all the models
-global_models = {model: {'auc_min': {}, 'auc_max': {}} for model in models}
-cases = ['auc_min', 'auc_max']
+global_cases = {model: {'auc_min': {}, 'auc_max': {}} for model in models}
 
 # Global features (CORRECCION: )
 global_features = fn.genetic_programed_features(p_data=datos, p_memory=7)
 
 # Evaluate all global cases
 for model in models:
-    for case in cases:
+    for case in ['auc_min', 'auc_max']:
         if model == 'model_1':
-            global_models[model][case] = fn.logistic_net(p_data=global_features,
-                                                         p_params=casos[model][case]['data']['params'])
+            global_cases[model][case] = fn.logistic_net(p_data=global_features,
+                                                         p_params=auc_cases[model][case]['data']['params'])
         elif model == 'model_2':
-            global_models[model][case] = fn.ls_svm(p_data=global_features,
-                                                   p_params=casos[model][case]['data']['params'])
+            global_cases[model][case] = fn.ls_svm(p_data=global_features,
+                                                   p_params=auc_cases[model][case]['data']['params'])
         elif model == 'model_3':
-            global_models[model][case] = fn.ann_mlp(p_data=global_features,
-                                                    p_params=casos[model][case]['data']['params'])
+            global_cases[model][case] = fn.ann_mlp(p_data=global_features,
+                                                    p_params=auc_cases[model][case]['data']['params'])
 
-# -- ----------------------------------------------------------------------- Visualizacion de resultados -- #
-# -- ----------------------------------------------------------------------- --------------------------- -- #
-
-# -- PRIORIDAD 1
-# ------------------------------------------------------------ Hacer una GRAFICA para todos los periodos -- #
-# -- TITULO: Separacion de datos
-# precios OHLC de todos los periodos con lineas verticales de separacion de periodos de m_folds
+# -- ----------------------------------------------------------------- PLOT 2: Time Series Block T-Folds -- #
+# -- ----------------------------------------------------------------- --------------------------------- -- #
 
 # construccion de fechas para lineas verticales de division de cada fold
 fechas_folds = []
@@ -189,10 +175,9 @@ plot_2 = vs.g_ohlc(p_ohlc=datos,
 obs_class = list(global_features['train_y']) + list(global_features['test_y'])
 obs_class = [-1 if x == 0 else 1 for x in obs_class]
 
-model_data = global_models['model_1']['auc_min']['results']['data']
+model_data = global_cases['model_1']['auc_min']['results']['data']
 pred_class = list(model_data['train']['y_train_pred']) + list(model_data['test']['y_test_pred'])
 pred_class = [-1 if x == 0 else 1 for x in pred_class]
-
 x_series = list(datos['timestamp'])
 
 # Hacer grafica
@@ -213,15 +198,14 @@ plot_3 = vs.g_relative_bars(p_x=x_series, p_y0=obs_class, p_y1=pred_class,
 minmax_auc_test = {i: {'x_period': [], 'y_mins': [], 'y_maxs': []} for i in models}
 
 for model in models:
-    minmax_auc_test[model]['x_period'] = list(casos[model]['hof_metrics']['data'].keys())
-
-    minmax_auc_test[model]['y_mins'] = [casos[model]['hof_metrics']['data'][periodo]['auc_min']
-                                        for periodo in list(casos[model]['hof_metrics']['data'].keys())]
-    minmax_auc_test[model]['y_maxs'] = [casos[model]['hof_metrics']['data'][periodo]['auc_max']
-                                        for periodo in list(casos[model]['hof_metrics']['data'].keys())]
+    minmax_auc_test[model]['x_period'] = list(auc_cases[model]['hof_metrics']['data'].keys())
+    minmax_auc_test[model]['y_mins'] = [auc_cases[model]['hof_metrics']['data'][periodo]['auc_min']
+                                        for periodo in list(auc_cases[model]['hof_metrics']['data'].keys())]
+    minmax_auc_test[model]['y_maxs'] = [auc_cases[model]['hof_metrics']['data'][periodo]['auc_max']
+                                        for periodo in list(auc_cases[model]['hof_metrics']['data'].keys())]
 
 # Hacer grafica
-plot_4 = vs.g_timeseries_auc(p_data_auc=0, p_theme=theme_plot_4)
+plot_4 = vs.g_timeseries_auc(p_data_auc=minmax_auc_test, p_theme=theme_plot_4)
 
 # mostrar grafica
 # plot_4.show()
@@ -241,11 +225,16 @@ period_min_auc = {model: {period: {} for period in m_folds} for model in models}
 
 for model in list(models.keys()):
     for period in list(m_folds.keys()):
-        period_max_auc[model][period] = casos[model]['hof_metrics']['data'][period]['auc_max_params']
-        period_min_auc[model][period] = casos[model]['hof_metrics']['data'][period]['auc_min_params']
+        period_max_auc[model][period] = auc_cases[model]['hof_metrics']['data'][period]['auc_max_params']
+        period_min_auc[model][period] = auc_cases[model]['hof_metrics']['data'][period]['auc_min_params']
 
-pd.DataFrame(period_max_auc['model_3']).T
-pd.DataFrame(period_min_auc['model_3']).T
+# Tabla 1: Parametros de modelos para los AUC max y AUC min
+table_2 = {'model_1': {'max': pd.DataFrame(period_max_auc['model_1']),
+                       'min': pd.DataFrame(period_min_auc['model_1'])},
+           'model_2': {'max': pd.DataFrame(period_max_auc['model_2']),
+                       'min': pd.DataFrame(period_min_auc['model_2'])},
+           'model_3': {'max': pd.DataFrame(period_max_auc['model_3']),
+                       'min': pd.DataFrame(period_min_auc['model_3'])}}
 
 # -- PRIORIDAD 5
 # ------------------------------------------------------- hacer una GRAFICA por periodo para cada modelo -- #
