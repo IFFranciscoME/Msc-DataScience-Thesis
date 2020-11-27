@@ -14,7 +14,6 @@ from codigos.datos import price_data
 import codigos.visualizaciones as vs
 from codigos.datos import models, theme_plot_1, theme_plot_2, theme_plot_3, theme_plot_4
 import pandas as pd
-import numpy as np
 
 # primeras pruebas sera con 1 solo periodo
 data_complete = price_data[list(price_data.keys())[9]]
@@ -37,12 +36,11 @@ datos = data_complete
 # ------------------------------------------------------------------------------- ---------------------- -- #
 
 # cargar funcion importada de visualizaciones
-ohlc = vs.g_ohlc(p_ohlc=datos,
-                 p_theme=plot_1['p_theme'], p_dims=plot_1['p_dims'], p_labels=plot_1['p_labels'],
-                 p_vlines=None)
+plot_1 = vs.g_ohlc(p_ohlc=datos, p_theme=theme_plot_1['p_theme'], p_dims=theme_plot_1['p_dims'],
+                   p_labels=theme_plot_1['p_labels'], p_vlines=None)
 
 # mostrar grafica
-# ohlc.show()
+# plot_1.show()
 
 # ----------------------------------------------------------------------- analisis exploratorio de datos -- #
 # ----------------------------------------------------------------------- ------------------------------ -- #
@@ -173,8 +171,8 @@ for fold in m_folds:
 
 # grafica OHLC
 plot_2 = vs.g_ohlc(p_ohlc=datos,
-                   p_theme=plot_1['p_theme'], p_dims=plot_1['p_dims'], p_labels=plot_1['p_labels'],
-                   p_vlines=fechas_folds)
+                   p_theme=theme_plot_2['p_theme'], p_dims=theme_plot_2['p_dims'],
+                   p_labels=theme_plot_2['p_labels'], p_vlines=fechas_folds)
 
 # mostrar grafica
 # plot_2.show()
@@ -196,8 +194,10 @@ pred_class = list(model_data['train']['y_train_pred']) + list(model_data['test']
 pred_class = [-1 if x == 0 else 1 for x in pred_class]
 
 x_series = list(datos['timestamp'])
+
+# Hacer grafica
 plot_3 = vs.g_relative_bars(p_x=x_series, p_y0=obs_class, p_y1=pred_class,
-                            p_theme=plot_1['p_theme'], p_dims=plot_1['p_dims'])
+                            p_theme=theme_plot_3['p_theme'], p_dims=theme_plot_3['p_dims'])
 
 # mostrar grafica
 # plot_3.show()
@@ -221,8 +221,10 @@ for model in models:
                                         for periodo in list(casos[model]['hof_metrics']['data'].keys())]
 
 # Hacer grafica
+plot_4 = vs.g_timeseries_auc(p_data_auc=0, p_theme=theme_plot_4)
 
-plot_4 = g_timeseries_auc(p_data_auc=0, p_theme=theme_plot_4)
+# mostrar grafica
+# plot_4.show()
 
 # -- PRIORIDAD 4
 # --------------------------------------------------------------------- Hacer una TABLA para cada modelo -- #
