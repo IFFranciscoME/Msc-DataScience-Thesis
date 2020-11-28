@@ -301,7 +301,6 @@ def symbolic_features(p_x, p_y):
 
     # dejar en un dataframe las variables
     data = pd.DataFrame(model_fit)
-    # data.columns = list(model.feature_names)
 
     # parametros de modelo
     model_params = model.get_params()
@@ -433,11 +432,36 @@ def ls_svm(p_data, p_params):
 
     Parameters
     ----------
-    p_data
-    p_params
+    p_data: dict
+        Diccionario con datos de entrada como los siguientes:
+
+        p_x: pd.DataFrame
+            with regressors or predictor variables
+            p_x = data_features.iloc[0:30, 3:]
+
+        p_y: pd.DataFrame
+            with variable to predict
+            p_y = data_features.iloc[0:30, 1]
+
+    p_params: dict
+        Diccionario con parametros de entrada para modelos, como los siguientes
+
+        p_kernel: str
+                kernel de LS_SVM
+                p_alpha = ['linear']
+
+        p_c: float
+            Valor de coeficiente C
+            p_ratio = 0.1
+
+        p_gamma: int
+            Valor de coeficiente gamma
+            p_iter = 0.1
 
     Returns
     -------
+    r_models: dict
+        Diccionario con modelos ajustados
 
     References
     ----------
@@ -511,7 +535,7 @@ def ls_svm(p_data, p_params):
     return r_models
 
 
-# --------------------------------------------------------- MODEL: Least Squares Support Vector Machines -- #
+# --------------------------------------------------- MODEL: Artificial Neural Net Multilayer Perceptron -- #
 # --------------------------------------------------------------------------------------------------------- #
 
 def ann_mlp(p_data, p_params):
@@ -520,11 +544,31 @@ def ann_mlp(p_data, p_params):
 
     Parameters
     ----------
-    p_data
-    p_params
+    p_data: dict
+        Diccionario con datos de entrada como los siguientes:
+
+        p_x: pd.DataFrame
+            with regressors or predictor variables
+            p_x = data_features.iloc[0:30, 3:]
+
+        p_y: pd.DataFrame
+            with variable to predict
+            p_y = data_features.iloc[0:30, 1]
+
+    p_params: dict
+
+        Diccionario con parametros de entrada para modelos, como los siguientes
+
+        hidden_layers: ()
+        activation: float
+        alpha: int
+        learning_r: int
+        learning_r_init: int
 
     Returns
     -------
+    r_models: dict
+        Diccionario con modelos ajustados
 
     References
     ----------
@@ -911,7 +955,7 @@ def genetic_algo_optimisation(p_data, p_model):
 
         return {'population': svm_pop, 'logs': svm_log, 'hof': svm_hof}
 
-    # -- ----------------------------------------------- Artifitial Neural Network MultiLayer Perceptron -- #
+    # -- ----------------------------------------------- Artificial Neural Network MultiLayer Perceptron -- #
     # ----------------------------------------------------------------------------------------------------- #
 
     elif p_model['label'] == 'ann-mlp':

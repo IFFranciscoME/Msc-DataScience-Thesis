@@ -65,26 +65,36 @@ for file_f in files_f:
 # ----------------------------------------------------------------------------- ------------------------ -- #
 
 # grafica OHLC
-theme_plot_1 = dict(p_theme={'color_1': '#ABABAB', 'color_2': '#ABABAB', 'color_3': '#ABABAB',
-                             'font_color_1': '#ABABAB', 'font_size_1': 12, 'font_size_2': 16},
+theme_plot_1 = dict(p_theme={'color_1': '#6b6b6b', 'color_2': '#6b6b6b', 'color_3': '#6b6b6b',
+                             'font_color_1': '#ABABAB', 'font_title': 12, 'font_axis': 12},
                     p_dims={'width': 1450, 'height': 800},
-                    p_labels={'title': 'Main title', 'x_title': 'x axis title', 'y_title': 'y axis title'})
+                    p_labels={'title': 'Precios OHLC',
+                              'x_title': 'Fechas', 'y_title': 'Futuros USD/MXN'})
 
 # grafica OHLC + Lineas Verticales para M-Folds
-theme_plot_2 = dict(p_theme={'color_1': '#ABABAB', 'color_2': '#ABABAB', 'color_3': '#ABABAB',
-                             'font_color_1': '#ABABAB', 'font_size_1': 12, 'font_size_2': 16},
+theme_plot_2 = dict(p_theme={'color_1': '#6b6b6b', 'color_2': '#ABABAB', 'color_3': '#ABABAB',
+                             'font_color_1': '#ABABAB', 'font_title': 12, 'font_axis': 12},
                     p_dims={'width': 1450, 'height': 800},
-                    p_labels={'title': 'Main title', 'x_title': 'x axis title', 'y_title': 'y axis title'})
+                    p_labels={'title': 'T-Folds por Bloques Sin Filtraciones',
+                              'x_title': 'Fechas', 'y_title': 'Futuros USD/MXN'})
 
 # Barras de Clasificaciones Observadas Vs Clasificaciones de modelo
 theme_plot_3 = dict(p_theme={'color_1': '#ABABAB', 'color_2': '#ABABAB', 'color_3': '#ABABAB',
-                             'font_color_1': '#ABABAB', 'font_size_1': 12, 'font_size_2': 16},
+                             'font_color_1': '#ABABAB', 'font_title': 12, 'font_axis': 12},
                     p_dims={'width': 1450, 'height': 800},
-                    p_labels={'title': 'Main title', 'x_title': 'x axis title', 'y_title': 'y axis title'})
+                    p_labels={'title': 'Clasificaciones',
+                              'x_title': 'Fechas', 'y_title': 'Clasificacion'})
 
 # Series de Tiempo de las AUC de los modelos
 theme_plot_4 = dict(p_theme={'color_1': '#ABABAB', 'color_2': '#ABABAB', 'color_3': '#ABABAB',
-                             'font_color_1': '#ABABAB', 'font_title': 32, 'font_axis': 18},
+                             'font_color_1': '#ABABAB', 'font_title': 12, 'font_axis': 12},
+                    p_dims={'width': 1450, 'height': 800},
+                    p_labels={'title': 'ROC (Test Data)',
+                              'x_title': 'FPR', 'y_title': 'TPR'})
+
+# Series de Tiempo de las AUC de los modelos
+theme_plot_5 = dict(p_theme={'color_1': '#ABABAB', 'color_2': '#ABABAB', 'color_3': '#ABABAB',
+                             'font_color_1': '#ABABAB', 'font_title': 12, 'font_axis': 12},
                     p_dims={'width': 1450, 'height': 800},
                     p_labels={'title': 'AUC por periodo (Test Data)',
                               'x_title': 'Periodos', 'y_title': 'AUC'})

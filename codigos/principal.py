@@ -8,11 +8,12 @@
 # -- repository: YOUR REPOSITORY URL                                                                     -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
+from sklearn.metrics import auc
 
 import codigos.funciones as fn
 from codigos.datos import price_data
 import codigos.visualizaciones as vs
-from codigos.datos import models, theme_plot_1, theme_plot_2, theme_plot_3, theme_plot_4
+from codigos.datos import models, theme_plot_1, theme_plot_2, theme_plot_3, theme_plot_4, theme_plot_5
 import pandas as pd
 
 # Datos con un solo periodo
@@ -33,11 +34,14 @@ datos = pd.concat([price_data[list(price_data.keys())[6]],
 # --------------------------------------------------------------- -------------------------------------- -- #
 
 # cargar funcion importada de visualizaciones
-plot_1 = vs.g_ohlc(p_ohlc=datos, p_theme=theme_plot_1['p_theme'], p_dims=theme_plot_1['p_dims'],
+plot_1 = vs.g_ohlc(p_ohlc=datos, p_theme=theme_plot_1, p_dims=theme_plot_1['p_dims'],
                    p_labels=theme_plot_1['p_labels'], p_vlines=None)
 
 # mostrar grafica
 # plot_1.show()
+
+# generar grafica en chart studio
+# py.plot(plot_1)
 
 # ----------------------------------------------------------------------- Analisis exploratorio de datos -- #
 # ----------------------------------------------------------------------- ------------------------------ -- #
@@ -168,11 +172,14 @@ for fold in m_folds:
 
 # grafica OHLC
 plot_2 = vs.g_ohlc(p_ohlc=datos,
-                   p_theme=theme_plot_2['p_theme'], p_dims=theme_plot_2['p_dims'],
+                   p_theme=theme_plot_2, p_dims=theme_plot_2['p_dims'],
                    p_labels=theme_plot_2['p_labels'], p_vlines=fechas_folds)
 
 # mostrar grafica
 # plot_2.show()
+
+# generar grafica en chart studio
+# py.plot(plot_2)
 
 # -- PRIORIDAD 2
 # ------------------------------------------------------------ Hacer una GRAFICA para todos los periodos -- #
@@ -193,12 +200,13 @@ x_series = list(datos['timestamp'])
 
 # Hacer grafica
 plot_3 = vs.g_relative_bars(p_x=x_series, p_y0=obs_class, p_y1=pred_class,
-                            p_theme=theme_plot_3['p_theme'], p_dims=theme_plot_3['p_dims'])
+                            p_theme=theme_plot_3, p_dims=theme_plot_3['p_dims'])
 
 # mostrar grafica
 # plot_3.show()
-# plot_3.write_html('presentacion/plot_1.html', full_html=True, include_plotlyjs='cdn')
 
+# generar grafica en chart studio
+# py.plot(plot_3)
 
 # -- PRIORIDAD 3
 # ------------------------------------ Hacer una GRAFICA con AUC_prom por modelo para todos los periodos -- #
@@ -218,10 +226,13 @@ for model in models:
                                         for periodo in list(auc_cases[model]['hof_metrics']['data'].keys())]
 
 # Hacer grafica
-plot_4 = vs.g_timeseries_auc(p_data_auc=minmax_auc_test, p_theme=theme_plot_4)
+plot_5 = vs.g_timeseries_auc(p_data_auc=minmax_auc_test, p_theme=theme_plot_5)
 
 # mostrar grafica
-# plot_4.show()
+# plot_5.show()
+
+# generar grafica en chart studio
+# py.plot(plot_5)
 
 # -- PRIORIDAD 4
 # --------------------------------------------------------------------- Hacer una TABLA para cada modelo -- #
@@ -258,6 +269,14 @@ table_2 = {'model_1': {'max': pd.DataFrame(period_max_auc['model_1']),
 # ejey: TPR
 # leyenda: max AUC, min AUC
 
+plot_4 = vs.g_roc_auc(p_casos=auc_cases, p_theme=theme_plot_4)
+
+# mostrar grafica
+# plot_4.show()
+
+# generar grafica en chart studio
+# py.plot(plot_4)
+
 # -- PRIORIDAD 5
 # -------------------------------------------------------------- hacer una TABLA para todos los periodos -- #
 # -- TITULO: DESEMPEÑO GENERAL DE MODELOS
@@ -274,16 +293,33 @@ table_2 = {'model_1': {'max': pd.DataFrame(period_max_auc['model_1']),
 # Criterio 4 (1% del capital)
 
 
-# -- ----------------------------------------------------------------------- Guardar Objetos Importantes -- #
-# -------------------------------------------------------------------------- --------------------------- -- #
-
-# import pickle
+# -- ---------------------------------------------------------------- Guardar/Cargar Objetos Importantes -- #
+# ------------------------------------------------------------------- ---------------------------------- -- #
 #
+# import pickle
+# # -- leer el archivo
+# with open('pickle.dat', 'rb') as handle:
+#     unserialized_data = pickle.load(handle)
+#
+# # -- Cargar a memoria principal los objetos de interes
+# datos = unserialized_data['datos']
+# m_folds = unserialized_data['m_folds']
+# memory_palace = unserialized_data['memory_palace']
+# models_names = unserialized_data['models_names']
+# auc_cases = unserialized_data['auc_cases']
+# global_cases = unserialized_data['global_cases']
+# global_features = unserialized_data['global_features']
+# model_data = unserialized_data['model_data']
+# minmax_auc_test = unserialized_data['minmax_auc_test']
+
 # pickle_data = {'datos': datos, 'table_1': table_1, 'm_folds': m_folds, 'memory_palace':memory_palace,
 #                'models_names': models_names, 'auc_cases': auc_cases, 'global_cases': global_cases,
 #                'global_features': global_features, 'model_data': model_data,
 #                'minmax_auc_test': minmax_auc_test}
-#
+
+# -- Guardar el archivo
 # PIK = "pickle.dat"
 # with open(PIK, "wb") as f:
 #     pickle.dump(pickle_data, f)
+
+
