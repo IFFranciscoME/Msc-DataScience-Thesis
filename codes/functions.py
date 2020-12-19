@@ -408,11 +408,9 @@ def logistic_net(p_data, p_params):
     # False Positive Rate, True Positive Rate, Thresholds
     fpr_test, tpr_test, thresholds_test = roc_curve(list(y_test), probs_test[:, 1], pos_label=1)
     # Area Under the Curve (ROC) for train data
-    auc_test = roc_auc_score(list(y_test), probs_test[:, 1])
+    auc_test = roc_auc_score(list(y_test), probs_test[:, 1]) 
 
-   
-
-    return r_models
+    return auc_test
 
 
 # --------------------------------------------------------- MODEL: Least Squares Support Vector Machines -- #
