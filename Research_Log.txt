@@ -3,4 +3,6 @@
 |       Type       |             Description            |  TimeStamp (HH:MM day.month.year)  | Time (hours) | Cumulative Time (hours) | 
 | ---------------- | -----------------------------------| ---------------------------------- | ------------ | ----------------------- |
 |                  |                                    |                                    |              |                         |
-|   Repository     | change content to english          | 21:00 18.Dec.2020                  | 1            |                         |
+|   Repository     | change content to english          | 21:00 18.Dec.2020                  | 1.0          |                         |
+|   Repository     | Rearrange folders and files        | 08:00 19.Dec.2020                  | 0.5          |                         |
+|   Repository     | Add funcs from other projects      | 08:30 19.Dec.2020                  | 1.5          |                         |
