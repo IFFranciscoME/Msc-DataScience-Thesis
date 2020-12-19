@@ -4,10 +4,10 @@ __pycache__/
 *$py.class
 
 .idea/
-
 .vscode/
-.codes/venv_thesis/
-workspace.code-workspace
+workspace_thesis.code-workspace
+venv_thesis/
+
 
 # C extensions
 *.so
