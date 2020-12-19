@@ -1,13 +1,24 @@
+
+# ---------- Added manually ---------- #
+
+# pycharm project folder
+.idea/
+
+# vscode project folder
+.vscode/
+
+# vscode project workspace
+workspace_thesis.code-workspace
+
+# virtual environment
+venv_thesis/
+
+# ---------- ------------- ---------- #
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-
-.idea/
-.vscode/
-workspace_thesis.code-workspace
-venv_thesis/
-
 
 # C extensions
 *.so
