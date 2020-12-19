@@ -4,3 +4,6 @@ Bitacora de investigacion
 |          Actividad          |          Tipo          | TimeStamp (HH:MM dia.mes.año)   | Tiempo invertido (horas) | Tiempo acumulado (horas) | 
 | --------------------------- | ---------------------- | ------------------------------- | ------------------------ | ------------------------ |
 |                             |                        |                                 |                          |                          |
+
+https://datascience.stackexchange.com/questions/806/advantages-of-auc-vs-standard-accuracy
+http://notmatthancock.github.io/2015/11/11/auc-and-accuracy.html

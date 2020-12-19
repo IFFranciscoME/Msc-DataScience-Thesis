@@ -410,15 +410,7 @@ def logistic_net(p_data, p_params):
     # Area Under the Curve (ROC) for train data
     auc_test = roc_auc_score(list(y_test), probs_test[:, 1])
 
-    # Return the result of the model
-    r_models = {'results': {'data': {'train': p_y_result_train, 'test': p_y_result_test},
-                            'matrix': {'train': cm_train, 'test': cm_test}},
-                'model': en_model, 'intercept': en_model.intercept_, 'coef': en_model.coef_,
-                'metrics': {'train': {'acc': acc_train, 'tpr': tpr_train, 'fpr': fpr_train,
-                                      'probs': probs_train, 'auc': auc_train},
-                            'test': {'acc': acc_test, 'tpr': tpr_test, 'fpr': fpr_test,
-                                     'probs': probs_test, 'auc': auc_test}},
-                'params': p_params}
+   
 
     return r_models
 
