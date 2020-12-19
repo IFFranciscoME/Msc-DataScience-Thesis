@@ -8,13 +8,15 @@
 # -- repository: YOUR REPOSITORY URL                                                                     -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
-from sklearn.metrics import auc
 
-import codigos.funciones as fn
-from codigos.datos import price_data
-import codigos.visualizaciones as vs
-from codigos.datos import models, theme_plot_1, theme_plot_2, theme_plot_3, theme_plot_4, theme_plot_5
+from sklearn.metrics import auc
 import pandas as pd
+
+import functions as fn
+import visualizations as vs
+import data as dt
+from data import price_data
+from data import models, theme_plot_1, theme_plot_2, theme_plot_3, theme_plot_4, theme_plot_5
 
 # Datos con un solo periodo
 # datos = price_data[list(price_data.keys())[9]]
