@@ -6,8 +6,7 @@ __pycache__/
 .idea/
 
 .vscode/
-.codes/venv_thesis
-.venv_thesis
+.venv_thesis/
 workspace.code-workspace
 
 # C extensions
