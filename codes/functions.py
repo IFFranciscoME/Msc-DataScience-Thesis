@@ -32,7 +32,7 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 # ------------------------------------------------------------------------------- transformacio de datos -- #
 # --------------------------------------------------------------------------------- -------------------- -- #
 
-def f_transformacion(p_datos, p_trans):
+def data_transform(p_datos, p_trans):
     """
     Estandarizar (a cada dato se le resta la media y se divide entre la desviacion estandar) se aplica a
     todas excepto la primera columna del dataframe que se use a la entrada
@@ -82,7 +82,7 @@ def f_transformacion(p_datos, p_trans):
 # ------------------------------------------------------- FUNCTION: Divide the data in M-Folds (montlhy) -- #
 # ------------------------------------------------------- ------------------------------------------------- #
 
-def f_m_folds(p_data, p_periodo):
+def t_folds(p_data, p_periodo):
     """
     Funcion para dividir los datos en m-bloques, donde m es un valor basado en tiempo:
         m={'mensual', 'trimestral'}
@@ -139,7 +139,7 @@ def f_m_folds(p_data, p_periodo):
 # ------------------------------------------------------------------------------ Autoregressive Features -- #
 # --------------------------------------------------------------------------------------------------------- #
 
-def f_autoregressive_features(p_data, p_nmax):
+def autoregressive_features(p_data, p_nmax):
     """
     Creacion de variables de naturaleza autoregresiva (resagos, promedios, diferencias)
 
@@ -224,7 +224,7 @@ def f_autoregressive_features(p_data, p_nmax):
 # ------------------------------------------------------------------------------------ Hadamard Features -- #
 # --------------------------------------------------------------------------------------------------------- #
 
-def f_hadamard_features(p_data, p_nmax):
+def hadamard_features(p_data, p_nmax):
     """
     Creacion de variables haciendo un producto hadamard entre todas las variables
 
@@ -264,49 +264,80 @@ def f_hadamard_features(p_data, p_nmax):
 # ------------------------------------------------------------------ MODEL: Symbolic Features Generation -- #
 # --------------------------------------------------------------------------------------------------------- #
 
-def symbolic_features(p_x, p_y):
+def symbolic_features(p_x, p_y, p_params):
     """
-    Funcion para crear regresores no lineales
+    Feature engineering process with symbolic variables by using genetic programming. 
 
     Parameters
     ----------
-    p_x: pd.DataFrame
+    p_x: pd.DataFrame / np.array / list
         with regressors or predictor variables
-        p_x = data_features.iloc[0:30, 3:]
 
-    p_y: pd.DataFrame
+        p_x = data_features.iloc[:, 1:]
+
+    p_y: pd.DataFrame / np.array / list
         with variable to predict
-        p_y = data_features.iloc[0:30, 1]
+
+        p_y = data_features.iloc[:, 0]
+
+    p_params: dict
+        with parameters for the genetic programming function
+
+        p_params = {'functions': ["sub", "add", 'inv', 'mul', 'div', 'abs', 'log'],
+        'population': 5000, 'tournament':20, 'hof': 20, 'generations': 5, 'n_features':20,
+        'init_depth': (4,8), 'init_method': 'half and half', 'parsimony': 0.1, 'constants': None,
+        'metric': 'pearson', 'metric_goal': 0.65, 
+        'prob_cross': 0.4, 'prob_mutation_subtree': 0.3,
+        'prob_mutation_hoist': 0.1. 'prob_mutation_point': 0.2,
+        'verbose': True, 'random_cv': None, 'parallelization': True, 'warm_start': True }
 
     Returns
     -------
-    score_gp: float
-        error of prediction
+    results: dict
+        With response information
 
+        {'fit': model fitted, 'params': model parameters, 'model': model,
+         'data': generated data with variables, 'best_programs': models best programs}
+
+    References
+    ----------
+    https://gplearn.readthedocs.io/en/stable/reference.html#gplearn.genetic.SymbolicTransformer
+    
     """
+    
+    # Function to produce Symbolic Features
+    model = SymbolicTransformer(function_set=p_params['functions'], population_size=p_params['population'],
+                                tournament_size=p_params['tournament'], hall_of_fame=p_params['hof'],
+                                generations=p_params['generations'], n_components=p_params['n_features'],
 
-    # funcion de generacion de variables simbolicas
-    model = SymbolicTransformer(function_set=["sub", "add", 'inv', 'mul', 'div', 'abs', 'log'],
-                                population_size=5000, hall_of_fame=100, n_components=20,
-                                generations=50, tournament_size=20,  stopping_criteria=.65,
-                                const_range=None, init_method='half and half', init_depth=(4, 16),
-                                metric='pearson', parsimony_coefficient=0.01,
-                                p_crossover=0.4, p_subtree_mutation=0.3, p_hoist_mutation=0.1,
-                                p_point_mutation=0.2, p_point_replace=.05,
-                                verbose=1, random_state=None, n_jobs=-1, feature_names=p_x.columns,
-                                warm_start=True)
+                                init_depth=p_params['init_depth'], init_method=p_params['init_method'],
+                                parsimony_coefficient=p_params['parsimony'],
+                                const_range=p_params['constants'],
+                                
+                                metric=p_params['pearson'], stopping_criteria=p_params['metric_goal'],
 
-    # resultado de ajuste con la funcion SymbolicTransformer
+                                p_crossover=p_params['prob_cross'],
+                                p_subtree_mutation=p_params['prob_mutation_subtree'],
+                                p_hoist_mutation=p_params['prob_mutation_hoist'],
+                                p_point_mutation=p_params['prob_mutation_point'],
+
+                                verbose=p_params['verbose'], warm_start=p_params['warm_start'],
+                                random_state=p_params['random_cv'],
+                                n_jobs=-1 if p_params['parallelization'] else 1,
+                                feature_names=p_x.columns)
+
+    # SymbolicTransformer fit
     model_fit = model.fit_transform(p_x, p_y)
 
-    # dejar en un dataframe las variables
+    # output data of the model
     data = pd.DataFrame(model_fit)
 
-    # parametros de modelo
+    # parameters of the model
     model_params = model.get_params()
 
-    # resultados
-    results = {'fit': model_fit, 'params': model_params, 'model': model, 'data': data}
+    # results
+    results = {'fit': model_fit, 'params': model_params, 'model': model, 'data': data,
+               'best_programs': model._best_programs}
 
     return results
 
@@ -667,7 +698,7 @@ def genetic_programed_features(p_data, p_memory):
     # ----------------------------------------------------------- -------------------------------------- -- #
 
     # funcion para generar variables autoregresivas
-    datos_arf = f_autoregressive_features(p_data=p_data, p_nmax=p_memory)
+    datos_arf = autoregressive_features(p_data=p_data, p_nmax=p_memory)
 
     # separacion de variable dependiente
     datos_y = datos_arf['co_d'].copy()
@@ -682,7 +713,7 @@ def genetic_programed_features(p_data, p_memory):
     # ----------------------------------------------------------------- -------------------------------- -- #
 
     # funcion para generar variables con producto hadamard
-    datos_had = f_hadamard_features(p_data=datos_arf, p_nmax=p_memory)
+    datos_had = hadamard_features(p_data=datos_arf, p_nmax=p_memory)
 
     # --------------------------------------------------------------- ingenieria de variables simbolicas -- #
     # --------------------------------------------------------------- ---------------------------------- -- #
