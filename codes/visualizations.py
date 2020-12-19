@@ -245,7 +245,7 @@ def g_roc_auc(p_casos, p_theme):
                    tickfont=dict(color='grey', size=p_theme['p_theme']['font_axis'])))
 
     fig_rocs.add_shape(type='line', line=dict(width=3, dash='dash', color='grey'), x0=0, x1=1, y0=0, y1=1)
-
+    model_name = ''
     for model in ['model_1', 'model_2', 'model_3']:
         for auc_type in ['auc_min', 'auc_max']:
             p_fpr = p_casos[model][auc_type]['data']['metrics']['train']['fpr']
