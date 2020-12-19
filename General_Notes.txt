@@ -1,0 +1,5 @@
+
+# -- Usefull Difference between AUC & ACC
+
+https://datascience.stackexchange.com/questions/806/advantages-of-auc-vs-standard-accuracy
+http://notmatthancock.github.io/2015/11/11/auc-and-accuracy.html

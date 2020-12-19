@@ -1,0 +1,6 @@
+
+
+|       Type       |             Description            |  TimeStamp (HH:MM day.month.year)  | Time (hours) | Cumulative Time (hours) | 
+| ---------------- | -----------------------------------| ---------------------------------- | ------------ | ----------------------- |
+|                  |                                    |                                    |              |                         |
+|   Repository     | change content to english          | 21:00 18.Dec.2020                  | 1            |                         |
