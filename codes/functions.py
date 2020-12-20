@@ -13,6 +13,8 @@ import pandas as pd
 import numpy as np
 import random
 import warnings
+import data as dt
+from datetime import datetime
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, RobustScaler, MaxAbsScaler
@@ -32,7 +34,7 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 # ------------------------------------------------------------------------------- transformacio de datos -- #
 # --------------------------------------------------------------------------------- -------------------- -- #
 
-def data_transform(p_datos, p_trans):
+def data_scaler(p_data, p_trans):
     """
     Estandarizar (a cada dato se le resta la media y se divide entre la desviacion estandar) se aplica a
     todas excepto la primera columna del dataframe que se use a la entrada
@@ -56,84 +58,102 @@ def data_transform(p_datos, p_trans):
     if p_trans == 'Standard':
 
         # estandarizacion de todas las variables independientes
-        lista = p_datos[list(p_datos.columns[1:])]
+        lista = p_data[list(p_data.columns[1:])]
 
         # armar objeto de salida
-        p_datos[list(p_datos.columns[1:])] = StandardScaler().fit_transform(lista)
+        p_data[list(p_data.columns[1:])] = StandardScaler().fit_transform(lista)
 
     elif p_trans == 'Robust':
 
         # estandarizacion de todas las variables independientes
-        lista = p_datos[list(p_datos.columns[1:])]
+        lista = p_data[list(p_data.columns[1:])]
 
         # armar objeto de salida
-        p_datos[list(p_datos.columns[1:])] = RobustScaler().fit_transform(lista)
+        p_data[list(p_data.columns[1:])] = RobustScaler().fit_transform(lista)
 
     elif p_trans == 'Scale':
 
         # estandarizacion de todas las variables independientes
-        lista = p_datos[list(p_datos.columns[1:])]
+        lista = p_data[list(p_data.columns[1:])]
 
-        p_datos[list(p_datos.columns[1:])] = MaxAbsScaler().fit_transform(lista)
+        p_data[list(p_data.columns[1:])] = MaxAbsScaler().fit_transform(lista)
 
-    return p_datos
+    return p_data
 
 
-# ------------------------------------------------------- FUNCTION: Divide the data in M-Folds (montlhy) -- #
-# ------------------------------------------------------- ------------------------------------------------- #
+# --------------------------------------------------------------------------- Divide the data in T-Folds -- #
+# --------------------------------------------------------------------------- ----------------------------- #
 
-def t_folds(p_data, p_periodo):
+def t_folds(p_data, p_period):
     """
-    Funcion para dividir los datos en m-bloques, donde m es un valor basado en tiempo:
-        m={'mensual', 'trimestral'}
-
+    Function to separate in T-Folds the data, considering not having filtrations (Month and Quarter)
     Parameters
     ----------
     p_data : pd.DataFrame
-        DataFrame con los datos a dividir
-
-    p_periodo : str
-        'mes': Para dividir datos por periodos mensuales
-        'trimestre' para dividir datos por periodos trimestrales
-
+        DataFrame with data
+    p_period : str
+        'month': monthly data division
+        'quarter' quarterly data division
     Returns
     -------
-    {'periodo_': pd.DataFrame}
-
+    m_data or q_data : 'period_'
+    References
+    ----------
+    https://web.stanford.edu/~hastie/ElemStatLearn/
     """
 
-    # For monthly separation of the data
-    if p_periodo == 'mes':
-        # List of months in the dataset
-        months = list(set(time.month for time in list(p_data['timestamp'])))
-        # List of years in the dataset
-        years = list(set(time.year for time in list(p_data['timestamp'])))
-        m_data = {}
-        # New key for every month_year
-        for j in years:
-            m_data.update({'m_' + str('0') + str(i) + '_' + str(j) if i <= 9 else str(i) + '_' + str(j):
-                               p_data[(pd.to_datetime(p_data['timestamp']).dt.month == i) &
-                                      (pd.to_datetime(p_data['timestamp']).dt.year == j)]
-                           for i in months})
-        return m_data
+    # data scaling by standarization
+    # p_data.iloc[:, 1:] = data_scaler(p_data=p_data.copy(), p_trans='Standard')
 
     # For quarterly separation of the data
-    elif p_periodo == 'trimestre':
+    if p_period == 'quarter':
         # List of quarters in the dataset
         quarters = list(set(time.quarter for time in list(p_data['timestamp'])))
         # List of years in the dataset
-        years = list(set(time.year for time in list(p_data['timestamp'])))
+        years = set(time.year for time in list(p_data['timestamp']))
         q_data = {}
         # New key for every quarter_year
-        for j in years:
-            q_data.update({'q_' + str('0') + str(i) + '_' + str(j) if i <= 9 else str(i) + '_' + str(j):
-                               p_data[(pd.to_datetime(p_data['timestamp']).dt.quarter == i) &
-                                      (pd.to_datetime(p_data['timestamp']).dt.year == j)]
+        for y in sorted(list(years)):
+            q_data.update({'q_' + str('0') + str(i) + '_' + str(y) if i <= 9 else str(i) + '_' + str(y):
+                               p_data[(pd.to_datetime(p_data['timestamp']).dt.year == y) &
+                                      (pd.to_datetime(p_data['timestamp']).dt.quarter == i)]
                            for i in quarters})
         return q_data
 
+    # For quarterly separation of the data
+    elif p_period == 'semester':
+        # List of years in the dataset
+        years = set(time.year for time in list(p_data['timestamp']))
+        s_data = {}
+        # New key for every quarter_year
+        for y in sorted(list(years)):
+            # y = sorted(list(years))[0]
+            s_data.update({'s_' + str('0') + str(1) + '_' + str(y):
+                               p_data[(pd.to_datetime(p_data['timestamp']).dt.year == y) &
+                                      ((pd.to_datetime(p_data['timestamp']).dt.quarter == 1) |
+                                      (pd.to_datetime(p_data['timestamp']).dt.quarter == 2))]})
+
+            s_data.update({'s_' + str('0') + str(2) + '_' + str(y):
+                               p_data[(pd.to_datetime(p_data['timestamp']).dt.year == y) &
+                                      ((pd.to_datetime(p_data['timestamp']).dt.quarter == 3) |
+                                       (pd.to_datetime(p_data['timestamp']).dt.quarter == 4))]})
+
+        return s_data
+
+        # For quarterly separation of the data
+    elif p_period == 'year':
+        # List of years in the dataset
+        years = set(time.year for time in list(p_data['timestamp']))
+        y_data = {}
+        # New key for every quarter_year
+        for y in sorted(list(years)):
+            # y = sorted(list(years))[0]
+            y_data.update({'y_' + str(y):
+                               p_data[(pd.to_datetime(p_data['timestamp']).dt.year == y)]})
+        return y_data
+
     # In the case a different label has been receieved
-    return 'Error: verificar parametros de entrada'
+    return 'Error: verify parameters'
 
 
 # ------------------------------------------------------------------------------ Autoregressive Features -- #
@@ -314,7 +334,7 @@ def symbolic_features(p_x, p_y, p_params):
                                 parsimony_coefficient=p_params['parsimony'],
                                 const_range=p_params['constants'],
                                 
-                                metric=p_params['pearson'], stopping_criteria=p_params['metric_goal'],
+                                metric=p_params['metric'], stopping_criteria=p_params['metric_goal'],
 
                                 p_crossover=p_params['prob_cross'],
                                 p_subtree_mutation=p_params['prob_mutation_subtree'],
@@ -340,6 +360,71 @@ def symbolic_features(p_x, p_y, p_params):
                'best_programs': model._best_programs}
 
     return results
+
+
+# -- ---------------------------------------------------- DATA PROCESSING: Metrics for Model Performance -- # 
+# -- ---------------------------------------------------- ---------------------------------------------- -- #
+
+def model_metrics(p_model, p_data):
+    """
+    
+    Parameters
+    ----------
+    p_model: str
+        string with the name of the model
+    
+    p_data: dict
+        With x_train, x_test, y_train, y_test keys of its respective pd.DataFrames
+   
+    Returns
+    -------
+    r_model_metrics
+
+    References
+    ----------
+
+
+    """
+
+    # fitted train values
+    p_y_train_d = p_model.predict(p_data['x_train'])
+    p_y_result_train = pd.DataFrame({'y_train': p_data['y_train'], 'y_train_pred': p_y_train_d})
+    # Confussion matrix
+    cm_train = confusion_matrix(p_y_result_train['y_train'], p_y_result_train['y_train_pred'])
+    # Probabilities of class in train data
+    probs_train = p_model.predict_proba(p_data['x_train'])
+
+    # Accuracy rate
+    acc_train = accuracy_score(list(p_data['y_train']), p_y_train_d)
+    # False Positive Rate, True Positive Rate, Thresholds
+    fpr_train, tpr_train, thresholds = roc_curve(list(p_data['y_train']), probs_train[:, 1], pos_label=1)
+    # Area Under the Curve (ROC) for train data
+    auc_train = roc_auc_score(list(p_data['y_train']), probs_train[:, 1])
+
+    # fitted test values
+    p_y_test_d = p_model.predict(p_data['x_test'])
+    p_y_result_test = pd.DataFrame({'y_test': p_data['y_test'], 'y_test_pred': p_y_test_d})
+    cm_test = confusion_matrix(p_y_result_test['y_test'], p_y_result_test['y_test_pred'])
+    # Probabilities of class in test data
+    probs_test = p_model.predict_proba(p_data['x_test'])
+
+    # Accuracy rate
+    acc_test = accuracy_score(list(p_data['y_test']), p_y_test_d)
+    # False Positive Rate, True Positive Rate, Thresholds
+    fpr_test, tpr_test, thresholds_test = roc_curve(list(p_data['y_test']), probs_test[:, 1], pos_label=1)
+    # Area Under the Curve (ROC) for train data
+    auc_test = roc_auc_score(list(p_data['y_test']), probs_test[:, 1])
+
+     # Return the result of the model
+    r_model_metrics = {'results': {'data': {'train': p_y_result_train, 'test': p_y_result_test},
+                                   'matrix': {'train': cm_train, 'test': cm_test}},
+                       'model': p_model, 
+                       'metrics': {'train': {'acc': acc_train, 'tpr': tpr_train, 'fpr': fpr_train,
+                                      'probs': probs_train, 'auc': auc_train},
+                                   'test': {'acc': acc_test, 'tpr': tpr_test, 'fpr': fpr_test,
+                                            'probs': probs_test, 'auc': auc_test}}}
+
+    return r_model_metrics
 
 
 # -------------------------- MODEL: Multivariate Linear Regression Model with ELASTIC NET regularization -- #
@@ -412,36 +497,11 @@ def logistic_net(p_data, p_params):
     # model fit
     en_model.fit(x_train, y_train)
 
-    # fitted train values
-    p_y_train_d = en_model.predict(x_train)
-    p_y_result_train = pd.DataFrame({'y_train': y_train, 'y_train_pred': p_y_train_d})
-    # Confussion matrix
-    cm_train = confusion_matrix(p_y_result_train['y_train'], p_y_result_train['y_train_pred'])
-    # Probabilities of class in train data
-    probs_train = en_model.predict_proba(x_train)
+   # performance metrics of the model
+    metrics_en_model = model_metrics(p_model=en_model, p_data={'x_train': x_train, 'y_train': y_train,
+                                                               'x_test': x_test, 'y_test': y_test})
 
-    # Accuracy rate
-    acc_train = accuracy_score(list(y_train), p_y_train_d)
-    # False Positive Rate, True Positive Rate, Thresholds
-    fpr_train, tpr_train, thresholds_train = roc_curve(list(y_train), probs_train[:, 1], pos_label=1)
-    # Area Under the Curve (ROC) for train data
-    auc_train = roc_auc_score(list(y_train), probs_train[:, 1])
-
-    # fitted test values
-    p_y_test_d = en_model.predict(x_test)
-    p_y_result_test = pd.DataFrame({'y_test': y_test, 'y_test_pred': p_y_test_d})
-    cm_test = confusion_matrix(p_y_result_test['y_test'], p_y_result_test['y_test_pred'])
-    # Probabilities of class in test data
-    probs_test = en_model.predict_proba(x_test)
-
-    # Accuracy rate
-    acc_test = accuracy_score(list(y_test), p_y_test_d)
-    # False Positive Rate, True Positive Rate, Thresholds
-    fpr_test, tpr_test, thresholds_test = roc_curve(list(y_test), probs_test[:, 1], pos_label=1)
-    # Area Under the Curve (ROC) for train data
-    auc_test = roc_auc_score(list(y_test), probs_test[:, 1]) 
-
-    return auc_test
+    return metrics_en_model
 
 
 # --------------------------------------------------------- MODEL: Least Squares Support Vector Machines -- #
@@ -515,45 +575,11 @@ def ls_svm(p_data, p_params):
     # model fit
     svm_model.fit(x_train, y_train)
 
-    # fitted train values
-    p_y_train_d = svm_model.predict(x_train)
-    p_y_result_train = pd.DataFrame({'y_train': y_train, 'y_train_pred': p_y_train_d})
-    cm_train = confusion_matrix(p_y_result_train['y_train'], p_y_result_train['y_train_pred'])
-    # Probabilities of class in train data
-    probs_train = svm_model.predict_proba(x_train)
+    # performance metrics of the model
+    metrics_svm_model = model_metrics(p_model=svm_model, p_data={'x_train': x_train, 'y_train': y_train,
+                                                                 'x_test': x_test, 'y_test': y_test})
 
-    # Accuracy rate
-    acc_train = accuracy_score(list(y_train), p_y_train_d)
-    # False Positive Rate, True Positive Rate, Thresholds
-    fpr_train, tpr_train, thresholds_train = roc_curve(list(y_train), probs_train[:, 1], pos_label=1)
-    # Area Under the Curve (ROC) for train data
-    auc_train = roc_auc_score(list(y_train), probs_train[:, 1])
-
-    # fitted test values
-    p_y_test_d = svm_model.predict(x_test)
-    p_y_result_test = pd.DataFrame({'y_test': y_test, 'y_test_pred': p_y_test_d})
-    cm_test = confusion_matrix(p_y_result_test['y_test'], p_y_result_test['y_test_pred'])
-    # Probabilities of class in test data
-    probs_test = svm_model.predict_proba(x_test)
-
-    # Accuracy rate
-    acc_test = accuracy_score(list(y_test), p_y_test_d)
-    # False Positive Rate, True Positive Rate, Thresholds
-    fpr_test, tpr_test, thresholds_test = roc_curve(list(y_test), probs_test[:, 1], pos_label=1)
-    # Area Under the Curve (ROC) for train data
-    auc_test = roc_auc_score(list(y_test), probs_test[:, 1])
-
-    # Return the result of the model
-    r_models = {'results': {'data': {'train': p_y_result_train, 'test': p_y_result_test},
-                            'matrix': {'train': cm_train, 'test': cm_test}},
-                'model': svm_model,
-                'metrics': {'train': {'acc': acc_train, 'tpr': tpr_train, 'fpr': fpr_train,
-                                      'probs': probs_train, 'auc': auc_train},
-                            'test': {'acc': acc_test, 'tpr': tpr_test, 'fpr': fpr_test,
-                                     'probs': probs_test, 'auc': auc_test}},
-                'params': p_params}
-
-    return r_models
+    return metrics_svm_model
 
 
 # --------------------------------------------------- MODEL: Artificial Neural Net Multilayer Perceptron -- #
@@ -616,53 +642,19 @@ def ann_mlp(p_data, p_params):
                               learning_rate=p_params['learning_r'],
                               learning_rate_init=p_params['learning_r_init'],
 
-                              batch_size='auto', solver='sgd', power_t=0.5, max_iter=80000, shuffle=False,
-                              random_state=None, tol=1e-3, verbose=False, warm_start=False, momentum=0.5,
-                              nesterovs_momentum=True, early_stopping=True, validation_fraction=0.1,
-                              n_iter_no_change=10)
+                              batch_size='auto', solver='sgd', power_t=0.5, max_iter=10000, shuffle=False,
+                              random_state=None, tol=1e-7, verbose=False, warm_start=True, momentum=0.8,
+                              nesterovs_momentum=True, early_stopping=True, validation_fraction=0.2,
+                              n_iter_no_change=100)
 
     # model fit
     mlp_model.fit(x_train, y_train)
 
-    # fitted train values
-    p_y_train_d = mlp_model.predict(x_train)
-    p_y_result_train = pd.DataFrame({'y_train': y_train, 'y_train_pred': p_y_train_d})
-    cm_train = confusion_matrix(p_y_result_train['y_train'], p_y_result_train['y_train_pred'])
-    # Probabilities of class in train data
-    probs_train = mlp_model.predict_proba(x_train)
+    # performance metrics of the model
+    metrics_mlp_model = model_metrics(p_model=mlp_model, p_data={'x_train': x_train, 'y_train': y_train,
+                                                                 'x_test': x_test, 'y_test': y_test})
 
-    # Accuracy rate
-    acc_train = accuracy_score(list(y_train), p_y_train_d)
-    # False Positive Rate, True Positive Rate, Thresholds
-    fpr_train, tpr_train, thresholds_train = roc_curve(list(y_train), probs_train[:, 1], pos_label=1)
-    # Area Under the Curve (ROC) for train data
-    auc_train = roc_auc_score(list(y_train), probs_train[:, 1])
-
-    # fitted test values
-    p_y_test_d = mlp_model.predict(x_test)
-    p_y_result_test = pd.DataFrame({'y_test': y_test, 'y_test_pred': p_y_test_d})
-    cm_test = confusion_matrix(p_y_result_test['y_test'], p_y_result_test['y_test_pred'])
-    # Probabilities of class in test data
-    probs_test = mlp_model.predict_proba(x_test)
-
-    # Accuracy rate
-    acc_test = accuracy_score(list(y_test), p_y_test_d)
-    # False Positive Rate, True Positive Rate, Thresholds
-    fpr_test, tpr_test, thresholds_test = roc_curve(list(y_test), probs_test[:, 1], pos_label=1)
-    # Area Under the Curve (ROC) for test data
-    auc_test = roc_auc_score(list(y_test), probs_test[:, 1])
-
-    # Return the result of the model
-    r_models = {'results': {'data': {'train': p_y_result_train, 'test': p_y_result_test},
-                            'matrix': {'train': cm_train, 'test': cm_test}},
-                'model': mlp_model,
-                'metrics': {'train': {'acc': acc_train, 'tpr': tpr_train, 'fpr': fpr_train,
-                                      'probs': probs_train, 'auc': auc_train},
-                            'test': {'acc': acc_test, 'tpr': tpr_test, 'fpr': fpr_test,
-                                     'probs': probs_test, 'auc': auc_test}},
-                'params': p_params}
-
-    return r_models
+    return metrics_mlp_model
 
 
 # ----------------------- FUNCTION: Simultaneous Feature Engieering/Selection & Hyperparameter Optimizer -- #
@@ -719,7 +711,7 @@ def genetic_programed_features(p_data, p_memory):
     # --------------------------------------------------------------- ---------------------------------- -- #
 
     # Lista de operaciones simbolicas
-    fun_sym = symbolic_features(p_x=datos_had, p_y=datos_y)
+    fun_sym = symbolic_features(p_x=datos_had, p_y=datos_y, p_params=dt.symbolic_params)
 
     # variables
     datos_sym = fun_sym['data']
@@ -747,7 +739,7 @@ def genetic_programed_features(p_data, p_memory):
 # -------------------------------------------------------------------------- FUNCTION: Genetic Algorithm -- #
 # ------------------------------------------------------- ------------------------------------------------- #
 
-def genetic_algo_optimisation(p_data, p_model):
+def genetic_algo_optimization(p_data, p_model):
     """
     El uso de algoritmos geneticos para optimizacion de hiperparametros de varios modelos
 
@@ -1088,25 +1080,282 @@ def genetic_algo_optimisation(p_data, p_model):
     return 'error, sin modelo seleccionado'
 
 
-# ------------------------------------------------------------------------------ Evaluaciones en periodo -- #
+# -------------------------------------------------------------------------- Model Evaluations by period -- #
 # --------------------------------------------------------------------------------------------------------- #
 
-def evaluaciones_periodo(p_features, p_optim_data, p_model):
+def model_evaluations(p_features, p_optim_data, p_model):
 
     for params in list(p_optim_data):
 
-        if p_model == 'model_1':
+        if p_model == 'logistic-elasticnet':
             parameters = {'ratio': params[0], 'c': params[1]}
 
             return logistic_net(p_data=p_features, p_params=parameters)
 
-        elif p_model == 'model_2':
+        elif p_model == 'ls-svm':
             parameters = {'c': params[0], 'kernel': params[1], 'gamma': params[2]}
 
             return ls_svm(p_data=p_features, p_params=parameters)
 
-        elif p_model == 'model_3':
+        elif p_model == 'ann-mlp':
             parameters = {'hidden_layers': params[0], 'activation': params[1], 'alpha': params[2],
                           'learning_r': params[3], 'learning_r_init': params[4]}
 
             return ann_mlp(p_data=p_features, p_params=parameters)
+
+
+# -------------------------------------------------------------------------- Model Evaluations by period -- #
+# --------------------------------------------------------------------------------------------------------- #
+
+def fold_evaluation(p_data_folds, p_models, p_saving, p_file_name):
+    """
+    Global evaluations for specified data folds for specified models
+
+    Parameters
+    ----------
+    p_data_folds: dict
+
+    p_models: list
+
+    p_saving: bool
+
+    p_file_name: str
+
+    Returns
+    -------
+    memory_palace: dict
+
+    """
+
+    # main data structure for calculations
+    memory_palace = {j: {i: {'e_hof': [], 'p_hof': [], 'time': [], 'features': {}}
+                         for i in p_data_folds} for j in list(dt.models.keys())}
+
+    # cycle to iterate all periods for all models
+    for period in p_data_folds:
+        for model in p_models:
+
+            # time measurement
+            init = datetime.now()
+
+            print('\n')
+            print('----------------------------')
+            print('modelo: ', model)
+            print('periodo: ', period)
+            print('----------------------------')
+            print('\n')
+            print('--------------------- Feature Engineering on the Current Fold ----------------------')
+            print('--------------------- --------------------------------------- ----------------------')
+
+            # scale data of the corresponding fold to evaluate
+            data_folds = data_scaler(p_data=p_data_folds[period].copy(), p_trans='Standard')
+
+            # Feature engineering (Autoregressive, Hadamard, Symbolic)
+            m_features = genetic_programed_features(p_data=data_folds, p_memory=7)
+
+            # Save features used in the evaluation in memory_palace
+            memory_palace[model][period]['features'] = m_features
+
+            # Optimization
+            print('\n')
+            print('------------------- Hyperparameter Optimization on the Current Fold ----------------')
+            print('------------------- ----------------------------------------------- ----------------')
+
+            # -- model optimization and evaluation for every element in the Hall of Fame for every period
+            # optimization process
+            hof_model = genetic_algo_optimization(p_data=m_features, p_model=dt.models[model])
+
+            # evaluation process
+            for i in range(0, len(list(hof_model['hof']))):
+                hof_eval = model_evaluations(p_features=m_features, p_model=model,
+                                             p_optim_data=hof_model['hof'])
+
+                # save evaluation in memory_palace
+                memory_palace[model][period]['e_hof'].append(hof_eval)
+
+                # save the parameters from optimization process
+                memory_palace[model][period]['p_hof'].append(hof_model)
+
+            # time measurement
+            end = datetime.now()
+            print("\nElapsed Time =", end - init)
+            memory_palace[model][period]['time'] = end - init
+
+    # -- --------------------------------------------------------------------- Save Data for offline use -- #
+
+    if p_saving:
+        # objects to be saved
+        pickle_rick = {'data': dt.ohlc_data, 'models': p_models,
+                       't_folds': p_data_folds, 'memory_palace': memory_palace}
+
+        # pickle format function
+        dt.data_save_load(p_data_objects=pickle_rick,
+                          p_data_file=p_file_name,
+                          p_data_action='save')
+
+    return memory_palace
+
+
+# -------------------------------------------------------------------------------- Model Global Features -- #
+# --------------------------------------------------------------------------------------------------------- #
+
+def model_features(p_model_data, p_memory, p_model, p_global_cases, p_cases):
+
+    # import sympy as sym
+
+    data_arf = autoregressive_features(p_data=p_model_data.copy(), p_nmax=p_memory)
+    # independent (explanatory) candidate variables separation
+    data_arf = data_arf.drop(['timestamp', 'co', 'co_d'], axis=1, inplace=False)
+    # function to generate hadamard product features
+    data_had = hadamard_features(p_data=data_arf.copy(), p_nmax=p_memory)
+    features = pd.concat([data_arf.copy(), data_had.copy()], axis=1)
+
+    period = p_cases[p_model]['auc_min']['period']
+    equations = p_global_cases[p_model][period]['features']['features_eq']
+
+    # -- MISSING -- #
+    # HOW TO TAKE THE EQUATION GENERATED BY THE GENETIC PROGRAMMING PART, AND, EVALUATE IT WITH
+    # THE INFORMATION OF THE COLUMN IN THE DATA, PRODUCE THE FEATURE.
+
+    return 1
+
+
+# ------------------------------------------------------------------------------ Model Global Evaluation -- #
+# --------------------------------------------------------------------------------------------------------- #
+
+def global_evaluation(p_data, p_memory, p_global_cases, p_models, p_cases):
+    """
+    Evaluation of models with global data and features for particular selected cases of parameters
+
+    Parameters
+    ----------
+    p_data: dict
+        The data to use in the model evaluation
+
+    p_memory: int
+        Memory value for the timeseries calculations
+
+    p_global_cases: pd.DataFrame
+        with all the features (inputs)
+
+    p_models: list
+        with the models name
+
+    p_cases: dict
+        with the information of the min and max AUC cases
+
+    Returns
+    -------
+    global_auc_cases: dict
+        with the evaluations
+
+    """
+
+    # Evaluation of auc_min and auc_max cases in all the models
+    global_auc_cases = {model: {'auc_min': {}, 'auc_max': {}} for model in p_models}
+
+    # Evaluate all global cases
+    for model in p_models:
+        for case in ['auc_min', 'auc_max']:
+
+            if model == 'logistic-elasticnet':
+
+                # Calculate case features, according to the information of the features used in
+                # the min AUC and max AUC found for the particular model
+                case_features = model_features(p_model_data=p_data, p_memory=p_memory,
+                                               p_model='logistic-elasticnet',
+                                               p_global_cases=p_global_cases,
+                                               p_cases=p_cases)
+
+                # get the results of the input features into the model with the optimised parameters
+                global_auc_cases[model][case] = logistic_net(p_data=case_features,
+                                                             p_params=p_cases[model][case]['data']['params'])
+            elif model == 'ls-svm':
+
+                # Calculate case features, according to the information of the features used in
+                # the min AUC and max AUC found for the particular model
+                case_features = model_features(p_model_data=p_data, p_memory=p_memory,
+                                               p_model='ls-svm',
+                                               p_global_cases=p_global_cases,
+                                               p_cases=p_cases)
+
+                # get the results of the input features into the model with the optimised parameters
+                global_auc_cases[model][case] = ls_svm(p_data=case_features,
+                                                       p_params=p_cases[model][case]['data']['params'])
+            elif model == 'ann-mlp':
+
+                # Calculate case features, according to the information of the features used in
+                # the min AUC and max AUC found for the particular model
+                case_features = model_features(p_model_data=p_data, p_memory=p_memory,
+                                               p_model='ann-mlp',
+                                               p_global_cases=p_global_cases,
+                                               p_cases=p_cases)
+
+                # get the results of the input features into the model with the optimised parameters
+                global_auc_cases[model][case] = ann_mlp(p_data=case_features,
+                                                        p_params=p_cases[model][case]['data']['params'])
+
+    return global_auc_cases
+
+
+# -------------------------------------------------------------------------- Model AUC Min and Max Cases -- #
+# --------------------------------------------------------------------------------------------------------- #
+
+def model_auc(p_models, p_global_cases, p_data_folds):
+    """
+    AUC min and max cases for the models
+    Parameters
+    ----------
+    p_models: list
+        with the models name
+    p_global_cases: dict
+        With all the info for the global cases
+    p_data_folds: dict
+        with all the historical data info in folds
+    Returns
+    -------
+    auc_cases:dict
+        with all the info of the min and the max case for every model
+    """
+
+    # diccionario para almacenar resultados de busqueda
+    auc_cases = {j: {i: {'data': {}, 'period':''}
+                     for i in ['auc_min', 'auc_max', 'hof_metrics']} for j in p_models}
+
+    # ciclo para busqueda de auc_min y auc_max
+    for model in p_models:
+        auc_min = 1
+        auc_max = 0
+        auc_max_params = {}
+        auc_min_params = {}
+        for period in p_data_folds:
+            auc_cases[model]['hof_metrics']['data'][period] = {}
+            auc_s = []
+            for i in range(0, 10):
+                auc_s.append(p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc'])
+
+                # -- caso 1
+                # El individuo de todos los HOF de todos los periodos que produjo la minima AUC
+                if p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc'] < auc_min:
+                    auc_min = p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc']
+                    auc_cases[model]['auc_min']['data'] = p_global_cases[model][period]['e_hof'][i]
+                    auc_cases[model]['auc_min']['period'] = period
+                    auc_min_params = p_global_cases[model][period]['e_hof'][i]['params']
+
+                # -- caso 2
+                # El individuo de todos los HOF de todos los periodos que produjo la maxima AUC
+                elif p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc'] > auc_max:
+                    auc_max = p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc']
+                    auc_cases[model]['auc_max']['data'] = p_global_cases[model][period]['e_hof'][i]
+                    auc_cases[model]['auc_max']['period'] = period
+                    auc_max_params = p_global_cases[model][period]['e_hof'][i]['params']
+
+            # Guardar info por periodo
+            auc_cases[model]['hof_metrics']['data'][period]['auc_s'] = auc_s
+            auc_cases[model]['hof_metrics']['data'][period]['auc_max'] = auc_max
+            auc_cases[model]['hof_metrics']['data'][period]['auc_max_params'] = auc_max_params
+            auc_cases[model]['hof_metrics']['data'][period]['auc_min'] = auc_min
+            auc_cases[model]['hof_metrics']['data'][period]['auc_min_params'] = auc_min_params
+
+    return auc_cases
+
