@@ -393,6 +393,9 @@ def model_metrics(p_model, p_data):
     cm_train = confusion_matrix(p_y_result_train['y_train'], p_y_result_train['y_train_pred'])
     # Probabilities of class in train data
     probs_train = p_model.predict_proba(p_data['x_train'])
+    # in case of a nan, replace it with zero (to prevent errors)
+    probs_train = np.nan_to_num(probs_train)
+    
 
     # Accuracy rate
     acc_train = accuracy_score(list(p_data['y_train']), p_y_train_d)
@@ -407,6 +410,8 @@ def model_metrics(p_model, p_data):
     cm_test = confusion_matrix(p_y_result_test['y_test'], p_y_result_test['y_test_pred'])
     # Probabilities of class in test data
     probs_test = p_model.predict_proba(p_data['x_test'])
+    # in case of a nan, replace it with zero (to prevent errors)
+    probs_test = np.nan_to_num(probs_test)
 
     # Accuracy rate
     acc_test = accuracy_score(list(p_data['y_test']), p_y_test_d)
@@ -860,8 +865,12 @@ def genetic_algo_optimization(p_data, p_model):
         # Genetic Algorithm Implementation
         en_pop, en_log = algorithms.eaSimple(population=en_pop, toolbox=toolbox_en, stats=stats,
                                              cxpb=crossover_probability, mutpb=mutation_probability,
-                                             ngen=number_of_generations,
-                                             halloffame=en_hof, verbose=True)
+                                             ngen=number_of_generations, halloffame=en_hof, verbose=True)
+
+        # transform the deap objects into list so it can be serialized and stored with pickle
+        en_pop = [list(pop) for pop in list(en_pop)]
+        en_log = [list(log) for log in list(en_log)]
+        en_hof = [list(hof) for hof in list(en_hof)]
 
         return {'population': en_pop, 'logs': en_log, 'hof': en_hof}
 
@@ -963,8 +972,12 @@ def genetic_algo_optimization(p_data, p_model):
         # Genetic Algortihm implementation
         svm_pop, svm_log = algorithms.eaSimple(population=svm_pop, toolbox=toolbox_svm, stats=stats,
                                                cxpb=crossover_probability, mutpb=mutation_probability,
-                                               ngen=number_of_generations,
-                                               halloffame=svm_hof, verbose=True)
+                                               ngen=number_of_generations, halloffame=svm_hof, verbose=True)
+
+        # transform the deap objects into list so it can be serialized and stored with pickle
+        svm_pop = [list(pop) for pop in list(svm_pop)]
+        svm_log = [list(log) for log in list(svm_log)]
+        svm_hof = [list(hof) for hof in list(svm_hof)]
 
         return {'population': svm_pop, 'logs': svm_log, 'hof': svm_hof}
 
@@ -1072,8 +1085,12 @@ def genetic_algo_optimization(p_data, p_model):
         # ga algorithjm
         mlp_pop, mlp_log = algorithms.eaSimple(population=mlp_pop, toolbox=toolbox_mlp, stats=stats,
                                                cxpb=crossover_probability, mutpb=mutation_probability,
-                                               ngen=number_of_generations,
-                                               halloffame=mlp_hof, verbose=True)
+                                               ngen=number_of_generations, halloffame=mlp_hof, verbose=True)
+
+        # transform the deap objects into list so it can be serialized and stored with pickle
+        mlp_pop = [list(pop) for pop in list(mlp_pop)]
+        mlp_log = [list(log) for log in list(mlp_log)]
+        mlp_hof = [list(hof) for hof in list(mlp_hof)]
 
         return {'population': mlp_pop, 'logs': mlp_log, 'hof': mlp_hof}
 
@@ -1128,8 +1145,8 @@ def fold_evaluation(p_data_folds, p_models, p_saving, p_file_name):
     """
 
     # main data structure for calculations
-    memory_palace = {j: {i: {'e_hof': [], 'p_hof': [], 'time': [], 'features': {}}
-                         for i in p_data_folds} for j in list(dt.models.keys())}
+    memory_palace = {j: {i: {'e_hof': {}, 'p_hof': {}, 'time': [], 'features': {}}
+                            for i in p_data_folds} for j in list(dt.models.keys())}
 
     # cycle to iterate all periods for all models
     for period in p_data_folds:
@@ -1140,8 +1157,8 @@ def fold_evaluation(p_data_folds, p_models, p_saving, p_file_name):
 
             print('\n')
             print('----------------------------')
-            print('modelo: ', model)
-            print('periodo: ', period)
+            print('model: ', model)
+            print('period: ', period)
             print('----------------------------')
             print('\n')
             print('--------------------- Feature Engineering on the Current Fold ----------------------')
@@ -1166,15 +1183,13 @@ def fold_evaluation(p_data_folds, p_models, p_saving, p_file_name):
             hof_model = genetic_algo_optimization(p_data=m_features, p_model=dt.models[model])
 
             # evaluation process
-            for i in range(0, len(list(hof_model['hof']))):
-                hof_eval = model_evaluations(p_features=m_features, p_model=model,
-                                             p_optim_data=hof_model['hof'])
+            hof_eval = model_evaluations(p_features=m_features, p_model=model, p_optim_data=hof_model['hof'])
 
-                # save evaluation in memory_palace
-                memory_palace[model][period]['e_hof'].append(hof_eval)
+            # save evaluation in memory_palace
+            memory_palace[model][period]['e_hof'] = hof_eval
 
-                # save the parameters from optimization process
-                memory_palace[model][period]['p_hof'].append(hof_model)
+            # save the parameters from optimization process
+            memory_palace[model][period]['p_hof'] = hof_model
 
             # time measurement
             end = datetime.now()

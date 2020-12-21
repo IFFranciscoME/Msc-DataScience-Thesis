@@ -14,17 +14,18 @@ import pandas as pd
 import functions as fn
 import visualizations as vs
 import data as dt
+from data import price_data
 from datetime import datetime
 
-# Two periods (fast run)
-data = pd.concat([dt.price_data[list(dt.price_data.keys())[0]], dt.price_data[list(dt.price_data.keys())[1]]])
+# One period (fast run)
+data = pd.concat([price_data[list(price_data.keys())[0]]])
 
 # All periods (slow run)
-# data = pd.concat([dt.price_data[list(dt.price_data.keys())[0]], dt.price_data[list(dt.price_data.keys())[1]],
-#                  dt.price_data[list(dt.price_data.keys())[2]], dt.price_data[list(dt.price_data.keys())[3]],
-#                  dt.price_data[list(dt.price_data.keys())[4]], dt.price_data[list(dt.price_data.keys())[5]],
-#                  dt.price_data[list(dt.price_data.keys())[6]], dt.price_data[list(dt.price_data.keys())[7]],
-#                  dt.price_data[list(dt.price_data.keys())[8]], dt.price_data[list(dt.price_data.keys())[9]]])
+# data = pd.concat([dt.price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
+#                  dt.price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
+#                  dt.price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]],
+#                  dt.price_data[list(price_data.keys())[6]], price_data[list(price_data.keys())[7]],
+#                  dt.price_data[list(price_data.keys())[8]], price_data[list(price_data.keys())[9]]])
 
 # --------------------------------------------------------------- PLOT 1: USD/MXN OHLC HISTORICAL PRICES -- #
 # --------------------------------------------------------------- -------------------------------------- -- #
@@ -33,7 +34,7 @@ data = pd.concat([dt.price_data[list(dt.price_data.keys())[0]], dt.price_data[li
 plot_1 =vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_1, p_vlines=None)
 
 # Show plot in script
-plot_1.show()
+# plot_1.show()
 
 # Generate plot online with chartstudio
 # py.plot(plot_1)
@@ -44,27 +45,23 @@ plot_1.show()
 # table with data description
 table_1 = data.describe()
 
-# --------------------------------------------------------------------- Division en K-Folds por periodos -- #
-# --------------------------------------------------------------------- -------------------------------- -- #
+# ------------------------------------------------------------------- TIMESERIES FOLDS FOR DATA DIVISION -- #
+# ------------------------------------------------------------------- ---------------------------------- -- #
 
-# Division de periodos de datos, sin filtracion
-# en amplitudes de 'trimestre' para obtener 4 folds por cada año
+# Timeseries data division in t-folds
 t_folds = fn.t_folds(p_data=data, p_period='quarter')
-# eliminar el ultimo trimestre por que estara incompleto
-t_folds.pop('q_04_2020', None)
 
 # -- ----------------------------------------------------------------- PLOT 2: Time Series Block T-Folds -- #
 # -- ----------------------------------------------------------------- --------------------------------- -- #
 
-# construccion de fechas para lineas verticales de division de cada fold
+# Dates for vertical lines in the T-Folds plot
 dates_folds = []
 for fold in list(t_folds.keys()):
     dates_folds.append(t_folds[fold]['timestamp'].iloc[0])
     dates_folds.append(t_folds[fold]['timestamp'].iloc[-1])
 
-
 # plot_1 with t-folds vertical lines
-# plot_2 = vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_2, p_vlines=dates_folds)
+plot_2 = vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_2, p_vlines=dates_folds)
 
 # Show plot in script
 # plot_2.show()
@@ -79,7 +76,7 @@ for fold in list(t_folds.keys()):
 ml_models = list(dt.models.keys())
 
 # File name to save the data
-file_name = 'genetic_net_quarter.dat'
+file_name = 'files/pickle_rick/genetic_net_quarter.dat'
 
 # ---------------------------------------------------------------- WARNING: TAKES HOURS TO RUN THIS PART -- #
 # Measure the begining of the code execution process
@@ -89,8 +86,6 @@ print(ini_time)
 # Main code to produce global evaluation for every t-fold for every model ()
 memory_palace = fn.fold_evaluation(p_data_folds=t_folds, p_models=ml_models, 
                                    p_saving=False, p_file_name=file_name)
-# Save data
-dt.data_save_load(p_data_objects=memory_palace, p_data_action='save', p_data_file=file_name)
 
 # Measure the end of the code execution process
 end_time = datetime.now()
@@ -98,8 +93,7 @@ print(end_time)
 # ------------------------------------------------------------------------------------------------------ -- #
 
 # Load previously generated data
-# memory_palace = dt.data_save_load(p_data_objects=None, p_data_action='load',
-#                                   p_data_file='files/pickle_rick/' + file_name)
+memory_palace_s = dt.data_save_load(p_data_objects=None, p_data_action='load', p_data_file=file_name)
 
 # -- -------------------------------------------------------------------- PROCESS: AUC min and max cases -- #
 # -- -------------------------------------------------------------------- ------------------------------ -- #

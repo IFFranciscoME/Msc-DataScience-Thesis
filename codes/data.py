@@ -105,7 +105,7 @@ ohlc_data.reset_index(inplace=True, drop=True)
 # --------------------------------------------------------------------- -------------------------------- -- #
 
 symbolic_params = {'functions': ["sub", "add", 'inv', 'mul', 'div', 'abs', 'log'],
-                   'population': 5000, 'tournament':20, 'hof': 20, 'generations': 5, 'n_features':20,
+                   'population': 5000, 'tournament':20, 'hof': 20, 'generations': 5, 'n_features':10,
                    'init_depth': (4,8), 'init_method': 'half and half', 'parsimony': 0.1, 'constants': None,
                    'metric': 'pearson', 'metric_goal': 0.65, 
                    'prob_cross': 0.4, 'prob_mutation_subtree': 0.3,
@@ -117,29 +117,10 @@ symbolic_params = {'functions': ["sub", "add", 'inv', 'mul', 'div', 'abs', 'log'
 
 # data dictionary for models and their respective hyperparameter value candidates
 models = {
-    'ann-mlp': {
-        'label': 'ann-mlp',
-        'params': {'hidden_layers': [(5, ), (10, ), (5, 5), (10, 5), (10, 10),
-                                     (5, ), (10, ), (5, 5), (10, 5), (10, 10)],
-                   'activation': ['relu', 'relu', 'relu', 'relu', 'relu',
-                                  'logistic', 'logistic', 'logistic', 'logistic', 'logistic'],
-                   'alpha': [0.005, 0.1, 0.05, 0.02, 0.01, 0.005, 0.1, 0.05, 0.02, 0.01],
-                   'learning_r': ['constant', 'constant', 'constant', 'constant', 'constant',
-                                  'adaptive', 'adaptive', 'adaptive', 'adaptive', 'adaptive'],
-                   'learning_r_init': [0.2, 0.1, 0.02, 0.01, 0.001, 0.2, 0.1, 0.02, 0.01, 0.001]}},
-
     'logistic-elasticnet': {
         'label': 'logistic-elasticnet',
         'params': {'ratio': [0.05, 0.10, 0.20, 0.30, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00],
-                   'c': [1.5, 1.1, 1, 0.8, 0.5, 1.5, 1.1, 1, 0.8, 0.5]}},
-
-    'ls-svm': {
-        'label': 'ls-svm',
-        'params': {'c': [1.5, 1.1, 1, 0.8, 0.5, 1.5, 1.1, 1, 0.8, 0.5],
-                   'kernel': ['linear', 'linear', 'linear', 'linear', 'linear',
-                              'rbf', 'rbf', 'rbf', 'rbf', 'rbf'],
-                   'gamma': ['scale', 'scale', 'scale', 'scale', 'scale',
-                             'auto', 'auto', 'auto', 'auto', 'auto']}}}
+                   'c': [1.5, 1.1, 1, 0.8, 0.5, 1.5, 1.1, 1, 0.8, 0.5]}}}
 
 # ------------------------------------------------------------------------------------- Themes for plots -- #
 # ------------------------------------------------------------------------------------- ---------------- -- #
@@ -207,7 +188,7 @@ def data_save_load(p_data_objects, p_data_action, p_data_file):
             pickle.dump(p_data_objects, f)
 
         # Return message
-        return 'Data saved in' + p_data_file + 'file'
+        return 'Data saved in' + p_data_file + ' file'
 
     # if loading is required
     elif p_data_action == 'load':
