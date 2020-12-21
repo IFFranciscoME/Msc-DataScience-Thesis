@@ -80,7 +80,7 @@ def g_ohlc(p_ohlc, p_theme, p_vlines):
                                         opacity=0.7))
 
     # Layout for margin, and both x and y axes
-    fig_g_ohlc.update_layout(margin=go.layout.Margin(l=50, r=50, b=20, t=50, pad=20),
+    fig_g_ohlc.update_layout(margin=go.layout.Margin(l=50, r=50, b=20, t=60, pad=20),
                              xaxis=dict(title_text=p_labels['x_title']),
                              yaxis=dict(title_text=p_labels['y_title']))
 
@@ -182,7 +182,7 @@ def g_ohlc_class(p_ohlc, p_theme, p_data_class, p_vlines):
     fig_g_ohlc = go.Figure()
 
     # Layout for margin, and both x and y axes
-    fig_g_ohlc.update_layout(margin=go.layout.Margin(l=50, r=50, b=20, t=50, pad=20),
+    fig_g_ohlc.update_layout(margin=go.layout.Margin(l=50, r=50, b=20, t=60, pad=20),
                              xaxis=dict(title_text=p_labels['x_title']),
                              yaxis=dict(title_text=p_labels['y_title']))
 
@@ -231,7 +231,7 @@ def g_ohlc_class(p_ohlc, p_theme, p_data_class, p_vlines):
         # add v_lines to the layout
         fig_g_ohlc.update_layout(shapes=shapes_list)
 
-    # Formato para titulo
+    # Legend format
     fig_g_ohlc.update_layout(legend=go.layout.Legend(x=.35, y=-.3, orientation='h',
                                                      bordercolor='dark grey',
                                                      borderwidth=1,
@@ -257,6 +257,12 @@ def g_ohlc_class(p_ohlc, p_theme, p_data_class, p_vlines):
 
 def g_roc_auc(p_casos, p_theme):
 
+    # default value for lables to use in main title, and both x and y axisp_fonts
+    if p_theme['p_labels'] is not None:
+        p_labels = p_theme['p_labels']
+    else:
+        p_labels = {'title': 'Main title', 'x_title': 'x axis title', 'y_title': 'y axis title'}
+
     # p_casos = casos
     fig_rocs = go.Figure()
     fig_rocs.update_layout(
@@ -266,6 +272,11 @@ def g_roc_auc(p_casos, p_theme):
         yaxis=dict(title_text=p_theme['p_labels']['y_title'],
                    tickfont=dict(color='grey', size=p_theme['p_theme']['font_axis'])))
 
+    # Layout for margin, and both x and y axes
+    fig_rocs.update_layout(margin=go.layout.Margin(l=50, r=50, b=20, t=60, pad=20),
+                             xaxis=dict(title_text=p_labels['x_title']),
+                             yaxis=dict(title_text=p_labels['y_title']))
+                             
     fig_rocs.add_shape(type='line', line=dict(width=3, dash='dash', color='grey'), x0=0, x1=1, y0=0, y1=1)
     model_name = ''
     for model in ['model_1', 'model_2', 'model_3']:
@@ -287,11 +298,11 @@ def g_roc_auc(p_casos, p_theme):
                 fig_rocs.add_trace(go.Scatter(x=p_fpr, y=p_tpr, name=model_name,
                                               mode='lines+markers', line=dict(width=2, color='blue')))
 
-    # Formato para titulo
-    fig_rocs.update_layout(legend=go.layout.Legend(x=.090, y=-0.11, orientation='h',
+    # Legend format
+    fig_rocs.update_layout(legend=go.layout.Legend(x=.35, y=-.3, orientation='h',
                                                      bordercolor='dark grey',
                                                      borderwidth=1,
-                                                     font=dict(size=12)))
+                                                     font=dict(size=p_theme['p_fonts']['font_axis'])))
 
     # Formato de tamanos
     fig_rocs.layout.autosize = True
@@ -328,13 +339,20 @@ def g_timeseries_auc(p_data_auc, p_theme):
 
     """
 
+    # default value for lables to use in main title, and both x and y axisp_fonts
+    if p_theme['p_labels'] is not None:
+        p_labels = p_theme['p_labels']
+    else:
+        p_labels = {'title': 'Main title', 'x_title': 'x axis title', 'y_title': 'y axis title'}
+
     fig_ts_auc = go.Figure()
+
     fig_ts_auc.update_layout(
         title=dict(x=0.5, text='Grafica 5:' + '<b> ' + p_theme['p_labels']['title'] + ' </b>'),
         xaxis=dict(title_text=p_theme['p_labels']['x_title'],
-                   tickfont=dict(color='grey', size=p_theme['p_theme']['font_axis'])),
+                   tickfont=dict(color='grey', size=p_theme['p_fonts']['font_axis'])),
         yaxis=dict(title_text=p_theme['p_labels']['y_title'],
-                   tickfont=dict(color='grey', size=p_theme['p_theme']['font_axis'])))
+                   tickfont=dict(color='grey', size=p_theme['p_fonts']['font_axis'])))
 
     fig_ts_auc.add_trace(go.Scatter(x=p_data_auc['model_1']['x_period'],
                                     y=p_data_auc['model_1']['y_mins'],
@@ -384,27 +402,86 @@ def g_timeseries_auc(p_data_auc, p_theme):
                                     name='ann-mlp (min)',
                                     mode='markers+lines'))
 
-    # # Update layout for the background
-    # fig_ts_auc.update_layout(paper_bgcolor='white', title_font_size=p_theme['p_theme']['font_title'],
-    #                          yaxis=dict(tickvals=np.arange(0, 1.1, 0.1), zeroline=False, automargin=True,
-    #                                     titlefont=dict(size=p_theme['p_theme']['font_axis']+4)),
-    #                          xaxis=dict(titlefont=dict(size=p_theme['p_theme']['font_axis']+4)))
-
-    # Formato para titulo
-    fig_ts_auc.update_layout(legend=go.layout.Legend(x=.1, y=-0.21, orientation='h',
+    # Legend format
+    fig_ts_auc.update_layout(legend=go.layout.Legend(x=.35, y=-.3, orientation='h',
                                                      bordercolor='dark grey',
                                                      borderwidth=1,
-                                                     font=dict(size=16)))
+                                                     font=dict(size=p_theme['p_fonts']['font_axis'])))
+
+    # Update layout for the background
+    fig_ts_auc.update_layout(title_font_size=p_theme['p_fonts']['font_title'],
+                             title=dict(x=0.5, text='<b> ' + p_labels['title'] + ' </b>'),
+                             yaxis=dict(title=p_labels['y_title'],
+                                        titlefont=dict(size=p_theme['p_fonts']['font_axis'] + 4)),
+                             xaxis=dict(title=p_labels['x_title'], rangeslider=dict(visible=False),
+                                        titlefont=dict(size=p_theme['p_fonts']['font_axis'] + 4)))
 
     # Formato de tamanos
     fig_ts_auc.layout.autosize = True
     fig_ts_auc.layout.width = p_theme['p_dims']['width']
     fig_ts_auc.layout.height = p_theme['p_dims']['height']
 
-    # Para generar el plot y visualizarlo en explorador
-    # fig_ts_auc.show()
-
-    # Para generar el plot con URL en chart studio
-    # py.plot(fig_ts_auc)
-
     return fig_ts_auc
+
+
+# -- ----------------------------------------------------------------------------------- PLOT: ROC + ACU -- #
+# -- --------------------------------------------------------------------------------------------------- -- #
+
+def g_roc_auc(p_cases, p_models, p_type, p_theme):
+
+    # default value for lables to use in main title, and both x and y axisp_fonts
+    if p_theme['p_labels'] is not None:
+        p_labels = p_theme['p_labels']
+    else:
+        p_labels = {'title': 'Main title', 'x_title': 'x axis title', 'y_title': 'y axis title'}
+
+    # p_casos = casos
+    fig_rocs = go.Figure()
+
+    # Layout for margin, and both x and y axes
+    fig_rocs.update_layout(margin=go.layout.Margin(l=50, r=50, b=20, t=60, pad=20),
+                           xaxis=dict(title_text=p_labels['x_title']),
+                           yaxis=dict(title_text=p_labels['y_title']))
+    
+    fig_rocs.update_layout(
+        title=dict(x=0.5, text=p_theme['p_labels']['title']),
+        xaxis=dict(title_text=p_theme['p_labels']['x_title'],
+                   tickfont=dict(color='grey', size=p_theme['p_fonts']['font_axis'])),
+        yaxis=dict(title_text=p_theme['p_labels']['y_title'],
+                   tickfont=dict(color='grey', size=p_theme['p_fonts']['font_axis'])))
+
+    fig_rocs.add_shape(type='line', line=dict(width=3, dash='dash', color='grey'), x0=0, x1=1, y0=0, y1=1)
+
+    for model in p_models:
+        for auc_type in ['auc_min', 'auc_max']:
+            p_fpr = p_cases[model][auc_type]['data']['metrics'][p_type]['fpr']
+            p_tpr = p_cases[model][auc_type]['data']['metrics'][p_type]['tpr']
+
+            if auc_type == 'auc_min':
+                fig_rocs.add_trace(go.Scatter(x=p_fpr, y=p_tpr, name='auc_min: ' + model,
+                                              mode='lines+markers', line=dict(width=2, color='red')))
+            elif auc_type == 'auc_max':
+                fig_rocs.add_trace(go.Scatter(x=p_fpr, y=p_tpr, name='auc_max: ' + model,
+                                              mode='lines+markers', line=dict(width=2, color='blue')))
+
+    # Legend format
+    fig_rocs.update_layout(legend=go.layout.Legend(x=.34, y=-.26, orientation='h',
+                                                   bordercolor='dark grey',
+                                                   borderwidth=1,
+                                                   font=dict(size=p_theme['p_fonts']['font_axis'])))
+
+    # Update layout for the background
+    fig_rocs.update_layout(title_font_size=p_theme['p_fonts']['font_title'],
+                           title=dict(x=0.5, text='<b> ' + p_labels['title'] + ' </b>'),
+                           yaxis=dict(title=p_labels['y_title'],
+                                      titlefont=dict(size=p_theme['p_fonts']['font_axis'] + 4)),
+                           xaxis=dict(title=p_labels['x_title'], rangeslider=dict(visible=False),
+                                      titlefont=dict(size=p_theme['p_fonts']['font_axis'] + 4)))
+
+    # Formato de tamanos
+    fig_rocs.layout.autosize = True
+    fig_rocs.layout.width = p_theme['p_dims']['width']
+    fig_rocs.layout.height = p_theme['p_dims']['height']
+
+    return fig_rocs
+

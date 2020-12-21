@@ -5,7 +5,7 @@
 # -- Script: main.py : python script with the main functionality                                         -- #
 # -- Author: IFFranciscoME                                                                               -- #
 # -- License: GPL-3.0 License                                                                            -- #
-# -- Repository:                                                                      -- #
+# -- Repository:                                                                                         -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 
@@ -76,7 +76,7 @@ plot_2 = vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_2, p_vlines=dates_folds)
 ml_models = list(dt.models.keys())
 
 # File name to save the data
-file_name = 'files/pickle_rick/genetic_net_quarter.dat'
+file_name = 'files/pickle_rick/genetic_net_quarter_logistic.dat'
 
 # ---------------------------------------------------------------- WARNING: TAKES HOURS TO RUN THIS PART -- #
 # Measure the begining of the code execution process
@@ -84,8 +84,8 @@ ini_time = datetime.now()
 print(ini_time)
 
 # Main code to produce global evaluation for every t-fold for every model ()
-memory_palace = fn.fold_evaluation(p_data_folds=t_folds, p_models=ml_models, 
-                                   p_saving=False, p_file_name=file_name)
+# memory_palace = fn.fold_evaluation(p_data_folds=t_folds, p_models=ml_models, 
+#                                    p_saving=True, p_file_name=file_name)
 
 # Measure the end of the code execution process
 end_time = datetime.now()
@@ -93,7 +93,8 @@ print(end_time)
 # ------------------------------------------------------------------------------------------------------ -- #
 
 # Load previously generated data
-memory_palace_s = dt.data_save_load(p_data_objects=None, p_data_action='load', p_data_file=file_name)
+memory_palace = dt.data_save_load(p_data_objects=None, p_data_action='load', p_data_file=file_name)
+memory_palace = memory_palace['memory_palace']
 
 # -- -------------------------------------------------------------------- PROCESS: AUC min and max cases -- #
 # -- -------------------------------------------------------------------- ------------------------------ -- #
@@ -101,26 +102,50 @@ memory_palace_s = dt.data_save_load(p_data_objects=None, p_data_action='load', p
 # min and max AUC cases for the models
 auc_cases = fn.model_auc(p_models=ml_models, p_global_cases=memory_palace, p_data_folds=t_folds)
 
-# -- ----------------------------------------------------------------- PROCESS: Model Global Performance -- #
-# -- ----------------------------------------------------------------- --------------------------------- -- #
-
-# # model performance for all models, with the min and max AUC parameters
-global_evaluations = fn.global_evaluation(p_data=data, p_memory=7, p_global_cases=memory_palace,
-                                          p_models=ml_models, p_cases=auc_cases)
-
-# -- ----------------------------------------------------------------------------- AUC Min and Max cases -- #
+# -- --------------------------------------------------------------- PLOT 3: Classification Fold Results -- #
 # -- ----------------------------------------------------------------------------- --------------------- -- #
 
-# min and max AUC cases for the models
-auc_cases = fn.model_auc(p_models=ml_models, p_global_cases=memory_palace, p_data_folds=t_folds)
+# pick case
+case = 'max'
 
-minmax_auc_test = {i: {'x_period': [], 'y_mins': [], 'y_maxs': []} for i in ml_models}
+# pick model to generate the plot
+auc_model = 'logistic-elasticnet'
 
-# get the cases where auc was min and max in all the periods
-for model in ml_models:
-    minmax_auc_test[model]['x_period'] = list(auc_cases[model]['hof_metrics']['data'].keys())
-    minmax_auc_test[model]['y_mins'] = [auc_cases[model]['hof_metrics']['data'][periodo]['auc_min']
-                                        for periodo in list(auc_cases[model]['hof_metrics']['data'].keys())]
-    minmax_auc_test[model]['y_maxs'] = [auc_cases[model]['hof_metrics']['data'][periodo]['auc_max']
-                                        for periodo in list(auc_cases[model]['hof_metrics']['data'].keys())]
+# generate title
+auc_title = 'max AUC for: ' + auc_model + ' found in period: ' + auc_cases[auc_model]['auc_max']['period']
 
+# plot title
+dt.theme_plot_3['p_labels']['title'] = auc_title
+
+# get data from auc_cases
+train_y = auc_cases[auc_model]['auc' + '_' + case]['data']['results']['data']['train']
+test_y = auc_cases[auc_model]['auc' + '_' + case]['data']['results']['data']['test']
+
+# get data for prices and predictions
+ohlc_prices = t_folds[auc_cases[auc_model]['auc' + '_' + case]['period']]
+ohlc_class = {'train_y': train_y['y_train'], 'train_y_pred': train_y['y_train_pred'],
+              'test_y': test_y['y_test'], 'test_y_pred': test_y['y_test_pred']}
+
+# make plot
+plot_3 = vs.g_ohlc_class(p_ohlc=ohlc_prices, p_theme=dt.theme_plot_3, p_data_class=ohlc_class, p_vlines=None)
+
+# visualize plot
+# plot_3.show()
+
+# -- ------------------------------------------------------------------ PLOT 4: ROC and AUC Fold Results -- #
+# -- ------------------------------------------------------------------ -------------------------------- -- #
+
+# plot title
+dt.theme_plot_4['p_labels']['title'] = 'max/min AUC cases'
+
+# Timeseries of the AUCs
+plot_4_folds = vs.g_roc_auc(p_cases=auc_cases, p_type='test', p_models=ml_models, p_theme=dt.theme_plot_4)
+
+# offline plot
+# plot_4_folds.show()
+
+# -- ----------------------------------------------------------- Global Result with AUC Cases Parameters -- #
+# -- ----------------------------------------------------------- --------------------------------------- -- #
+
+# -- ----------------------------------------------------------------- PLOT 5: Timeseries AUC for Models -- #
+# -- ----------------------------------------------------------------- --------------------------------- -- #

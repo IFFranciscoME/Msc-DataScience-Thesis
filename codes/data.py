@@ -130,21 +130,21 @@ theme_plot_1 = dict(p_colors={'color_1': '#6b6b6b', 'color_2': '#ABABAB', 'color
                     p_fonts={'font_title': 18, 'font_axis': 10, 'font_ticks': 10},
                     p_dims={'width': 900, 'height': 400},
                     p_labels={'title': 'Precios OHLC',
-                              'x_title': 'Fechas', 'y_title': 'Futuros USD/MXN'})
+                              'x_title': 'Dates', 'y_title': 'Continuous Future Prices USD/MXN'})
 
 # Plot_2 : Timeseries T-Folds blocks without filtration
 theme_plot_2 = dict(p_colors={'color_1': '#6b6b6b', 'color_2': '#ABABAB', 'color_3': '#ABABAB'},
                     p_fonts={'font_title': 18, 'font_axis': 10, 'font_ticks': 10},
                     p_dims={'width': 900, 'height': 500},
                     p_labels={'title': 'T-Folds por Bloques Sin Filtraciones',
-                              'x_title': 'Fechas', 'y_title': 'Futuros USD/MXN'})
+                              'x_title': 'Fechas', 'y_title': 'Continuous Future Prices USD/MXN'})
 
 # Plot_3 Observed Class vs Predicted Class
 theme_plot_3 = dict(p_colors={'color_1': '#6b6b6b', 'color_2': '#ABABAB', 'color_3': '#ABABAB'},
                     p_fonts={'font_title': 18, 'font_axis': 10, 'font_ticks': 10},
                     p_dims={'width': 900, 'height': 500},
-                    p_labels={'title': 'Clasificaciones',
-                              'x_title': 'Fechas', 'y_title': 'Clasificacion'})
+                    p_labels={'title': 'Clasifications',
+                              'x_title': 'Dates', 'y_title': 'Continuous Future Price USD/MXN'})
 
 # Plot_4 ROC of models
 theme_plot_4 = dict(p_colors={'color_1': '#6b6b6b', 'color_2': '#ABABAB', 'color_3': '#ABABAB'},

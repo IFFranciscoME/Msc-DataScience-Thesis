@@ -1145,7 +1145,7 @@ def fold_evaluation(p_data_folds, p_models, p_saving, p_file_name):
     """
 
     # main data structure for calculations
-    memory_palace = {j: {i: {'e_hof': {}, 'p_hof': {}, 'time': [], 'features': {}}
+    memory_palace = {j: {i: {'e_hof': [], 'p_hof': {}, 'time': [], 'features': {}}
                             for i in p_data_folds} for j in list(dt.models.keys())}
 
     # cycle to iterate all periods for all models
@@ -1183,10 +1183,12 @@ def fold_evaluation(p_data_folds, p_models, p_saving, p_file_name):
             hof_model = genetic_algo_optimization(p_data=m_features, p_model=dt.models[model])
 
             # evaluation process
-            hof_eval = model_evaluations(p_features=m_features, p_model=model, p_optim_data=hof_model['hof'])
+            for i in range(0, len(list(hof_model['hof']))):
+                hof_eval = model_evaluations(p_features=m_features, p_model=model,
+                                                p_optim_data=hof_model['hof'])
 
-            # save evaluation in memory_palace
-            memory_palace[model][period]['e_hof'] = hof_eval
+                # save evaluation in memory_palace
+                memory_palace[model][period]['e_hof'].append(hof_eval)
 
             # save the parameters from optimization process
             memory_palace[model][period]['p_hof'] = hof_model
@@ -1339,11 +1341,13 @@ def model_auc(p_models, p_global_cases, p_data_folds):
 
     # ciclo para busqueda de auc_min y auc_max
     for model in p_models:
+        # model = p_models[0]
         auc_min = 1
         auc_max = 0
         auc_max_params = {}
         auc_min_params = {}
         for period in p_data_folds:
+            # period = 'q_01_2011'
             auc_cases[model]['hof_metrics']['data'][period] = {}
             auc_s = []
             for i in range(0, 10):
@@ -1355,7 +1359,7 @@ def model_auc(p_models, p_global_cases, p_data_folds):
                     auc_min = p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc']
                     auc_cases[model]['auc_min']['data'] = p_global_cases[model][period]['e_hof'][i]
                     auc_cases[model]['auc_min']['period'] = period
-                    auc_min_params = p_global_cases[model][period]['e_hof'][i]['params']
+                    auc_min_params = p_global_cases[model][period]['p_hof']['hof'][i]
 
                 # -- caso 2
                 # El individuo de todos los HOF de todos los periodos que produjo la maxima AUC
@@ -1363,7 +1367,7 @@ def model_auc(p_models, p_global_cases, p_data_folds):
                     auc_max = p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc']
                     auc_cases[model]['auc_max']['data'] = p_global_cases[model][period]['e_hof'][i]
                     auc_cases[model]['auc_max']['period'] = period
-                    auc_max_params = p_global_cases[model][period]['e_hof'][i]['params']
+                    auc_max_params = p_global_cases[model][period]['p_hof']['hof'][i]
 
             # Guardar info por periodo
             auc_cases[model]['hof_metrics']['data'][period]['auc_s'] = auc_s
