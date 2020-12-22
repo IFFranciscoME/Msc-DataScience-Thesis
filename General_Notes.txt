@@ -3,3 +3,20 @@
 
 https://datascience.stackexchange.com/questions/806/advantages-of-auc-vs-standard-accuracy
 http://notmatthancock.github.io/2015/11/11/auc-and-accuracy.html
+
+# T-Fold method
+# -- Divide all the data in T-folds
+# -- Create Symbolic Features in each T-Fold (add the entire HoF with best N individuals)
+# -- Optimize parameters using Symbolic Features in each T-Fold (save the HoF with best N cases)
+# -- Calculate and plot model metrics in each T-Fold (for the entire Hall of Fame)
+# -- -- metrics: AUC and ACC
+# -- -- plots: all the ROCs + mean ROC + mean+1std ROCs
+
+# -- (Pending) Extract Symbolic Feature generated in a Fold and use them in the rest of the folds
+# -- (Pending) Extract optimal parameters found in a fold and use them in the rest of the folds
+# -- (Pending) Reach the goal 1 and 2 with the "Best of the Hall of Fame of all of the Hall of Fames"
+# -- (Pending) Reach the goal 1 and 2 with the "Worst of the Hall of Fame of all of the Hall of Fames"
+# -- (Pending) Evaluate "best of the best" and "worst of the best"
+# -- (Pending) Calculate and plot model metrics in global ("Best of the best" and "worst of the best")
+# -- -- metrics: AUC and ACC
+# -- -- plots: all the ROCs + mean ROC + mean+1std ROCs
