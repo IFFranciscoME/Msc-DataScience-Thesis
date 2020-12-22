@@ -87,18 +87,15 @@ for file_f in files_f:
     for year_f in years_f:
         price_data['MP_D_' + year_f] = data_f
 
-# whole data sets integrated
-ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
-                       price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
-                       price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]],
-                       price_data[list(price_data.keys())[6]], price_data[list(price_data.keys())[7]],
-                       price_data[list(price_data.keys())[8]], price_data[list(price_data.keys())[9]]])
+# One period data concatenation (Fast run of main.py)
+ohlc_data = pd.concat([price_data[list(price_data.keys())[0]]])
 
-# Co
-# ohlc_data = pd.concat([price_data[list(price_data.keys())[10]]])
-
-# reset index
-ohlc_data.reset_index(inplace=True, drop=True)
+# All periods data concatenation (Slow run of main.py)
+# ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
+#                        price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
+#                        price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]],
+#                        price_data[list(price_data.keys())[6]], price_data[list(price_data.keys())[7]],
+#                        price_data[list(price_data.keys())[8]], price_data[list(price_data.keys())[9]]])
 
 
 # --------------------------------------------------------------------- Parameters for Symbolic Features -- #
@@ -106,7 +103,7 @@ ohlc_data.reset_index(inplace=True, drop=True)
 
 symbolic_params = {'functions': ["sub", "add", 'inv', 'mul', 'div', 'abs', 'log'],
                    'population': 5000, 'tournament':20, 'hof': 20, 'generations': 5, 'n_features':10,
-                   'init_depth': (4,8), 'init_method': 'half and half', 'parsimony': 0.1, 'constants': None,
+                   'init_depth': (4,8), 'init_method': 'half and half', 'parsimony': 0, 'constants': None,
                    'metric': 'pearson', 'metric_goal': 0.65, 
                    'prob_cross': 0.4, 'prob_mutation_subtree': 0.3,
                    'prob_mutation_hoist': 0.1, 'prob_mutation_point': 0.2,
@@ -117,10 +114,31 @@ symbolic_params = {'functions': ["sub", "add", 'inv', 'mul', 'div', 'abs', 'log'
 
 # data dictionary for models and their respective hyperparameter value candidates
 models = {
+
     'logistic-elasticnet': {
         'label': 'logistic-elasticnet',
         'params': {'ratio': [0.05, 0.10, 0.20, 0.30, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00],
-                   'c': [1.5, 1.1, 1, 0.8, 0.5, 1.5, 1.1, 1, 0.8, 0.5]}}}
+                   'c': [1.5, 1.1, 1, 0.8, 0.5, 1.5, 1.1, 1, 0.8, 0.5]}},
+
+    'l1-svm': {
+        'label': 'l1-svm',
+        'params': {'c': [1.5, 1.1, 1, 0.8, 0.5, 1.5, 1.1, 1, 0.8, 0.5],
+                   'kernel': ['linear', 'linear', 'linear', 'linear', 'linear',
+                              'rbf', 'rbf', 'rbf', 'rbf', 'rbf'],
+                   'gamma': ['scale', 'scale', 'scale', 'scale', 'scale',
+                             'auto', 'auto', 'auto', 'auto', 'auto']}},
+
+    'ann-mlp': {
+        'label': 'ann-mlp',
+        'params': {'hidden_layers': [(5, ), (10, ), (5, 5), (10, 5), (10, 10),
+                                     (5, ), (10, ), (5, 5), (10, 5), (10, 10)],
+                   'activation': ['relu', 'relu', 'relu', 'relu', 'relu',
+                                  'logistic', 'logistic', 'logistic', 'logistic', 'logistic'],
+                   'alpha': [0.005, 0.1, 0.05, 0.02, 0.01, 0.005, 0.1, 0.05, 0.02, 0.01],
+                   'learning_r': ['constant', 'constant', 'constant', 'constant', 'constant',
+                                  'adaptive', 'adaptive', 'adaptive', 'adaptive', 'adaptive'],
+                   'learning_r_init': [0.2, 0.1, 0.02, 0.01, 0.001, 0.2, 0.1, 0.02, 0.01, 0.001]}}}
+
 
 # ------------------------------------------------------------------------------------- Themes for plots -- #
 # ------------------------------------------------------------------------------------- ---------------- -- #

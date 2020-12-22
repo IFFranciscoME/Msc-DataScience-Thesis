@@ -355,9 +355,20 @@ def symbolic_features(p_x, p_y, p_params):
     # parameters of the model
     model_params = model.get_params()
 
+    # best programs dataframe
+    best_programs = {}
+    for p in model._best_programs:
+        factor_name = 'sym' + str(model._best_programs.index(p) + 1)
+        best_programs[factor_name] = {'fitness': p.fitness_, 'expression': str(p),
+                                      'depth': p.depth_, 'length': p.length_}
+
+    # format and sorting
+    best_programs = pd.DataFrame(best_programs).T
+    best_programs = best_programs.sort_values(by='fitness', ascending=False)
+
     # results
     results = {'fit': model_fit, 'params': model_params, 'model': model, 'data': data,
-               'best_programs': model._best_programs}
+               'best_programs': best_programs, 'details': model.run_details_}
 
     return results
 
@@ -716,14 +727,11 @@ def genetic_programed_features(p_data, p_memory):
     # --------------------------------------------------------------- ---------------------------------- -- #
 
     # Lista de operaciones simbolicas
-    fun_sym = symbolic_features(p_x=datos_had, p_y=datos_y, p_params=dt.symbolic_params)
+    sym_data = symbolic_features(p_x=datos_had, p_y=datos_y, p_params=dt.symbolic_params)
 
     # variables
-    datos_sym = fun_sym['data']
-    datos_sym.columns = ['sym_' + str(i) for i in range(0, len(fun_sym['data'].iloc[0, :]))]
-
-    # ecuaciones de todas las variables
-    # equaciones = [i.__str__() for i in list(fun_sym['model'])]
+    datos_sym = sym_data['data']
+    datos_sym.columns = ['sym_' + str(i) for i in range(0, len(sym_data['data'].iloc[0, :]))]
 
     # datos para utilizar en la siguiente etapa
     datos_modelo = pd.concat([datos_arf.copy(), datos_had.copy(), datos_sym.copy()], axis=1)
@@ -738,7 +746,7 @@ def genetic_programed_features(p_data, p_memory):
     model_data['test_x'] = xtest
     model_data['test_y'] = ytest
 
-    return model_data
+    return {'model_data': model_data, 'sym_data': sym_data}
 
 
 # -------------------------------------------------------------------------- FUNCTION: Genetic Algorithm -- #
@@ -877,7 +885,7 @@ def genetic_algo_optimization(p_data, p_model):
     # -- --------------------------------------------------------- Least Squares Support Vector Machines -- #
     # ----------------------------------------------------------------------------------------------------- #
 
-    elif p_model['label'] == 'ls-svm':
+    elif p_model['label'] == 'l1-svm':
 
         # borrar clases previas si existen
         try:
@@ -1109,7 +1117,7 @@ def model_evaluations(p_features, p_optim_data, p_model):
 
             return logistic_net(p_data=p_features, p_params=parameters)
 
-        elif p_model == 'ls-svm':
+        elif p_model == 'l1-svm':
             parameters = {'c': params[0], 'kernel': params[1], 'gamma': params[2]}
 
             return ls_svm(p_data=p_features, p_params=parameters)
@@ -1158,7 +1166,7 @@ def fold_evaluation(p_data_folds, p_models, p_saving, p_file_name):
             print('\n')
             print('----------------------------')
             print('model: ', model)
-            print('period: ', period)
+            print('period:', period)
             print('----------------------------')
             print('\n')
             print('--------------------- Feature Engineering on the Current Fold ----------------------')
@@ -1170,8 +1178,11 @@ def fold_evaluation(p_data_folds, p_models, p_saving, p_file_name):
             # Feature engineering (Autoregressive, Hadamard, Symbolic)
             m_features = genetic_programed_features(p_data=data_folds, p_memory=7)
 
-            # Save features used in the evaluation in memory_palace
-            memory_palace[model][period]['features'] = m_features
+            # Save data of features used in the evaluation in memory_palace
+            memory_palace[model][period]['features'] = m_features['model_data']
+
+            # Save equations of features used in the evaluation in memory_palace
+            memory_palace[model][period]['sym_features'] = m_features['sym_data']
 
             # Optimization
             print('\n')
@@ -1180,11 +1191,11 @@ def fold_evaluation(p_data_folds, p_models, p_saving, p_file_name):
 
             # -- model optimization and evaluation for every element in the Hall of Fame for every period
             # optimization process
-            hof_model = genetic_algo_optimization(p_data=m_features, p_model=dt.models[model])
+            hof_model = genetic_algo_optimization(p_data=m_features['model_data'], p_model=dt.models[model])
 
             # evaluation process
             for i in range(0, len(list(hof_model['hof']))):
-                hof_eval = model_evaluations(p_features=m_features, p_model=model,
+                hof_eval = model_evaluations(p_features=m_features['model_data'], p_model=model,
                                                 p_optim_data=hof_model['hof'])
 
                 # save evaluation in memory_palace
@@ -1287,12 +1298,12 @@ def global_evaluation(p_data, p_memory, p_global_cases, p_models, p_cases):
                 # get the results of the input features into the model with the optimised parameters
                 global_auc_cases[model][case] = logistic_net(p_data=case_features,
                                                              p_params=p_cases[model][case]['data']['params'])
-            elif model == 'ls-svm':
+            elif model == 'l1-svm':
 
                 # Calculate case features, according to the information of the features used in
                 # the min AUC and max AUC found for the particular model
                 case_features = model_features(p_model_data=p_data, p_memory=p_memory,
-                                               p_model='ls-svm',
+                                               p_model='l1-svm',
                                                p_global_cases=p_global_cases,
                                                p_cases=p_cases)
 
@@ -1353,7 +1364,8 @@ def model_auc(p_models, p_global_cases, p_data_folds):
             for i in range(0, 10):
                 auc_s.append(p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc'])
 
-                # -- caso 1
+                # -- Case 1
+                # get the individual of all of the HoF 
                 # El individuo de todos los HOF de todos los periodos que produjo la minima AUC
                 if p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc'] < auc_min:
                     auc_min = p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc']
@@ -1369,12 +1381,15 @@ def model_auc(p_models, p_global_cases, p_data_folds):
                     auc_cases[model]['auc_max']['period'] = period
                     auc_max_params = p_global_cases[model][period]['p_hof']['hof'][i]
 
+            # Get features used for every case, therefore, for min and max AUC cases
+            features = p_global_cases[model][period]['features']['train_x']
+
             # Guardar info por periodo
             auc_cases[model]['hof_metrics']['data'][period]['auc_s'] = auc_s
             auc_cases[model]['hof_metrics']['data'][period]['auc_max'] = auc_max
             auc_cases[model]['hof_metrics']['data'][period]['auc_max_params'] = auc_max_params
             auc_cases[model]['hof_metrics']['data'][period]['auc_min'] = auc_min
             auc_cases[model]['hof_metrics']['data'][period]['auc_min_params'] = auc_min_params
+            auc_cases[model]['hof_metrics']['data'][period]['features'] = features
 
     return auc_cases
-

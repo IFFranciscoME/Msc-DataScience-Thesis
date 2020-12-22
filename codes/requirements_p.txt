@@ -15,3 +15,4 @@ requests>=2.24
 plotly>=4.12
 scikit-learn>=0.23
 chart_studio
+rich>=9.5

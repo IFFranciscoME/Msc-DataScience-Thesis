@@ -14,18 +14,9 @@ import pandas as pd
 import functions as fn
 import visualizations as vs
 import data as dt
-from data import price_data
+
+from data import ohlc_data as data
 from datetime import datetime
-
-# One period (fast run)
-data = pd.concat([price_data[list(price_data.keys())[0]]])
-
-# All periods (slow run)
-# data = pd.concat([dt.price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
-#                  dt.price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
-#                  dt.price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]],
-#                  dt.price_data[list(price_data.keys())[6]], price_data[list(price_data.keys())[7]],
-#                  dt.price_data[list(price_data.keys())[8]], price_data[list(price_data.keys())[9]]])
 
 # --------------------------------------------------------------- PLOT 1: USD/MXN OHLC HISTORICAL PRICES -- #
 # --------------------------------------------------------------- -------------------------------------- -- #
@@ -49,7 +40,7 @@ table_1 = data.describe()
 # ------------------------------------------------------------------- ---------------------------------- -- #
 
 # Timeseries data division in t-folds
-t_folds = fn.t_folds(p_data=data, p_period='quarter')
+t_folds = fn.t_folds(p_data=data, p_period='semester')
 
 # -- ----------------------------------------------------------------- PLOT 2: Time Series Block T-Folds -- #
 # -- ----------------------------------------------------------------- --------------------------------- -- #
@@ -76,16 +67,16 @@ plot_2 = vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_2, p_vlines=dates_folds)
 ml_models = list(dt.models.keys())
 
 # File name to save the data
-file_name = 'files/pickle_rick/genetic_net_quarter_logistic.dat'
+file_name = 'files/pickle_rick/genetic_net_semester.dat'
 
 # ---------------------------------------------------------------- WARNING: TAKES HOURS TO RUN THIS PART -- #
 # Measure the begining of the code execution process
 ini_time = datetime.now()
 print(ini_time)
 
-# Main code to produce global evaluation for every t-fold for every model ()
-# memory_palace = fn.fold_evaluation(p_data_folds=t_folds, p_models=ml_models, 
-#                                    p_saving=True, p_file_name=file_name)
+# Feature engineering + hyperparameter optimization + model metrics for every fold
+memory_palace = fn.fold_evaluation(p_data_folds=t_folds, p_models=ml_models,
+                                   p_saving=True, p_file_name=file_name)
 
 # Measure the end of the code execution process
 end_time = datetime.now()
@@ -93,14 +84,24 @@ print(end_time)
 # ------------------------------------------------------------------------------------------------------ -- #
 
 # Load previously generated data
-memory_palace = dt.data_save_load(p_data_objects=None, p_data_action='load', p_data_file=file_name)
-memory_palace = memory_palace['memory_palace']
+# memory_palace = dt.data_save_load(p_data_objects=None, p_data_action='load', p_data_file=file_name)
+# memory_palace = memory_palace['memory_palace']
 
-# -- -------------------------------------------------------------------- PROCESS: AUC min and max cases -- #
-# -- -------------------------------------------------------------------- ------------------------------ -- #
+# -- ---------------------------------------------------------------------- PROCESS: AUC min & max cases -- #
+# -- ---------------------------------------------------------------------- ---------------------------- -- #
 
 # min and max AUC cases for the models
 auc_cases = fn.model_auc(p_models=ml_models, p_global_cases=memory_palace, p_data_folds=t_folds)
+
+# -- --------------------------------------------------------- Global Evaluation for AUC min & max Cases -- #
+# -- --------------------------------------------------------- ----------------------------------------- -- #
+
+# get features 
+
+
+
+# get params 
+
 
 # -- --------------------------------------------------------------- PLOT 3: Classification Fold Results -- #
 # -- ----------------------------------------------------------------------------- --------------------- -- #
@@ -142,10 +143,7 @@ dt.theme_plot_4['p_labels']['title'] = 'max/min AUC cases'
 plot_4_folds = vs.g_roc_auc(p_cases=auc_cases, p_type='test', p_models=ml_models, p_theme=dt.theme_plot_4)
 
 # offline plot
-# plot_4_folds.show()
-
-# -- ----------------------------------------------------------- Global Result with AUC Cases Parameters -- #
-# -- ----------------------------------------------------------- --------------------------------------- -- #
+plot_4_folds.show()
 
 # -- ----------------------------------------------------------------- PLOT 5: Timeseries AUC for Models -- #
 # -- ----------------------------------------------------------------- --------------------------------- -- #
