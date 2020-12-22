@@ -13,6 +13,9 @@ workspace_thesis.code-workspace
 # virtual environment
 venv_thesis/
 
+# folder with Pickle Rick !! files
+codes/files/pickle_rick
+
 # ---------- ------------- ---------- #
 
 # Byte-compiled / optimized / DLL files

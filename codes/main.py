@@ -96,11 +96,16 @@ auc_cases = fn.model_auc(p_models=ml_models, p_global_cases=memory_palace, p_dat
 # -- --------------------------------------------------------- Global Evaluation for AUC min & max Cases -- #
 # -- --------------------------------------------------------- ----------------------------------------- -- #
 
-# get features 
-
-
-
-# get params 
+# case to evaluate
+fold_case = 'auc_max'
+# model to evaluate
+fold_model = 'ann-mlp'
+# get period of ocurring case
+fold_period = auc_cases[fold_model][fold_case]['period']
+# symbolic equations
+fold_sym_eqs = list(memory_palace[fold_model][fold_period]['sym_features']['best_programs']['expression'])
+# model parameters
+fold_mod_params = auc_cases[fold_model]['hof_metrics']['data'][fold_period][fold_case + '_params']
 
 
 # -- --------------------------------------------------------------- PLOT 3: Classification Fold Results -- #
