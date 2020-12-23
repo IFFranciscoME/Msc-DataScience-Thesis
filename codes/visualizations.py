@@ -287,7 +287,7 @@ def g_roc_auc(p_casos, p_theme):
             if model == 'model_1':
                 model_name = 'logistic-elasticnet'
             elif model == 'model_2':
-                model_name = 'ls-svm'
+                model_name = 'l1-svm'
             elif model == 'model_3':
                 model_name = 'ann-mlp'
 
@@ -375,7 +375,7 @@ def g_timeseries_auc(p_data_auc, p_theme):
 
                                     line=dict(color='#FB5D41', width=3),
                                     marker=dict(color='#FB5D41', size=9),
-                                    name='ls-svm (min)',
+                                    name='l1-svm (min)',
                                     mode='markers+lines'))
 
     fig_ts_auc.add_trace(go.Scatter(x=p_data_auc['model_2']['x_period'],
@@ -383,7 +383,7 @@ def g_timeseries_auc(p_data_auc, p_theme):
 
                                     line=dict(color='#FB5D41', width=3),
                                     marker=dict(color='#FB5D41', size=9),
-                                    name='ls-svm (max)',
+                                    name='l1-svm (max)',
                                     mode='markers+lines'))
 
     fig_ts_auc.add_trace(go.Scatter(x=p_data_auc['model_3']['x_period'],

@@ -107,7 +107,7 @@ symbolic_params = {'functions': ["sub", "add", 'inv', 'mul', 'div', 'abs', 'log'
                    'metric': 'pearson', 'metric_goal': 0.65, 
                    'prob_cross': 0.4, 'prob_mutation_subtree': 0.3,
                    'prob_mutation_hoist': 0.1, 'prob_mutation_point': 0.2,
-                   'verbose': True, 'random_cv': None, 'parallelization': True, 'warm_start': True }
+                   'verbose': True, 'parallelization': True, 'warm_start': True}
 
 # ----------------------------------------------------------------------- Hyperparameters for the Models -- #
 # ----------------------------------------------------------------------- ------------------------------ -- #

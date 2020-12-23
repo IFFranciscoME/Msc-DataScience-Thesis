@@ -342,8 +342,7 @@ def symbolic_features(p_x, p_y, p_params):
                                 p_point_mutation=p_params['prob_mutation_point'],
 
                                 verbose=p_params['verbose'], warm_start=p_params['warm_start'],
-                                random_state=p_params['random_cv'],
-                                n_jobs=-1 if p_params['parallelization'] else 1,
+                                random_state=123, n_jobs=-1 if p_params['parallelization'] else 1,
                                 feature_names=p_x.columns)
 
     # SymbolicTransformer fit
@@ -409,11 +408,11 @@ def model_metrics(p_model, p_data):
     
 
     # Accuracy rate
-    acc_train = accuracy_score(list(p_data['y_train']), p_y_train_d)
+    acc_train = round(accuracy_score(list(p_data['y_train']), p_y_train_d), 4)
     # False Positive Rate, True Positive Rate, Thresholds
     fpr_train, tpr_train, thresholds = roc_curve(list(p_data['y_train']), probs_train[:, 1], pos_label=1)
     # Area Under the Curve (ROC) for train data
-    auc_train = roc_auc_score(list(p_data['y_train']), probs_train[:, 1])
+    auc_train = round(roc_auc_score(list(p_data['y_train']), probs_train[:, 1]), 4)
 
     # fitted test values
     p_y_test_d = p_model.predict(p_data['x_test'])
@@ -425,11 +424,11 @@ def model_metrics(p_model, p_data):
     probs_test = np.nan_to_num(probs_test)
 
     # Accuracy rate
-    acc_test = accuracy_score(list(p_data['y_test']), p_y_test_d)
+    acc_test = round(accuracy_score(list(p_data['y_test']), p_y_test_d), 4)
     # False Positive Rate, True Positive Rate, Thresholds
     fpr_test, tpr_test, thresholds_test = roc_curve(list(p_data['y_test']), probs_test[:, 1], pos_label=1)
     # Area Under the Curve (ROC) for train data
-    auc_test = roc_auc_score(list(p_data['y_test']), probs_test[:, 1])
+    auc_test = round(roc_auc_score(list(p_data['y_test']), probs_test[:, 1]), 4)
 
      # Return the result of the model
     r_model_metrics = {'results': {'data': {'train': p_y_result_train, 'test': p_y_result_test},
@@ -508,7 +507,7 @@ def logistic_net(p_data, p_params):
     # Fit model
     en_model = LogisticRegression(l1_ratio=p_params['ratio'], C=p_params['c'], tol=1e-3,
                                   penalty='elasticnet', solver='saga', multi_class='ovr', n_jobs=-1,
-                                  max_iter=1000, fit_intercept=False)
+                                  max_iter=1000, fit_intercept=False, random_state=123)
 
     # model fit
     en_model.fit(x_train, y_train)
@@ -523,7 +522,7 @@ def logistic_net(p_data, p_params):
 # --------------------------------------------------------- MODEL: Least Squares Support Vector Machines -- #
 # --------------------------------------------------------------------------------------------------------- #
 @ignore_warnings(category=ConvergenceWarning)
-def ls_svm(p_data, p_params):
+def l1_svm(p_data, p_params):
     """
     Least Squares Support Vector Machines
 
@@ -544,7 +543,7 @@ def ls_svm(p_data, p_params):
         Diccionario con parametros de entrada para modelos, como los siguientes
 
         p_kernel: str
-                kernel de LS_SVM
+                kernel de L1_SVM
                 p_alpha = ['linear']
 
         p_c: float
@@ -586,7 +585,7 @@ def ls_svm(p_data, p_params):
 
                     shrinking=True, probability=True, tol=1e-5, cache_size=4000,
                     class_weight=None, verbose=False, max_iter=100000, decision_function_shape='ovr',
-                    break_ties=False, random_state=None)
+                    break_ties=False, random_state=123)
 
     # model fit
     svm_model.fit(x_train, y_train)
@@ -659,7 +658,7 @@ def ann_mlp(p_data, p_params):
                               learning_rate_init=p_params['learning_r_init'],
 
                               batch_size='auto', solver='sgd', power_t=0.5, max_iter=10000, shuffle=False,
-                              random_state=None, tol=1e-7, verbose=False, warm_start=True, momentum=0.8,
+                              random_state=123, tol=1e-7, verbose=False, warm_start=True, momentum=0.8,
                               nesterovs_momentum=True, early_stopping=True, validation_fraction=0.2,
                               n_iter_no_change=100)
 
@@ -673,12 +672,12 @@ def ann_mlp(p_data, p_params):
     return metrics_mlp_model
 
 
-# ----------------------- FUNCTION: Simultaneous Feature Engieering/Selection & Hyperparameter Optimizer -- #
+# --------------------------------------------- FUNCTION: Autoregressive and Hadamard Feature Engieering -- #
 # ------------------------------------------------------- ------------------------------------------------- #
 
-def genetic_programed_features(p_data, p_memory):
+def linear_features(p_data, p_memory):
     """
-    El uso de programacion genetica para generar variables independientes simbolicas
+    autoregressive and hadamard product for feature engineering
 
     Parameters
     ----------
@@ -697,8 +696,6 @@ def genetic_programed_features(p_data, p_memory):
 
     References
     ----------
-    https://stackoverflow.com/questions/3819977/
-    what-are-the-differences-between-genetic-algorithms-and-genetic-programming
 
     """
 
@@ -723,6 +720,43 @@ def genetic_programed_features(p_data, p_memory):
     # funcion para generar variables con producto hadamard
     datos_had = hadamard_features(p_data=datos_arf, p_nmax=p_memory)
 
+    # datos para utilizar en la siguiente etapa
+    features_data = pd.concat([datos_y.copy(), datos_arf.copy(), datos_had.copy()], axis=1)
+  
+    return features_data
+
+
+# ------------------------------------------------- FUNCTION: Genetic Programming for Feature Engieering -- #
+# ------------------------------------------------- ------------------------------------------------------- #
+
+def genetic_programed_features(p_data):
+    """
+    El uso de programacion genetica para generar variables independientes simbolicas
+
+    Parameters
+    ----------
+    p_data: pd.DataFrame
+        con datos completos para ajustar modelos
+        p_data = m_folds['periodo_1']
+
+    Returns
+    -------
+    model_data: dict
+        {'train_x': pd.DataFrame, 'train_y': pd.DataFrame, 'test_x': pd.DataFrame, 'test_y': pd.DataFrame}
+
+    References
+    ----------
+    https://stackoverflow.com/questions/3819977/
+    what-are-the-differences-between-genetic-algorithms-and-genetic-programming
+
+    """
+   
+    # separacion de variable dependiente
+    datos_y = p_data['co_d'].copy()
+
+    # separacion de variables independientes
+    datos_had = p_data.drop(['co_d'], axis=1, inplace=False)
+
     # --------------------------------------------------------------- ingenieria de variables simbolicas -- #
     # --------------------------------------------------------------- ---------------------------------- -- #
 
@@ -734,7 +768,7 @@ def genetic_programed_features(p_data, p_memory):
     datos_sym.columns = ['sym_' + str(i) for i in range(0, len(sym_data['data'].iloc[0, :]))]
 
     # datos para utilizar en la siguiente etapa
-    datos_modelo = pd.concat([datos_arf.copy(), datos_had.copy(), datos_sym.copy()], axis=1)
+    datos_modelo = pd.concat([datos_had.copy(), datos_sym.copy()], axis=1)
     model_data = {}
 
     # -- -- Dividir datos 80-20
@@ -938,7 +972,7 @@ def genetic_algo_optimization(p_data, p_model):
             chromosome = {'c': eval_individual[0], 'kernel': eval_individual[1], 'gamma': eval_individual[2]}
 
             # model results
-            model = ls_svm(p_data=p_data, p_params=chromosome)
+            model = l1_svm(p_data=p_data, p_params=chromosome)
 
             # True positives in train data
             train_tp = model['results']['matrix']['train'][0, 0]
@@ -1120,7 +1154,7 @@ def model_evaluations(p_features, p_optim_data, p_model):
         elif p_model == 'l1-svm':
             parameters = {'c': params[0], 'kernel': params[1], 'gamma': params[2]}
 
-            return ls_svm(p_data=p_features, p_params=parameters)
+            return l1_svm(p_data=p_features, p_params=parameters)
 
         elif p_model == 'ann-mlp':
             parameters = {'hidden_layers': params[0], 'activation': params[1], 'alpha': params[2],
@@ -1175,8 +1209,11 @@ def fold_evaluation(p_data_folds, p_models, p_saving, p_file_name):
             # scale data of the corresponding fold to evaluate
             data_folds = data_scaler(p_data=p_data_folds[period].copy(), p_trans='Standard')
 
-            # Feature engineering (Autoregressive, Hadamard, Symbolic)
-            m_features = genetic_programed_features(p_data=data_folds, p_memory=7)
+            # Feature engineering (Autoregressive, Hadamard)
+            linear_data = linear_features(p_data=data_folds, p_memory=7)
+            
+            # Symbolic features generation with genetic programming
+            m_features = genetic_programed_features(p_data=linear_data)
 
             # Save data of features used in the evaluation in memory_palace
             memory_palace[model][period]['features'] = m_features['model_data']
@@ -1224,34 +1261,10 @@ def fold_evaluation(p_data_folds, p_models, p_saving, p_file_name):
     return memory_palace
 
 
-# -------------------------------------------------------------------------------- Model Global Features -- #
-# --------------------------------------------------------------------------------------------------------- #
-
-def model_features(p_model_data, p_memory, p_model, p_global_cases, p_cases):
-
-    # import sympy as sym
-
-    data_arf = autoregressive_features(p_data=p_model_data.copy(), p_nmax=p_memory)
-    # independent (explanatory) candidate variables separation
-    data_arf = data_arf.drop(['timestamp', 'co', 'co_d'], axis=1, inplace=False)
-    # function to generate hadamard product features
-    data_had = hadamard_features(p_data=data_arf.copy(), p_nmax=p_memory)
-    features = pd.concat([data_arf.copy(), data_had.copy()], axis=1)
-
-    period = p_cases[p_model]['auc_min']['period']
-    equations = p_global_cases[p_model][period]['features']['features_eq']
-
-    # -- MISSING -- #
-    # HOW TO TAKE THE EQUATION GENERATED BY THE GENETIC PROGRAMMING PART, AND, EVALUATE IT WITH
-    # THE INFORMATION OF THE COLUMN IN THE DATA, PRODUCE THE FEATURE.
-
-    return 1
-
-
 # ------------------------------------------------------------------------------ Model Global Evaluation -- #
 # --------------------------------------------------------------------------------------------------------- #
 
-def global_evaluation(p_data, p_memory, p_global_cases, p_models, p_cases):
+def global_evaluation(p_memory_palace, p_data, p_cases, p_model, p_case):
     """
     Evaluation of models with global data and features for particular selected cases of parameters
 
@@ -1260,17 +1273,11 @@ def global_evaluation(p_data, p_memory, p_global_cases, p_models, p_cases):
     p_data: dict
         The data to use in the model evaluation
 
-    p_memory: int
-        Memory value for the timeseries calculations
+    p_model: dict
+        With information of the model that is going to be tested
 
-    p_global_cases: pd.DataFrame
-        with all the features (inputs)
-
-    p_models: list
-        with the models name
-
-    p_cases: dict
-        with the information of the min and max AUC cases
+    p_features: dict
+        With information of the features to build to use in the model that is going to be tested
 
     Returns
     -------
@@ -1279,51 +1286,55 @@ def global_evaluation(p_data, p_memory, p_global_cases, p_models, p_cases):
 
     """
 
-    # Evaluation of auc_min and auc_max cases in all the models
-    global_auc_cases = {model: {'auc_min': {}, 'auc_max': {}} for model in p_models}
+    # p_memory_palace = memory_palance
+    # p_data = data
+    # p_cases = auc_cases
+    # p_case = fold_case
+    # p_model = fold_model
 
-    # Evaluate all global cases
-    for model in p_models:
-        for case in ['auc_min', 'auc_max']:
+    # get period of ocurring case
+    fold_period = p_cases[p_model][p_case]['period']
 
-            if model == 'logistic-elasticnet':
+    # model parameters
+    fold_mod_params = p_cases[p_model]['hof_metrics']['data'][fold_period][p_case + '_params']
 
-                # Calculate case features, according to the information of the features used in
-                # the min AUC and max AUC found for the particular model
-                case_features = model_features(p_model_data=p_data, p_memory=p_memory,
-                                               p_model='logistic-elasticnet',
-                                               p_global_cases=p_global_cases,
-                                               p_cases=p_cases)
+    # Get all the linear features 
+    linear_data = linear_features(p_data=p_data.copy(), p_memory=7)
+    y_target = linear_data['co_d'].copy()
+    linear_data = linear_data.drop(['co_d'], axis=1, inplace=False)
 
-                # get the results of the input features into the model with the optimised parameters
-                global_auc_cases[model][case] = logistic_net(p_data=case_features,
-                                                             p_params=p_cases[model][case]['data']['params'])
-            elif model == 'l1-svm':
+    # use equations to generate symbolic features
+    global_features = p_memory_palace[p_model][fold_period]['sym_features']['model'].transform(linear_data)
+    global_features = pd.DataFrame(np.hstack((linear_data, global_features)))
 
-                # Calculate case features, according to the information of the features used in
-                # the min AUC and max AUC found for the particular model
-                case_features = model_features(p_model_data=p_data, p_memory=p_memory,
-                                               p_model='l1-svm',
-                                               p_global_cases=p_global_cases,
-                                               p_cases=p_cases)
+    # data division    
+    xtrain, xtest, ytrain, ytest = train_test_split(global_features, y_target, test_size=0.99, shuffle=False)
 
-                # get the results of the input features into the model with the optimised parameters
-                global_auc_cases[model][case] = ls_svm(p_data=case_features,
-                                                       p_params=p_cases[model][case]['data']['params'])
-            elif model == 'ann-mlp':
+    global_features = {}
+    global_features['train_x'] = xtrain
+    global_features['train_y'] = ytrain
+    global_features['test_x'] = xtest
+    global_features['test_y'] = ytest
 
-                # Calculate case features, according to the information of the features used in
-                # the min AUC and max AUC found for the particular model
-                case_features = model_features(p_model_data=p_data, p_memory=p_memory,
-                                               p_model='ann-mlp',
-                                               p_global_cases=p_global_cases,
-                                               p_cases=p_cases)
+    if p_model == 'logistic-elasticnet':
+        parameters = {'ratio': fold_mod_params[0], 'c': fold_mod_params[1]}
 
-                # get the results of the input features into the model with the optimised parameters
-                global_auc_cases[model][case] = ann_mlp(p_data=case_features,
-                                                        p_params=p_cases[model][case]['data']['params'])
+        return {'global_data': global_features,
+                'model': logistic_net(p_data=global_features, p_params=parameters)}
 
-    return global_auc_cases
+    elif p_model == 'l1-svm':
+        parameters = {'c': fold_mod_params[0], 'kernel': fold_mod_params[1], 'gamma': fold_mod_params[2]}
+
+        return {'global_data': global_features,
+                'model': l1_svm(p_data=global_features, p_params=parameters)}
+
+    elif p_model == 'ann-mlp':
+        parameters = {'hidden_layers': fold_mod_params[0], 'activation': fold_mod_params[1],
+                      'alpha': fold_mod_params[2], 'learning_r': fold_mod_params[3],
+                      'learning_r_init': fold_mod_params[4]}
+
+        return {'global_data': global_features,
+                'model': ann_mlp(p_data=global_features, p_params=parameters)}
 
 
 # -------------------------------------------------------------------------- Model AUC Min and Max Cases -- #
