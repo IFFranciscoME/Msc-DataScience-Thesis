@@ -99,25 +99,6 @@ memory_palace = memory_palace['memory_palace']
 # min and max AUC cases for the models
 auc_cases = fn.model_auc(p_models=ml_models, p_global_cases=memory_palace, p_data_folds=t_folds)
 
-# -- --------------------------------------------------------- Global Evaluation for AUC min & max Cases -- #
-# -- --------------------------------------------------------- ----------------------------------------- -- #
-
-# case to evaluate
-fold_case = 'auc_max'
-# model to evaluate
-fold_model = 'logistic-elasticnet'
-# function
-global_model = fn.global_evaluation(p_memory_palace=memory_palace, p_data=data, p_cases=auc_cases, 
-                                    p_model=fold_model, p_case=fold_case)
-
-# auc
-# global_model['model']['metrics']['test']['auc']
-
-# accuracy
-# global_model['model']['metrics']['test']['acc']
-
-# global plot
-
 # -- --------------------------------------------------------------- PLOT 3: Classification Fold Results -- #
 # -- ----------------------------------------------------------------------------- --------------------- -- #
 
@@ -160,5 +141,42 @@ plot_4_folds = vs.g_roc_auc(p_cases=auc_cases, p_type='test', p_models=ml_models
 # offline plot
 # plot_4_folds.show()
 
-# -- ----------------------------------------------------------------- PLOT 5: Timeseries AUC for Models -- #
-# -- ----------------------------------------------------------------- --------------------------------- -- #
+# -- --------------------------------------------------------- Global Evaluation for AUC min & max Cases -- #
+# -- --------------------------------------------------------- ----------------------------------------- -- #
+
+# case to evaluate
+fold_case = 'auc_min'
+# model to evaluate
+fold_model = 'logistic-elasticnet'
+# function
+global_model = fn.global_evaluation(p_memory_palace=memory_palace, p_data=data, p_cases=auc_cases, 
+                                    p_model=fold_model, p_case=fold_case)
+
+# parameters
+# global_model['global_parameters']
+
+# auc
+# global_model['model']['metrics']['test']['auc']
+
+# accuracy
+# global_model['model']['metrics']['test']['acc']
+
+# -- ------------------------------------------------------------- PLOT 5: Global Classification Results -- #
+# -- ------------------------------------------------------------- ------------------------------------- -- #
+
+# get data for prices and predictions
+ohlc_prices = data
+
+ohlc_class = {'train_y': global_model['model']['results']['data']['train']['y_train'],
+              'train_y_pred': global_model['model']['results']['data']['train']['y_train_pred'],
+              'test_y': global_model['model']['results']['data']['test']['y_test'],
+              'test_y_pred': global_model['model']['results']['data']['test']['y_test_pred']}
+
+# plot title
+dt.theme_plot_3['p_labels']['title'] = 'Global results with t-fold optimized parameters'
+
+# make plot
+plot_5 = vs.g_ohlc_class(p_ohlc=ohlc_prices, p_theme=dt.theme_plot_3, p_data_class=ohlc_class, p_vlines=None)
+
+# visualize plot
+# plot_5.show()

@@ -1319,13 +1319,13 @@ def global_evaluation(p_memory_palace, p_data, p_cases, p_model, p_case):
     if p_model == 'logistic-elasticnet':
         parameters = {'ratio': fold_mod_params[0], 'c': fold_mod_params[1]}
 
-        return {'global_data': global_features,
+        return {'global_data': global_features, 'global_parameters': parameters,
                 'model': logistic_net(p_data=global_features, p_params=parameters)}
 
     elif p_model == 'l1-svm':
         parameters = {'c': fold_mod_params[0], 'kernel': fold_mod_params[1], 'gamma': fold_mod_params[2]}
 
-        return {'global_data': global_features,
+        return {'global_data': global_features, 'global_parameters': parameters,
                 'model': l1_svm(p_data=global_features, p_params=parameters)}
 
     elif p_model == 'ann-mlp':
@@ -1333,7 +1333,7 @@ def global_evaluation(p_memory_palace, p_data, p_cases, p_model, p_case):
                       'alpha': fold_mod_params[2], 'learning_r': fold_mod_params[3],
                       'learning_r_init': fold_mod_params[4]}
 
-        return {'global_data': global_features,
+        return {'global_data': global_features, 'global_parameters': parameters,
                 'model': ann_mlp(p_data=global_features, p_params=parameters)}
 
 
