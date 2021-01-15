@@ -22,7 +22,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.metrics import confusion_matrix, accuracy_score, roc_auc_score, roc_curve
 from sklearn.neural_network import MLPClassifier
-from sklearn.utils.testing import ignore_warnings
+# from sklearn.utils.testing import ignore_warnings
 from sklearn.exceptions import ConvergenceWarning
 
 from gplearn.genetic import SymbolicTransformer
@@ -521,7 +521,7 @@ def logistic_net(p_data, p_params):
 
 # --------------------------------------------------------- MODEL: Least Squares Support Vector Machines -- #
 # --------------------------------------------------------------------------------------------------------- #
-@ignore_warnings(category=ConvergenceWarning)
+# @ignore_warnings(category=ConvergenceWarning)
 def l1_svm(p_data, p_params):
     """
     Least Squares Support Vector Machines

@@ -45,8 +45,11 @@ table_1 = data.describe()
 # ------------------------------------------------------------------- TIMESERIES FOLDS FOR DATA DIVISION -- #
 # ------------------------------------------------------------------- ---------------------------------- -- #
 
+# fold size
+fold_size = 'quarter'
+
 # Timeseries data division in t-folds
-t_folds = fn.t_folds(p_data=data, p_period='year')
+t_folds = fn.t_folds(p_data=data, p_period=fold_size)
 
 # -- ----------------------------------------------------------------- PLOT 2: Time Series Block T-Folds -- #
 # -- ----------------------------------------------------------------- --------------------------------- -- #
@@ -73,7 +76,7 @@ plot_2 = vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_2, p_vlines=dates_folds)
 ml_models = list(dt.models.keys())
 
 # File name to save the data
-file_name = 'files/pickle_rick/genetic_net_year.dat'
+file_name = 'files/pickle_rick/genetic_net_' + fold_size + '.dat'
 
 # ---------------------------------------------------------------- WARNING: TAKES HOURS TO RUN THIS PART -- #
 # Measure the begining of the code execution process
@@ -109,7 +112,8 @@ case = 'max'
 auc_model = 'logistic-elasticnet'
 
 # generate title
-auc_title = 'max AUC for: ' + auc_model + ' found in period: ' + auc_cases[auc_model]['auc_max']['period']
+auc_title = 'in Fold max AUC for: ' + auc_model + ' found in period: ' + \
+             auc_cases[auc_model]['auc_max']['period']
 
 # plot title
 dt.theme_plot_3['p_labels']['title'] = auc_title
@@ -133,13 +137,13 @@ plot_3 = vs.g_ohlc_class(p_ohlc=ohlc_prices, p_theme=dt.theme_plot_3, p_data_cla
 # -- ------------------------------------------------------------------ -------------------------------- -- #
 
 # plot title
-dt.theme_plot_4['p_labels']['title'] = 'max/min AUC cases'
+dt.theme_plot_4['p_labels']['title'] = 'in Fold max/min AUC cases'
 
 # Timeseries of the AUCs
 plot_4_folds = vs.g_roc_auc(p_cases=auc_cases, p_type='test', p_models=ml_models, p_theme=dt.theme_plot_4)
 
 # offline plot
-# plot_4_folds.show()
+plot_4_folds.show()
 
 # -- --------------------------------------------------------- Global Evaluation for AUC min & max Cases -- #
 # -- --------------------------------------------------------- ----------------------------------------- -- #
@@ -147,19 +151,19 @@ plot_4_folds = vs.g_roc_auc(p_cases=auc_cases, p_type='test', p_models=ml_models
 # case to evaluate
 fold_case = 'auc_min'
 # model to evaluate
-fold_model = 'logistic-elasticnet'
+fold_model = 'ann-mlp'
 # function
 global_model = fn.global_evaluation(p_memory_palace=memory_palace, p_data=data, p_cases=auc_cases, 
                                     p_model=fold_model, p_case=fold_case)
 
-# parameters
-# global_model['global_parameters']
+# Model parameters
+global_model['global_parameters']
 
-# auc
-# global_model['model']['metrics']['test']['auc']
+# Model auc
+global_model['model']['metrics']['test']['auc']
 
-# accuracy
-# global_model['model']['metrics']['test']['acc']
+# Model accuracy
+global_model['model']['metrics']['test']['acc']
 
 # -- ------------------------------------------------------------- PLOT 5: Global Classification Results -- #
 # -- ------------------------------------------------------------- ------------------------------------- -- #
@@ -179,4 +183,4 @@ dt.theme_plot_3['p_labels']['title'] = 'Global results with t-fold optimized par
 plot_5 = vs.g_ohlc_class(p_ohlc=ohlc_prices, p_theme=dt.theme_plot_3, p_data_class=ohlc_class, p_vlines=None)
 
 # visualize plot
-# plot_5.show()
+plot_5.show()

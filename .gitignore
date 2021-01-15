@@ -8,10 +8,10 @@
 .vscode/
 
 # vscode project workspace
-workspace_thesis.code-workspace
+codes/Msc_Thesis.code-workspace
 
 # virtual environment
-venv_thesis/
+codes/Msc_Thesis_venv/
 
 # folder with Pickle Rick !! files
 codes/files/pickle_rick
