@@ -1,11 +1,12 @@
 
 """
 # -- --------------------------------------------------------------------------------------------------- -- #
-# -- project: A SHORT DESCRIPTION OF THE PROJECT                                                         -- #
-# -- script: functions.py : python script with general functions                                         -- #
-# -- author: YOUR GITHUB USER NAME                                                                       -- #
-# -- license: GPL-3.0 License                                                                            -- #
-# -- repository: YOUR REPOSITORY URL                                                                     -- #
+# -- Project: Masters in Data Science Thesis Project                                                     -- #
+# -- Statistical Learning and Genetic Methods to Design, Optimize and Calibrate Trading Systems          -- #
+# -- File: functions.py - python script with general functions                                           -- #
+# -- Author: IFFranciscoME - if.francisco.me@gmail.com                                                   -- #
+# -- License: GPL-3.0 License                                                                            -- #
+# -- Repository: https://github.com/IFFranciscoME/Msc_Thesis                                             -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 

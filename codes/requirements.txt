@@ -1,10 +1,11 @@
 
 # -- --------------------------------------------------------------------------------------------------- -- #
-# -- project: A SHORT DESCRIPTION OF THE PROJECT                                                         -- #
-# -- script: visualizations.py : python script with the main functionality                               -- #
-# -- author: YOUR GITHUB USER NAME                                                                       -- #
-# -- license: GPL-3.0 License                                                                            -- #
-# -- repository: YOUR REPOSITORY URL                                                                     -- #
+# -- Project: Masters in Data Science Thesis Project                                                     -- #
+# -- Statistical Learning and Genetic Methods to Design, Optimize and Calibrate Trading Systems          -- #
+# -- File: requirements.txt - python libraries required for the project                                  -- #
+# -- Author: IFFranciscoME - if.francisco.me@gmail.com                                                   -- #
+# -- License: GPL-3.0 License                                                                            -- #
+# -- Repository: https://github.com/IFFranciscoME/Msc_Thesis                                             -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 
 deap>=1.3.1

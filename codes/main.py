@@ -2,10 +2,11 @@
 """
 # -- --------------------------------------------------------------------------------------------------- -- #
 # -- Project: Masters in Data Science Thesis Project                                                     -- #
-# -- Script: main.py : python script with the main functionality                                         -- #
-# -- Author: IFFranciscoME                                                                               -- #
+# -- Statistical Learning and Genetic Methods to Design, Optimize and Calibrate Trading Systems          -- #
+# -- File: main.py - python script with the main operations & results                                    -- #
+# -- Author: IFFranciscoME - if.francisco.me@gmail.com                                                   -- #
 # -- License: GPL-3.0 License                                                                            -- #
-# -- Repository:                                                                                         -- #
+# -- Repository: https://github.com/IFFranciscoME/Msc_Thesis                                             -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 

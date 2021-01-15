@@ -1,11 +1,12 @@
+
 """
 # -- --------------------------------------------------------------------------------------------------- -- #
-# -- project: Trading System with Genetic Programming for Feature Engineering, Multilayer Perceptron     -- #
-# -- -------  Neural Network Predictive Model and Genetic Algorithms for Hyperparameter Optimization     -- #
-# -- file: data.py : input and output data functions for the project                                     -- #
-# -- author: IFFranciscoME - franciscome@iteso.mx                                                        -- #
-# -- license: GPL-3.0 License                                                                            -- #
-# -- repository: https://github.com/IFFranciscoME/Genetic_Net                                            -- #
+# -- Project: Masters in Data Science Thesis Project                                                     -- #
+# -- Statistical Learning and Genetic Methods to Design, Optimize and Calibrate Trading Systems          -- #
+# -- File: data.py - input and output data functions for the project                                     -- #
+# -- Author: IFFranciscoME - if.francisco.me@gmail.com                                                   -- #
+# -- License: GPL-3.0 License                                                                            -- #
+# -- Repository: https://github.com/IFFranciscoME/Msc_Thesis                                             -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 
