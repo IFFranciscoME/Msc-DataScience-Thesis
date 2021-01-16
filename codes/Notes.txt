@@ -4,10 +4,16 @@
 https://datascience.stackexchange.com/questions/806/advantages-of-auc-vs-standard-accuracy
 http://notmatthancock.github.io/2015/11/11/auc-and-accuracy.html
 
-# T-Fold method
+# -- T-Fold method
 # -- Divide all the data in T-folds
-# -- Create Symbolic Features in each T-Fold (add the entire HoF with best N individuals)
-# -- Optimize parameters using Symbolic Features in each T-Fold (save the HoF with best N cases)
+# -- With each T-Fold
+# -- -- Create Autoregressive and Hadamard features 
+# -- -- Create Symbolic Features
+# -- -- Conduct the optimization process with genetic algorithms 
+# -- -- Save the HoF with best N individuals (parameter set)
+# -- -- Save the parameter set that produces the max, min value of the fitness metric (AUC)
+# -- -- Search for the mode of parameter sets among all the T-Folds
+
 # -- Calculate and plot model metrics in each T-Fold (for the entire Hall of Fame)
 # -- -- metrics: AUC and ACC
 # -- -- plots: all the ROCs + mean ROC + mean+1std ROCs
@@ -20,3 +26,8 @@ http://notmatthancock.github.io/2015/11/11/auc-and-accuracy.html
 # -- (Pending) Calculate and plot model metrics in global ("Best of the best" and "worst of the best")
 # -- -- metrics: AUC and ACC
 # -- -- plots: all the ROCs + mean ROC + mean+1std ROCs
+
+
+# T-Folds Crossvalidation for Timeseries
+# -- 2 academic references about the concept
+

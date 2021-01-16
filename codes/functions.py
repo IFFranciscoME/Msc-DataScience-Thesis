@@ -87,17 +87,24 @@ def data_scaler(p_data, p_trans):
 
 def t_folds(p_data, p_period):
     """
-    Function to separate in T-Folds the data, considering not having filtrations (Month and Quarter)
+    Function to separate in T-Folds the data, the functions guarantees not having filtrations
+    
     Parameters
     ----------
     p_data : pd.DataFrame
         DataFrame with data
+    
     p_period : str
-        'month': monthly data division
-        'quarter' quarterly data division
+        'month': every T-Fold will be of one month of historical data
+        'quarter': every T-Fold will be of three months (quarter) of historical data
+        'year': every T-Fold will be of twelve months of historical data
+        'bi-year': every T-Fold will be of 2 years of historical data
+        '80-20': Hold out method, 80% for training and 20% for testing
+    
     Returns
     -------
     m_data or q_data : 'period_'
+    
     References
     ----------
     https://web.stanford.edu/~hastie/ElemStatLearn/
@@ -121,14 +128,13 @@ def t_folds(p_data, p_period):
                            for i in quarters})
         return q_data
 
-    # For quarterly separation of the data
+    # For semester separation of the data
     elif p_period == 'semester':
         # List of years in the dataset
         years = set(time.year for time in list(p_data['timestamp']))
         s_data = {}
-        # New key for every quarter_year
+        # New key for every semester_year
         for y in sorted(list(years)):
-            # y = sorted(list(years))[0]
             s_data.update({'s_' + str('0') + str(1) + '_' + str(y):
                                p_data[(pd.to_datetime(p_data['timestamp']).dt.year == y) &
                                       ((pd.to_datetime(p_data['timestamp']).dt.quarter == 1) |
@@ -141,17 +147,39 @@ def t_folds(p_data, p_period):
 
         return s_data
 
-        # For quarterly separation of the data
+    # For yearly separation of the data
     elif p_period == 'year':
         # List of years in the dataset
         years = set(time.year for time in list(p_data['timestamp']))
         y_data = {}
-        # New key for every quarter_year
+        # New key for every year
         for y in sorted(list(years)):
-            # y = sorted(list(years))[0]
             y_data.update({'y_' + str(y):
                                p_data[(pd.to_datetime(p_data['timestamp']).dt.year == y)]})
         return y_data
+
+    # For bi-yearly separation of the data
+    elif p_period == 'bi-year':
+        # List of years in the dataset
+        years = sorted(list(set(time.year for time in list(p_data['timestamp']))))
+        y_data = {}
+        
+        folds = len(years)%2
+        if folds > 0:
+            # no residual, so the list has an odd number of years
+            
+            print(1)
+        else:
+
+            print(2)
+            # even number of years
+
+        return 1
+
+    # For yearly separation of the data
+    elif p_period == '80-20':
+
+        return 2
 
     # In the case a different label has been receieved
     return 'Error: verify parameters'

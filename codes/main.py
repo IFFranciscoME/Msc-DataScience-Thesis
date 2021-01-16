@@ -147,7 +147,7 @@ dt.theme_plot_4['p_labels']['title'] = 'in Fold max/min AUC cases'
 plot_4 = vs.g_roc_auc(p_cases=auc_cases, p_type='test', p_models=ml_models, p_theme=dt.theme_plot_4)
 
 # Show plot in script
-plot_4.show()
+# plot_4.show()
 
 # Generate plot online with chartstudio
 # py.plot(plot_4)
@@ -190,7 +190,7 @@ dt.theme_plot_3['p_labels']['title'] = 'Global results with t-fold optimized par
 plot_5 = vs.g_ohlc_class(p_ohlc=ohlc_prices, p_theme=dt.theme_plot_3, p_data_class=ohlc_class, p_vlines=None)
 
 # Show plot in script
-plot_5.show()
+# plot_5.show()
 
 # Generate plot online with chartstudio
 # py.plot(plot_5)
