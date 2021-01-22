@@ -10,6 +10,9 @@
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 
+from rich import print
+from rich import inspect
+
 from scipy.sparse.construct import random
 from sklearn.metrics import auc
 import pandas as pd

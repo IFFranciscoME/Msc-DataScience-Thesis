@@ -1,8 +1,14 @@
 
 
-|       Type       |             Description            |  TimeStamp (HH:MM day.month.year)  | Time (hours) | Cumulative Time (hours) | 
-| ---------------- | -----------------------------------| ---------------------------------- | ------------ | ----------------------- |
-|                  |                                    |                                    |              |                         |
-|   Repository     | change content to english          | 21:00 18.Dec.2020                  | 1.0          |                         |
-|   Repository     | Rearrange folders and files        | 08:00 19.Dec.2020                  | 0.5          |                         |
-|   Repository     | Add funcs from other projects      | 08:30 19.Dec.2020                  | 1.5          |                         |
+|       Type       |             Description            |      TimeStamp     | Time (hours) | Cum Time (hours) | 
+| ---------------- | -----------------------------------| ------------------ | ------------ | ---------------- |
+|                  |                                    |                    |              |                  |
+|   Repository     | change content to english          | 21:00 18.Dec.2020  | 1.0          |                  |
+|   Repository     | Rearrange folders and files        | 08:00 19.Dec.2020  | 0.5          |                  |
+|   Repository     | Add funcs from other projects      | 08:30 19.Dec.2020  | 1.5          |                  |
+|   Feedback       | Document layout and results        | 13:00 Jan.15.2021  | 1.0          |                  |
+|   Document       | LaTeX format modifications         | 17:00 15.Jan.2021  | 3.0          |                  |
+|   Coding         | T-Fold process                     | 21:00 15.Jan.2021  | 1.0          |                  |
+|   Document       | LaTeX format modifications         | 07:00 22.Jan.2021  | 1.0          |                  |
+
+|   Coding         | Code review and organization       | 08:00 15.Jan.2021  | 2.0          |                  |
