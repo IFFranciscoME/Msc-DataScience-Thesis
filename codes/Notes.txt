@@ -1,33 +1,68 @@
+# -- Check for the presence of the simpson paradox 
+# -- Simpson's paradox is one of many reasons why it’s important to evaluate your models on different slices of data.
+# -- Model 1 outperforms model 2 on group A and group B separately, but model 2 can still outperform model 1 overall.
 
 # -- Usefull Difference between AUC & ACC
+# -- ------------------------------------------------------------- ------------------------------------- -- #
 
 https://datascience.stackexchange.com/questions/806/advantages-of-auc-vs-standard-accuracy
 http://notmatthancock.github.io/2015/11/11/auc-and-accuracy.html
 
-# -- T-Fold method
-# -- Divide all the data in T-folds
+# -- T-FOLD PROCESS
+# -- ------------------------------------------------------------- ------------------------------------- -- #
 # -- With each T-Fold
-# -- -- Create Autoregressive and Hadamard features 
-# -- -- Create Symbolic Features
-# -- -- Conduct the optimization process with genetic algorithms 
+# -- -- Separate data in 80% (in sample) - 20% (out of sample)
+# -- -- Scale data with a Standarization process (with in sample and out of sample data)
+# -- -- Create Autoregressive and Hadamard features (with in sample and out of sample data)
+# -- -- Create Symbolic Features (genetic programming) (with in sample and out of sample data)
+# -- -- Conduct the hyperparameter optimization for all models (genetic algorithms)
+# -- -- -- train with in sample and fitness with tp+tn/total
 # -- -- Save the HoF with best N individuals (parameter set)
-# -- -- Save the parameter set that produces the max, min value of the fitness metric (AUC)
-# -- -- Search for the mode of parameter sets among all the T-Folds
+# -- -- Save the parameter set that produces the max, min value of the fitness metric
+# -- -- Calculate model metrics for the entire Hall of Fame
+# -- -- -- metrics: AUC and ACC
 
-# -- Calculate and plot model metrics in each T-Fold (for the entire Hall of Fame)
-# -- -- metrics: AUC and ACC
-# -- -- plots: all the ROCs + mean ROC + mean+1std ROCs
+# -- (Pending) For every model, save the mode parameter set among all the T-Folds
+# -- (Pending) add other t-fold sizes (bi-anual, 80-20)
 
-# -- (Pending) Extract Symbolic Feature generated in a Fold and use them in the rest of the folds
-# -- (Pending) Extract optimal parameters found in a fold and use them in the rest of the folds
-# -- (Pending) Reach the goal 1 and 2 with the "Best of the Hall of Fame of all of the Hall of Fames"
-# -- (Pending) Reach the goal 1 and 2 with the "Worst of the Hall of Fame of all of the Hall of Fames"
-# -- (Pending) Evaluate "best of the best" and "worst of the best"
-# -- (Pending) Calculate and plot model metrics in global ("Best of the best" and "worst of the best")
-# -- -- metrics: AUC and ACC
-# -- -- plots: all the ROCs + mean ROC + mean+1std ROCs
+# -- LOCAL EVALUATION
+# -- ------------------------------------------------------------- ------------------------------------- -- #
+# -- search for the max, min, mode (pending) cases among all the folds
+# -- -- display metrics
+# -- -- display plots
 
+# -- GLOBAL EVALUATION
+# -- ------------------------------------------------------------- ------------------------------------- -- #
+# -- with min, max, mode (pending) cases found, evaluate with the rest of T-Folds data
+# -- -- display metrics
+# -- -- display plots
 
-# T-Folds Crossvalidation for Timeseries
-# -- 2 academic references about the concept
+# -- LOCAL-GLOBAL COMPARISSON
+# -- ------------------------------------------------------------- ------------------------------------- -- #
+# -- -- DATA ANALYSIS
+# -- -- -- Amount/dates of data
+# -- -- -- Balance of the clases
 
+# -- -- MODEL ANALYSIS
+# -- -- -- change in accuracy
+# -- -- -- change in auc
+
+# -- -- FEATURE ANALYSIS
+# -- -- -- correlation matrix among features
+# -- -- -- outliers presence in features
+# -- -- -- Features parsimony (length and depth of program)
+
+# -- PARAMETER ESTABILITY
+# -- -- for every model in every T-Fold evaluate the best and worst of the HoF of the fold
+# -- -- display timeseries parameters dataframe (parameters of all bests/worsts of all the folds)
+# -- -- display timeseries metrics plots (of all bests/worsts of all the folds)
+# -- -- -- AUC, ACC
+# -- -- display all the ROC curves and average ROC curve plot for every model
+
+# -- Possible questions to answer:
+# -- -- is this method useful to find a parameter set that does not change a lot in time ?
+# -- -- is this method useful to have a stable generalization error of the model ?
+# -- -- does this method shows that a linear combination of non-linear features performs well in financial timeseries forecasting ?
+# -- -- what role plays the feature complexity in this method ?
+# -- -- What is the time complexity of this method ? 
+# -- -- What is the memory complexity of this method ? 

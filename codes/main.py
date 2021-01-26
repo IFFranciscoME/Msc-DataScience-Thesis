@@ -159,9 +159,9 @@ plot_4 = vs.g_roc_auc(p_cases=auc_cases, p_type='test', p_models=ml_models, p_th
 # -- --------------------------------------------------------- ----------------------------------------- -- #
 
 # Case to evaluate
-fold_case = 'auc_min'
+fold_case = 'auc_max'
 # Model to evaluate
-fold_model = 'ann-mlp'
+fold_model = 'logistic-elasticnet'
 # Function
 global_model = fn.global_evaluation(p_memory_palace=memory_palace, p_data=data, p_cases=auc_cases, 
                                     p_model=fold_model, p_case=fold_case)

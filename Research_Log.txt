@@ -1,5 +1,4 @@
 
-
 |       Type       |             Description            |      TimeStamp     | Time (hours) | Cum Time (hours) | 
 | ---------------- | -----------------------------------| ------------------ | ------------ | ---------------- |
 |                  |                                    |                    |              |                  |
@@ -10,5 +9,6 @@
 |   Document       | LaTeX format modifications         | 17:00 15.Jan.2021  | 3.0          |                  |
 |   Coding         | T-Fold process                     | 21:00 15.Jan.2021  | 1.0          |                  |
 |   Document       | LaTeX format modifications         | 07:00 22.Jan.2021  | 1.0          |                  |
-
-|   Coding         | Code review and organization       | 08:00 15.Jan.2021  | 2.0          |                  |
+|   Resources      | email for cluster usage            | 08:00 15.Jan.2021  | 0.5          |                  |
+|   Coding         | Code review and organization       | 08:30 15.Jan.2021  | 2.0          |                  |
+|   Meeting        | With thesis director               | 01:00 15.Jan.2021  | 1.0          |                  |
