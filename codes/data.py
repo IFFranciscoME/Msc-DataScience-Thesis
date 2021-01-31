@@ -52,12 +52,13 @@ def group_daily():
 
     return r_data
 
+# group_daily()
 
 # ---------------------------------------------------------------------------- Historical Prices Reading -- #
 # ---------------------------------------------------------------------------- ------------------------- -- #
 
-# the price in the file is expressed as the USD to purchas one MXN
-# if is needed to convert to the inverse, the MXN to purchas one USD, uncomment the following line
+# the price in the file is expressed as the USD to purchase one MXN
+# if is needed to convert to the inverse, the MXN to purchase one USD, uncomment the following line
 mode = 'MXN_USD'
 
 # path in order to read files
@@ -118,27 +119,51 @@ models = {
 
     'logistic-elasticnet': {
         'label': 'logistic-elasticnet',
-        'params': {'ratio': [0.05, 0.10, 0.20, 0.30, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00],
-                   'c': [1.5, 1.1, 1, 0.8, 0.5, 1.5, 1.1, 1, 0.8, 0.5]}},
+        
+        'params': {'ratio': [0.05, 0.10, 0.20, 0.30, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00,
+                             0.05, 0.10, 0.20, 0.30, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00],
+
+                   'c': [1.5, 1.1, 1, 0.8, 0.5, 1.5, 1.1, 1, 0.8, 0.5,
+                         1.5, 1.1, 1, 0.8, 0.5, 1.5, 1.1, 1, 0.8, 0.5]}},
 
     'l1-svm': {
         'label': 'l1-svm',
-        'params': {'c': [1.5, 1.1, 1, 0.8, 0.5, 1.5, 1.1, 1, 0.8, 0.5],
+
+        'params': {'c': [1.5, 1.1, 1, 0.8, 0.5, 1.5, 1.1, 1, 0.8, 0.5,
+                         1.5, 1.1, 1, 0.8, 0.5, 1.5, 1.1, 1, 0.8, 0.5],
+
                    'kernel': ['linear', 'linear', 'linear', 'linear', 'linear',
+                              'rbf', 'rbf', 'rbf', 'rbf', 'rbf',
+                              'linear', 'linear', 'linear', 'linear', 'linear',
                               'rbf', 'rbf', 'rbf', 'rbf', 'rbf'],
+
                    'gamma': ['scale', 'scale', 'scale', 'scale', 'scale',
+                             'auto', 'auto', 'auto', 'auto', 'auto',
+                             'scale', 'scale', 'scale', 'scale', 'scale',
                              'auto', 'auto', 'auto', 'auto', 'auto']}},
 
     'ann-mlp': {
         'label': 'ann-mlp',
         'params': {'hidden_layers': [(5, ), (10, ), (5, 5), (10, 5), (10, 10),
+                                     (5, ), (10, ), (5, 5), (10, 5), (10, 10),
+                                     (5, ), (10, ), (5, 5), (10, 5), (10, 10),
                                      (5, ), (10, ), (5, 5), (10, 5), (10, 10)],
+
                    'activation': ['relu', 'relu', 'relu', 'relu', 'relu',
+                                  'logistic', 'logistic', 'logistic', 'logistic', 'logistic',
+                                  'relu', 'relu', 'relu', 'relu', 'relu',
                                   'logistic', 'logistic', 'logistic', 'logistic', 'logistic'],
-                   'alpha': [0.005, 0.1, 0.05, 0.02, 0.01, 0.005, 0.1, 0.05, 0.02, 0.01],
+
+                   'alpha': [0.005, 0.1, 0.05, 0.02, 0.01, 0.005, 0.1, 0.05, 0.02, 0.01,
+                             0.005, 0.1, 0.05, 0.02, 0.01, 0.005, 0.1, 0.05, 0.02, 0.01],
+
                    'learning_r': ['constant', 'constant', 'constant', 'constant', 'constant',
+                                  'adaptive', 'adaptive', 'adaptive', 'adaptive', 'adaptive',
+                                  'constant', 'constant', 'constant', 'constant', 'constant',
                                   'adaptive', 'adaptive', 'adaptive', 'adaptive', 'adaptive'],
-                   'learning_r_init': [0.2, 0.1, 0.02, 0.01, 0.001, 0.2, 0.1, 0.02, 0.01, 0.001]}}}
+
+                   'learning_r_init': [0.2, 0.1, 0.02, 0.01, 0.001, 0.2, 0.1, 0.02, 0.01, 0.001,
+                                       0.2, 0.1, 0.02, 0.01, 0.001, 0.2, 0.1, 0.02, 0.01, 0.001]}}}
 
 
 # ------------------------------------------------------------------------------------- Themes for plots -- #

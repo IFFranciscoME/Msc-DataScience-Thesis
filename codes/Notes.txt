@@ -8,8 +8,10 @@
 https://datascience.stackexchange.com/questions/806/advantages-of-auc-vs-standard-accuracy
 http://notmatthancock.github.io/2015/11/11/auc-and-accuracy.html
 
+# -- ------------------------------------------------------------- ------------------------------------- -- #
 # -- T-FOLD PROCESS
 # -- ------------------------------------------------------------- ------------------------------------- -- #
+# -- Define T-Fold longitudes: Quarter, Semester, Year, Bi-year, 80-20
 # -- With each T-Fold
 # -- -- Separate data in 80% (in sample) - 20% (out of sample)
 # -- -- Scale data with a Standarization process (with in sample and out of sample data)
@@ -22,23 +24,49 @@ http://notmatthancock.github.io/2015/11/11/auc-and-accuracy.html
 # -- -- Calculate model metrics for the entire Hall of Fame
 # -- -- -- metrics: AUC and ACC
 
+# -- ------------------------------------------------------------- ------------------------------------- -- #
+# -- SYMBOLIC FEATURE ENGINEERING
+# -- ------------------------------------------------------------- ------------------------------------- -- #
+
+# -- Autoregressive features
+# -- Hadamard features
+
+# -- Genetic Programming for Symbolic Features
+# -- -- Heuristics 
+# -- -- -- Genetic Diversity
+# -- -- -- Fitness for feature selection
+# -- -- -- Feature parsimony
+
+# -- ------------------------------------------------------------- ------------------------------------- -- #
+# -- CALIBRATION TECHNIQUE
+# -- ------------------------------------------------------------- ------------------------------------- -- #
+
+# -- ------------------------------------------------------------- ------------------------------------- -- #
+# -- MODEL DIVERSITY
+# -- ------------------------------------------------------------- ------------------------------------- -- #
+
+# -- Basic - Logistic Regression with regularization
+# -- Statistical Learning - Support Vector Machines with L1 regularization
+# -- Machine Learning - Aritificial Neural Network - Multi Layer Pereceptron
+# -- Tree-based-ensemble method - XGBoost trees
+
+# -- ------------------------------------------------------------- ------------------------------------- -- #
+# -- TRADING SYSTEM DEFINITION
+# -- ------------------------------------------------------------- ------------------------------------- -- #
+
+
+
 # -- (Pending) For every model, save the mode parameter set among all the T-Folds
 # -- (Pending) add other t-fold sizes (bi-anual, 80-20)
 
-# -- LOCAL EVALUATION
-# -- ------------------------------------------------------------- ------------------------------------- -- #
-# -- search for the max, min, mode (pending) cases among all the folds
+# -- (Pending) search for the max, min, mode cases among all the folds
 # -- -- display metrics
 # -- -- display plots
 
-# -- GLOBAL EVALUATION
-# -- ------------------------------------------------------------- ------------------------------------- -- #
-# -- with min, max, mode (pending) cases found, evaluate with the rest of T-Folds data
+# -- (Pending) with min, max, mode cases found, evaluate with the rest of T-Folds data
 # -- -- display metrics
 # -- -- display plots
 
-# -- LOCAL-GLOBAL COMPARISSON
-# -- ------------------------------------------------------------- ------------------------------------- -- #
 # -- -- DATA ANALYSIS
 # -- -- -- Amount/dates of data
 # -- -- -- Balance of the clases
@@ -66,3 +94,26 @@ http://notmatthancock.github.io/2015/11/11/auc-and-accuracy.html
 # -- -- what role plays the feature complexity in this method ?
 # -- -- What is the time complexity of this method ? 
 # -- -- What is the memory complexity of this method ? 
+
+
+# -- Exploratory Data Analysis: Linear and Symbolic Features Statistics ----------------------------------- #
+# -- ------------------------------------------------------------------ -------------------------------- -- #
+
+# exploratory visuals and metrics
+# -- boxplot for outliers (individual)
+# -- histogram and measurement of symmetry (individual)
+# -- Correlation heatmap (all)
+# -- parsimony vs outliers
+# -- parsimony vs symmetry
+
+# cross analysis (Winning Fold Vs Global Test)
+# -- outliers vs regularization
+# -- symmetry vs regularization
+# -- correlation vs regularization
+# -- parsimony vs outliers
+# -- parsimony vs symmetry
+
+# model response to features from Fold to Global
+# -- Regularization effects in logistic regression
+# -- kernel in SVM
+# -- training time in ANN-MLP

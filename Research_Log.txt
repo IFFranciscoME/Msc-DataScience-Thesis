@@ -12,3 +12,7 @@
 |   Resources      | email for cluster usage            | 08:00 15.Jan.2021  | 0.5          |                  |
 |   Coding         | Code review and organization       | 08:30 15.Jan.2021  | 2.0          |                  |
 |   Meeting        | With thesis director               | 01:00 15.Jan.2021  | 1.0          |                  |
+|   Meeting        | With thesis director               | 12:00 29.Jan.2021  | 0.5          |                  |
+|   Presentation   | Slides format preparation          | 15:00 30.Jan.2021  | 1.0          |                  |
+
+|   Organization   | General content organization       | 16:00 30.Jan.2021  | 1.0          |                  |
