@@ -23,14 +23,13 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.metrics import confusion_matrix, accuracy_score, roc_auc_score, roc_curve
 from sklearn.neural_network import MLPClassifier
-# from sklearn.utils.testing import ignore_warnings
 from sklearn.exceptions import ConvergenceWarning
 
 from gplearn.genetic import SymbolicTransformer
 from deap import base, creator, tools, algorithms
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
-
+warnings.filterwarnings('ignore', 'Solver terminated early.*')
 
 # ------------------------------------------------------------------------------- transformacio de datos -- #
 # --------------------------------------------------------------------------------- -------------------- -- #
@@ -536,7 +535,7 @@ def logistic_net(p_data, p_params):
     # Fit model
     en_model = LogisticRegression(l1_ratio=p_params['ratio'], C=p_params['c'], tol=1e-3,
                                   penalty='elasticnet', solver='saga', multi_class='ovr', n_jobs=-1,
-                                  max_iter=1000, fit_intercept=False, random_state=123)
+                                  max_iter=1e6, fit_intercept=False, random_state=123)
 
     # model fit
     en_model.fit(x_train, y_train)
@@ -612,8 +611,8 @@ def l1_svm(p_data, p_params):
     # model function
     svm_model = SVC(C=p_params['c'], kernel=p_params['kernel'], gamma=p_params['gamma'],
 
-                    shrinking=True, probability=True, tol=1e-5, cache_size=4000,
-                    class_weight=None, verbose=False, max_iter=100000, decision_function_shape='ovr',
+                    shrinking=True, probability=True, tol=1e-3, cache_size=5000,
+                    class_weight=None, verbose=False, max_iter=1e6, decision_function_shape='ovr',
                     break_ties=False, random_state=123)
 
     # model fit
@@ -654,7 +653,7 @@ def ann_mlp(p_data, p_params):
         activation: float
         alpha: int
         learning_r: int
-        learning_r_init: int
+        learning_rate_init: int
 
     Returns
     -------
@@ -675,19 +674,23 @@ def ann_mlp(p_data, p_params):
 
     # ------------------------------------------------------------------------------ FUNCTION PARAMETERS -- #
     # model hyperparameters
-    # hidden_layer_sizes, activation, solver, alpha, learning_rate,
+    # hidden_layer_sizes, activation, solver, alpha, 
 
-    # batch_size, learning_rate_init, power_t, max_iter, shuffle, random_state, tol, verbose,
+    # learning_rate, batch_size, learning_rate_init, power_t, max_iter, shuffle, random_state, tol, verbose,
     # warm_start, momentum, nesterovs_momentum, early_stopping, validation_fraction
+
+    # the batch size will be 50% of the training data length or 75
+    batch = max(25, len(x_train)//8)
+    # print(batch)
 
     # model function
     mlp_model = MLPClassifier(hidden_layer_sizes=p_params['hidden_layers'],
                               activation=p_params['activation'], alpha=p_params['alpha'],
-                              learning_rate=p_params['learning_r'],
-                              learning_rate_init=p_params['learning_r_init'],
+                              learning_rate_init=p_params['learning_rate_init'],
 
-                              batch_size='auto', solver='sgd', power_t=0.5, max_iter=10000, shuffle=False,
-                              random_state=123, tol=1e-7, verbose=False, warm_start=True, momentum=0.8,
+                              learning_rate='adaptive',
+                              batch_size=batch, solver='sgd', power_t=0.5, max_iter=10000, shuffle=False,
+                              random_state=123, tol=1e-7, verbose=False, warm_start=True, momentum=0.9,
                               nesterovs_momentum=True, early_stopping=True, validation_fraction=0.2,
                               n_iter_no_change=100)
 
@@ -815,7 +818,7 @@ def genetic_programed_features(p_data):
 # -------------------------------------------------------------------------- FUNCTION: Genetic Algorithm -- #
 # ------------------------------------------------------- ------------------------------------------------- #
 
-def genetic_algo_optimization(p_data, p_model):
+def genetic_algo_optimization(p_data, p_model, p_opt_params):
     """
     El uso de algoritmos geneticos para optimizacion de hiperparametros de varios modelos
 
@@ -826,6 +829,9 @@ def genetic_algo_optimization(p_data, p_model):
 
     p_data: pd.DataFrame
         data frame con datos del m_fold
+    
+    p_opt_params: dict
+        with optimization parameters from data.py
 
     Returns
     -------
@@ -917,16 +923,11 @@ def genetic_algo_optimization(p_data, p_model):
 
         toolbox_en.register("mate", tools.cxOnePoint)
         toolbox_en.register("mutate", mutate_en)
-        toolbox_en.register("select", tools.selTournament, tournsize=10)
+        toolbox_en.register("select", tools.selTournament, tournsize=p_opt_params['tournament'])
         toolbox_en.register("evaluate", evaluate_en)
 
-        population_size = 50
-        crossover_probability = 0.8
-        mutation_probability = 0.1
-        number_of_generations = 4
-
-        en_pop = toolbox_en.population(n=population_size)
-        en_hof = tools.HallOfFame(10)
+        en_pop = toolbox_en.population(n=p_opt_params['population'])
+        en_hof = tools.HallOfFame(p_opt_params['halloffame'])
         stats = tools.Statistics(lambda ind: ind.fitness.values)
         stats.register("avg", np.mean)
         stats.register("std", np.std)
@@ -935,8 +936,8 @@ def genetic_algo_optimization(p_data, p_model):
 
         # Genetic Algorithm Implementation
         en_pop, en_log = algorithms.eaSimple(population=en_pop, toolbox=toolbox_en, stats=stats,
-                                             cxpb=crossover_probability, mutpb=mutation_probability,
-                                             ngen=number_of_generations, halloffame=en_hof, verbose=True)
+                                             cxpb=p_opt_params['crossover'], mutpb=p_opt_params['mutation'],
+                                             ngen=p_opt_params['generations'], halloffame=en_hof, verbose=True)
 
         # transform the deap objects into list so it can be serialized and stored with pickle
         en_pop = [list(pop) for pop in list(en_pop)]
@@ -1024,16 +1025,11 @@ def genetic_algo_optimization(p_data, p_model):
 
         toolbox_svm.register("mate", tools.cxOnePoint)
         toolbox_svm.register("mutate", mutate_svm)
-        toolbox_svm.register("select", tools.selTournament, tournsize=10)
+        toolbox_svm.register("select", tools.selTournament, tournsize=p_opt_params['tournament'])
         toolbox_svm.register("evaluate", evaluate_svm)
 
-        population_size = 50
-        crossover_probability = 0.8
-        mutation_probability = 0.1
-        number_of_generations = 4
-
-        svm_pop = toolbox_svm.population(n=population_size)
-        svm_hof = tools.HallOfFame(10)
+        svm_pop = toolbox_svm.population(n=p_opt_params['population'])
+        svm_hof = tools.HallOfFame(p_opt_params['halloffame'])
         stats = tools.Statistics(lambda ind: ind.fitness.values)
         stats.register("avg", np.mean)
         stats.register("std", np.std)
@@ -1042,8 +1038,8 @@ def genetic_algo_optimization(p_data, p_model):
 
         # Genetic Algortihm implementation
         svm_pop, svm_log = algorithms.eaSimple(population=svm_pop, toolbox=toolbox_svm, stats=stats,
-                                               cxpb=crossover_probability, mutpb=mutation_probability,
-                                               ngen=number_of_generations, halloffame=svm_hof, verbose=True)
+                                               cxpb=p_opt_params['crossover'], mutpb=p_opt_params['mutation'],
+                                               ngen=p_opt_params['generations'], halloffame=svm_hof, verbose=True)
 
         # transform the deap objects into list so it can be serialized and stored with pickle
         svm_pop = [list(pop) for pop in list(svm_pop)]
@@ -1073,16 +1069,15 @@ def genetic_algo_optimization(p_data, p_model):
         toolbox_mlp.register("attr_hidden_layers", random.choice, p_model['params']['hidden_layers'])
         toolbox_mlp.register("attr_activation", random.choice, p_model['params']['activation'])
         toolbox_mlp.register("attr_alpha", random.choice, p_model['params']['alpha'])
-        toolbox_mlp.register("attr_learning_r", random.choice, p_model['params']['learning_r'])
-        toolbox_mlp.register("attr_learning_r_init", random.choice, p_model['params']['learning_r_init'])
+        toolbox_mlp.register("attr_learning_rate_init",
+                             random.choice, p_model['params']['learning_rate_init'])
 
         # This is the order in which genes will be combined to create a chromosome
         toolbox_mlp.register("Individual_mlp", tools.initCycle, creator.Individual_mlp,
                              (toolbox_mlp.attr_hidden_layers,
                               toolbox_mlp.attr_activation,
                               toolbox_mlp.attr_alpha,
-                              toolbox_mlp.attr_learning_r,
-                              toolbox_mlp.attr_learning_r_init), n=1)
+                              toolbox_mlp.attr_learning_rate_init), n=1)
 
         # population definition
         toolbox_mlp.register("population", tools.initRepeat, list, toolbox_mlp.Individual_mlp)
@@ -1100,9 +1095,7 @@ def genetic_algo_optimization(p_data, p_model):
             elif gene == 2:
                 individual[2] = random.choice(p_model['params']['alpha'])
             elif gene == 3:
-                individual[3] = random.choice(p_model['params']['learning_r'])
-            elif gene == 4:
-                individual[4] = random.choice(p_model['params']['learning_r_init'])
+                individual[3] = random.choice(p_model['params']['learning_rate_init'])
             return individual,
 
         # ------------------------------------------------------------ funcion de evaluacion para LS SVM -- #
@@ -1110,8 +1103,7 @@ def genetic_algo_optimization(p_data, p_model):
 
             # output of genetic algorithm
             chromosome = {'hidden_layers': eval_individual[0], 'activation': eval_individual[1],
-                          'alpha': eval_individual[2], 'learning_r': eval_individual[3],
-                          'learning_r_init': eval_individual[4]}
+                          'alpha': eval_individual[2], 'learning_rate_init': eval_individual[3]}
 
             # model results
             model = ann_mlp(p_data=p_data, p_params=chromosome)
@@ -1137,16 +1129,11 @@ def genetic_algo_optimization(p_data, p_model):
 
         toolbox_mlp.register("mate", tools.cxOnePoint)
         toolbox_mlp.register("mutate", mutate_mlp)
-        toolbox_mlp.register("select", tools.selTournament, tournsize=10)
+        toolbox_mlp.register("select", tools.selTournament, tournsize=p_opt_params['tournament'])
         toolbox_mlp.register("evaluate", evaluate_mlp)
 
-        population_size = 50
-        crossover_probability = 0.8
-        mutation_probability = 0.1
-        number_of_generations = 4
-
-        mlp_pop = toolbox_mlp.population(n=population_size)
-        mlp_hof = tools.HallOfFame(10)
+        mlp_pop = toolbox_mlp.population(n=p_opt_params['population'])
+        mlp_hof = tools.HallOfFame(p_opt_params['halloffame'])
         stats = tools.Statistics(lambda ind: ind.fitness.values)
         stats.register("avg", np.mean)
         stats.register("std", np.std)
@@ -1155,8 +1142,8 @@ def genetic_algo_optimization(p_data, p_model):
 
         # ga algorithjm
         mlp_pop, mlp_log = algorithms.eaSimple(population=mlp_pop, toolbox=toolbox_mlp, stats=stats,
-                                               cxpb=crossover_probability, mutpb=mutation_probability,
-                                               ngen=number_of_generations, halloffame=mlp_hof, verbose=True)
+                                               cxpb=p_opt_params['crossover'], mutpb=p_opt_params['mutation'],
+                                               ngen=p_opt_params['generations'], halloffame=mlp_hof, verbose=True)
 
         # transform the deap objects into list so it can be serialized and stored with pickle
         mlp_pop = [list(pop) for pop in list(mlp_pop)]
@@ -1187,7 +1174,7 @@ def model_evaluations(p_features, p_optim_data, p_model):
 
         elif p_model == 'ann-mlp':
             parameters = {'hidden_layers': params[0], 'activation': params[1], 'alpha': params[2],
-                          'learning_r': params[3], 'learning_r_init': params[4]}
+                          'learning_rate_init': params[3]}
 
             return ann_mlp(p_data=p_features, p_params=parameters)
 
@@ -1219,30 +1206,35 @@ def fold_evaluation(p_data_folds, p_models, p_saving, p_file_name):
     memory_palace = {j: {i: {'e_hof': [], 'p_hof': {}, 'time': [], 'features': {}}
                             for i in p_data_folds} for j in list(dt.models.keys())}
 
-    # cycle to iterate all periods for all models
+    # cycle to iterate all periods
     for period in p_data_folds:
+
+        # time measurement
+        init = datetime.now()
+
+        print('\n')
+        print('----------------------------')
+        print('period:', period)
+        print('----------------------------')
+        print('\n')
+        print('--------------------- Feature Engineering on the Current Fold ----------------------')
+        print('')
+        print('--------------------- --------------------------------------- ----------------------')
+        
+        # scale data of the corresponding fold to evaluate
+        data_folds = data_scaler(p_data=p_data_folds[period].copy(), p_trans='Standard')
+
+        # Feature engineering (Autoregressive, Hadamard)
+        linear_data = linear_features(p_data=data_folds, p_memory=7)
+        
+        # Symbolic features generation with genetic programming
+        m_features = genetic_programed_features(p_data=linear_data)
+
+        print('\n')
+        print('------------------- Hyperparameter Optimization on the Current Fold ----------------')
+
+        # cycle to iterate all models
         for model in p_models:
-
-            # time measurement
-            init = datetime.now()
-
-            print('\n')
-            print('----------------------------')
-            print('model: ', model)
-            print('period:', period)
-            print('----------------------------')
-            print('\n')
-            print('--------------------- Feature Engineering on the Current Fold ----------------------')
-            print('--------------------- --------------------------------------- ----------------------')
-
-            # scale data of the corresponding fold to evaluate
-            data_folds = data_scaler(p_data=p_data_folds[period].copy(), p_trans='Standard')
-
-            # Feature engineering (Autoregressive, Hadamard)
-            linear_data = linear_features(p_data=data_folds, p_memory=7)
-            
-            # Symbolic features generation with genetic programming
-            m_features = genetic_programed_features(p_data=linear_data)
 
             # Save data of features used in the evaluation in memory_palace
             memory_palace[model][period]['features'] = m_features['model_data']
@@ -1251,13 +1243,17 @@ def fold_evaluation(p_data_folds, p_models, p_saving, p_file_name):
             memory_palace[model][period]['sym_features'] = m_features['sym_data']
 
             # Optimization
-            print('\n')
-            print('------------------- Hyperparameter Optimization on the Current Fold ----------------')
-            print('------------------- ----------------------------------------------- ----------------')
+            
+            print('')
+            print('------------------------------------------------------------------------------------')
+            print('model: ', model,)
+            print('------------------------------------------------------------------------------------')
+            print('')
 
             # -- model optimization and evaluation for every element in the Hall of Fame for every period
             # optimization process
-            hof_model = genetic_algo_optimization(p_data=m_features['model_data'], p_model=dt.models[model])
+            hof_model = genetic_algo_optimization(p_data=m_features['model_data'], p_model=dt.models[model],
+                                                  p_opt_params=dt.optimization_params)
 
             # evaluation process
             for i in range(0, len(list(hof_model['hof']))):
@@ -1359,8 +1355,7 @@ def global_evaluation(p_memory_palace, p_data, p_cases, p_model, p_case):
 
     elif p_model == 'ann-mlp':
         parameters = {'hidden_layers': fold_mod_params[0], 'activation': fold_mod_params[1],
-                      'alpha': fold_mod_params[2], 'learning_r': fold_mod_params[3],
-                      'learning_r_init': fold_mod_params[4]}
+                      'alpha': fold_mod_params[2], 'learning_rate_init': fold_mod_params[3]}
 
         return {'global_data': global_features, 'global_parameters': parameters,
                 'model': ann_mlp(p_data=global_features, p_params=parameters)}

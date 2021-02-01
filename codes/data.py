@@ -119,7 +119,7 @@ models = {
 
     'logistic-elasticnet': {
         'label': 'logistic-elasticnet',
-        
+
         'params': {'ratio': [0.05, 0.10, 0.20, 0.30, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00,
                              0.05, 0.10, 0.20, 0.30, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00],
 
@@ -133,38 +133,43 @@ models = {
                          1.5, 1.1, 1, 0.8, 0.5, 1.5, 1.1, 1, 0.8, 0.5],
 
                    'kernel': ['linear', 'linear', 'linear', 'linear', 'linear',
-                              'rbf', 'rbf', 'rbf', 'rbf', 'rbf',
                               'linear', 'linear', 'linear', 'linear', 'linear',
+
+                              'rbf', 'rbf', 'rbf', 'rbf', 'rbf',
                               'rbf', 'rbf', 'rbf', 'rbf', 'rbf'],
 
                    'gamma': ['scale', 'scale', 'scale', 'scale', 'scale',
                              'auto', 'auto', 'auto', 'auto', 'auto',
+
                              'scale', 'scale', 'scale', 'scale', 'scale',
                              'auto', 'auto', 'auto', 'auto', 'auto']}},
 
     'ann-mlp': {
         'label': 'ann-mlp',
-        'params': {'hidden_layers': [(5, ), (10, ), (5, 5), (10, 5), (10, 10),
-                                     (5, ), (10, ), (5, 5), (10, 5), (10, 10),
-                                     (5, ), (10, ), (5, 5), (10, 5), (10, 10),
-                                     (5, ), (10, ), (5, 5), (10, 5), (10, 10)],
+        'params': {'hidden_layers': [(10,), (20,), (40,), (10, 20), (20, 10),
+                                     (10, 30), (30, 10), (20, 30), (30, 20), (30, 30),
+
+                                     (10,), (20,), (40,), (10, 20), (20, 10),
+                                     (10, 30), (30, 10), (20, 30), (30, 20), (30, 30)],
 
                    'activation': ['relu', 'relu', 'relu', 'relu', 'relu',
-                                  'logistic', 'logistic', 'logistic', 'logistic', 'logistic',
                                   'relu', 'relu', 'relu', 'relu', 'relu',
+
+                                  'logistic', 'logistic', 'logistic', 'logistic', 'logistic',
                                   'logistic', 'logistic', 'logistic', 'logistic', 'logistic'],
 
-                   'alpha': [0.005, 0.1, 0.05, 0.02, 0.01, 0.005, 0.1, 0.05, 0.02, 0.01,
-                             0.005, 0.1, 0.05, 0.02, 0.01, 0.005, 0.1, 0.05, 0.02, 0.01],
+                   'alpha': [0.01, 0.1, 0.15, 0.30, 0.60, 0.75, 0.90, 1.0, 1.5, 3.0,
+                             0.01, 0.1, 0.15, 0.30, 0.60, 0.75, 0.90, 1.0, 1.5, 3.0],
 
-                   'learning_r': ['constant', 'constant', 'constant', 'constant', 'constant',
-                                  'adaptive', 'adaptive', 'adaptive', 'adaptive', 'adaptive',
-                                  'constant', 'constant', 'constant', 'constant', 'constant',
-                                  'adaptive', 'adaptive', 'adaptive', 'adaptive', 'adaptive'],
+                   'learning_rate_init': [0.2, 0.1, 0.02, 0.01, 0.001, 0.2, 0.1, 0.02, 0.01, 0.001,
+                                          0.2, 0.1, 0.02, 0.01, 0.001, 0.2, 0.1, 0.02, 0.01, 0.001]}}}
 
-                   'learning_r_init': [0.2, 0.1, 0.02, 0.01, 0.001, 0.2, 0.1, 0.02, 0.01, 0.001,
-                                       0.2, 0.1, 0.02, 0.01, 0.001, 0.2, 0.1, 0.02, 0.01, 0.001]}}}
 
+# ------------------------------------------------------------------ Parameters for Genetic Optimization -- #
+# ------------------------------------------------------------------ ----------------------------------- -- #
+
+optimization_params = {'halloffame':10, 'tournament': 10, 'population': 10, 'generations': 2,
+                       'mutation': 0.1, 'crossover': 0.8}
 
 # ------------------------------------------------------------------------------------- Themes for plots -- #
 # ------------------------------------------------------------------------------------- ---------------- -- #

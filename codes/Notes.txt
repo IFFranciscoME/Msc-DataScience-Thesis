@@ -4,9 +4,24 @@
 
 # -- Usefull Difference between AUC & ACC
 # -- ------------------------------------------------------------- ------------------------------------- -- #
-
 https://datascience.stackexchange.com/questions/806/advantages-of-auc-vs-standard-accuracy
 http://notmatthancock.github.io/2015/11/11/auc-and-accuracy.html
+
+# -- HOW DOES BATCH SIZE AFFECT CONVERGENCE OF SGD AND WHY ?
+https://stats.stackexchange.com/questions/316464/how-does-batch-size-affect-convergence-of-sgd-and-why
+
+# -- How to Control the Stability of Training Neural Networks With the Batch Size
+https://machinelearningmastery.com/how-to-control-the-speed-and-stability-of-training-neural-networks-with-gradient-descent-batch-size/
+
+# -- Number of hidden layers / number of neurons & Universal Aproximation Theorem.
+https://www.researchgate.net/post/How-to-decide-the-number-of-hidden-layers-and-nodes-in-a-hidden-layer
+https://www.heatonresearch.com/2017/06/01/hidden-layers.html
+https://en.wikipedia.org/wiki/Universal_approximation_theorem
+https://stats.stackexchange.com/questions/181/how-to-choose-the-number-of-hidden-layers-and-nodes-in-a-feedforward-neural-netw
+
+# -- XGBoost
+https://github.com/dmlc/xgboost
+
 
 # -- ------------------------------------------------------------- ------------------------------------- -- #
 # -- T-FOLD PROCESS
@@ -40,6 +55,8 @@ http://notmatthancock.github.io/2015/11/11/auc-and-accuracy.html
 # -- ------------------------------------------------------------- ------------------------------------- -- #
 # -- CALIBRATION TECHNIQUE
 # -- ------------------------------------------------------------- ------------------------------------- -- #
+
+# -- Optimization Function
 
 # -- ------------------------------------------------------------- ------------------------------------- -- #
 # -- MODEL DIVERSITY
@@ -95,6 +112,14 @@ http://notmatthancock.github.io/2015/11/11/auc-and-accuracy.html
 # -- -- What is the time complexity of this method ? 
 # -- -- What is the memory complexity of this method ? 
 
+
+# -- ANN-MLP
+# -- -- HYPERPARAMETERS
+
+# -- -- -- hidden_layer_sizes: The ith element represents the number of neurons in the ith hidden layer.
+# -- -- -- alpha: L2 penalty (regularization term) parameter.
+# -- -- -- activation: Activation function for the hidden layer.
+# -- -- -- learning_rate_init: The initial learning rate used. It controls the step-size in updating the weights.
 
 # -- Exploratory Data Analysis: Linear and Symbolic Features Statistics ----------------------------------- #
 # -- ------------------------------------------------------------------ -------------------------------- -- #

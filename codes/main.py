@@ -13,17 +13,17 @@
 from rich import print
 from rich import inspect
 
-from scipy.sparse.construct import random
-from sklearn.metrics import auc
 import pandas as pd
+import numpy as np
+import random
+
+from scipy.sparse.construct import random
+from data import ohlc_data as data
+from datetime import datetime
+
 import functions as fn
 import visualizations as vs
 import data as dt
-
-import random
-import numpy as np
-from data import ohlc_data as data
-from datetime import datetime
 
 # Reproducible results
 random.seed(123)
@@ -80,25 +80,25 @@ plot_2 = vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_2, p_vlines=dates_folds)
 ml_models = list(dt.models.keys())
 
 # File name to save the data
-file_name = 'files/pickle_rick/genetic_net_' + fold_size + '.dat'
+file_name = 'files/pickle_rick/genetic_net_' + fold_size + '_pruebas.dat'
 
 # ---------------------------------------------------------------- WARNING: TAKES HOURS TO RUN THIS PART -- #
 # Measure the begining of the code execution process
-# ini_time = datetime.now()
-# print(ini_time)
+ini_time = datetime.now()
+print(ini_time)
 
 # Feature engineering + hyperparameter optimization + model metrics for every fold
-# memory_palace = fn.fold_evaluation(p_data_folds=t_folds, p_models=ml_models,
-#                                    p_saving=True, p_file_name=file_name)
+memory_palace = fn.fold_evaluation(p_data_folds=t_folds, p_models=ml_models,
+                                   p_saving=True, p_file_name=file_name)
 
 # Measure the end of the code execution process
-# end_time = datetime.now()
-# print(end_time)
+end_time = datetime.now()
+print(end_time)
 # ------------------------------------------------------------------------------------------------------ -- #
 
 # Load previously generated data
-memory_palace = dt.data_save_load(p_data_objects=None, p_data_action='load', p_data_file=file_name)
-memory_palace = memory_palace['memory_palace']
+# memory_palace = dt.data_save_load(p_data_objects=None, p_data_action='load', p_data_file=file_name)
+# memory_palace = memory_palace['memory_palace']
 
 # -- ---------------------------------------------------------------------- PROCESS: AUC min & max cases -- #
 # -- ---------------------------------------------------------------------- ---------------------------- -- #
