@@ -151,34 +151,55 @@ def t_folds(p_data, p_period):
         # List of years in the dataset
         years = set(time.year for time in list(p_data['timestamp']))
         y_data = {}
+        
         # New key for every year
         for y in sorted(list(years)):
             y_data.update({'y_' + str(y):
                                p_data[(pd.to_datetime(p_data['timestamp']).dt.year == y)]})
+                               
         return y_data
 
     # For bi-yearly separation of the data
     elif p_period == 'bi-year':
         # List of years in the dataset
         years = sorted(list(set(time.year for time in list(p_data['timestamp']))))
-        y_data = {}
-        
+        # dict to store data
+        b_y_data = {}
+        # even or odd number of years
         folds = len(years)%2
+        
+        # even number of years
         if folds > 0:
-            # no residual, so the list has an odd number of years
-            
-            print(1)
+            # fill years
+            for y in np.arange(0, len(years), 2):
+                b_y_data.update({'b_y_' + str(y):
+                                p_data[(pd.to_datetime(p_data['timestamp']).dt.year == years[y]) |
+                                       (pd.to_datetime(p_data['timestamp']).dt.year == years[y+1])]})
+        # odd number of years (pending)
         else:
+            # fill years
+            for y in np.arange(0, len(years), 2):
+                b_y_data.update({'b_y_' + str(y):
+                                p_data[(pd.to_datetime(p_data['timestamp']).dt.year == years[y]) |
+                                       (pd.to_datetime(p_data['timestamp']).dt.year == years[y+1])]})
 
-            print(2)
-            # even number of years
-
-        return 1
+        return b_y_data
 
     # For yearly separation of the data
     elif p_period == '80-20':
 
-        return 2
+        # List of years in the dataset
+        years = sorted(list(set(time.year for time in list(p_data['timestamp']))))
+        
+        # dict to store data
+        a_80 = int(len(years)*0.80) 
+        a_20 = int(len(years)*0.20)
+        
+        # data construction
+        y_80_20_data = {'80': p_data[pd.to_datetime(p_data['timestamp']).dt.year.isin(years[0:a_80])],
+                        '20': p_data[pd.to_datetime(p_data['timestamp']).dt.year.isin(years[a_80:a_80+a_20])]}
+    
+        return y_80_20_data
 
     # In the case a different label has been receieved
     return 'Error: verify parameters'
