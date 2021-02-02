@@ -333,6 +333,60 @@ def hadamard_features(p_data, p_nmax):
     return p_data
 
 
+# --------------------------------------------- FUNCTION: Autoregressive and Hadamard Feature Engieering -- #
+# ------------------------------------------------------- ------------------------------------------------- #
+
+def linear_features(p_data, p_memory):
+    """
+    autoregressive and hadamard product for feature engineering
+
+    Parameters
+    ----------
+    p_data: pd.DataFrame
+        con datos completos para ajustar modelos
+        p_data = m_folds['periodo_1']
+
+    p_memory: int
+        valor de memoria maxima para hacer calculo de variables autoregresivas
+        p_memory = 7
+
+    Returns
+    -------
+    model_data: dict
+        {'train_x': pd.DataFrame, 'train_y': pd.DataFrame, 'test_x': pd.DataFrame, 'test_y': pd.DataFrame}
+
+    References
+    ----------
+
+    """
+
+    # ----------------------------------------------------------- ingenieria de variables autoregresivas -- #
+    # ----------------------------------------------------------- -------------------------------------- -- #
+
+    # funcion para generar variables autoregresivas
+    datos_arf = autoregressive_features(p_data=p_data, p_nmax=p_memory)
+
+    # separacion de variable dependiente
+    datos_y = datos_arf['co_d'].copy()
+
+    # separacion de variable dependiente
+    # datos_timestamp = datos_arf['timestamp'].copy()
+
+    # separacion de variables independientes
+    datos_arf = datos_arf.drop(['timestamp', 'co', 'co_d'], axis=1, inplace=False)
+
+    # ----------------------------------------------------------------- ingenieria de variables hadamard -- #
+    # ----------------------------------------------------------------- -------------------------------- -- #
+
+    # funcion para generar variables con producto hadamard
+    datos_had = hadamard_features(p_data=datos_arf, p_nmax=p_memory)
+
+    # datos para utilizar en la siguiente etapa
+    features_data = pd.concat([datos_y.copy(), datos_arf.copy(), datos_had.copy()], axis=1)
+  
+    return features_data
+
+
 # ------------------------------------------------------------------ MODEL: Symbolic Features Generation -- #
 # --------------------------------------------------------------------------------------------------------- #
 
@@ -422,6 +476,63 @@ def symbolic_features(p_x, p_y, p_params):
                'best_programs': best_programs, 'details': model.run_details_}
 
     return results
+
+
+# ------------------------------------------------- FUNCTION: Genetic Programming for Feature Engieering -- #
+# ------------------------------------------------- ------------------------------------------------------- #
+
+def genetic_programed_features(p_data):
+    """
+    El uso de programacion genetica para generar variables independientes simbolicas
+
+    Parameters
+    ----------
+    p_data: pd.DataFrame
+        con datos completos para ajustar modelos
+        p_data = m_folds['periodo_1']
+
+    Returns
+    -------
+    model_data: dict
+        {'train_x': pd.DataFrame, 'train_y': pd.DataFrame, 'test_x': pd.DataFrame, 'test_y': pd.DataFrame}
+
+    References
+    ----------
+    https://stackoverflow.com/questions/3819977/
+    what-are-the-differences-between-genetic-algorithms-and-genetic-programming
+
+    """
+   
+    # separacion de variable dependiente
+    datos_y = p_data['co_d'].copy()
+
+    # separacion de variables independientes
+    datos_had = p_data.drop(['co_d'], axis=1, inplace=False)
+
+    # --------------------------------------------------------------- ingenieria de variables simbolicas -- #
+    # --------------------------------------------------------------- ---------------------------------- -- #
+
+    # Lista de operaciones simbolicas
+    sym_data = symbolic_features(p_x=datos_had, p_y=datos_y, p_params=dt.symbolic_params)
+
+    # variables
+    datos_sym = sym_data['data']
+    datos_sym.columns = ['sym_' + str(i) for i in range(0, len(sym_data['data'].iloc[0, :]))]
+
+    # datos para utilizar en la siguiente etapa
+    datos_modelo = pd.concat([datos_had.copy(), datos_sym.copy()], axis=1)
+    model_data = {}
+
+    # -- -- Dividir datos 80-20
+    xtrain, xtest, ytrain, ytest = train_test_split(datos_modelo, datos_y, test_size=.2, shuffle=False)
+
+    # division de datos
+    model_data['train_x'] = xtrain
+    model_data['train_y'] = ytrain
+    model_data['test_x'] = xtest
+    model_data['test_y'] = ytest
+
+    return {'model_data': model_data, 'sym_data': sym_data}
 
 
 # -- ---------------------------------------------------- DATA PROCESSING: Metrics for Model Performance -- # 
@@ -573,7 +684,7 @@ def logistic_net(p_data, p_params):
 
 # --------------------------------------------------------- MODEL: Least Squares Support Vector Machines -- #
 # --------------------------------------------------------------------------------------------------------- #
-# @ignore_warnings(category=ConvergenceWarning)
+
 def l1_svm(p_data, p_params):
     """
     Least Squares Support Vector Machines
@@ -726,118 +837,6 @@ def ann_mlp(p_data, p_params):
                                                                  'x_test': x_test, 'y_test': y_test})
 
     return metrics_mlp_model
-
-
-# --------------------------------------------- FUNCTION: Autoregressive and Hadamard Feature Engieering -- #
-# ------------------------------------------------------- ------------------------------------------------- #
-
-def linear_features(p_data, p_memory):
-    """
-    autoregressive and hadamard product for feature engineering
-
-    Parameters
-    ----------
-    p_data: pd.DataFrame
-        con datos completos para ajustar modelos
-        p_data = m_folds['periodo_1']
-
-    p_memory: int
-        valor de memoria maxima para hacer calculo de variables autoregresivas
-        p_memory = 7
-
-    Returns
-    -------
-    model_data: dict
-        {'train_x': pd.DataFrame, 'train_y': pd.DataFrame, 'test_x': pd.DataFrame, 'test_y': pd.DataFrame}
-
-    References
-    ----------
-
-    """
-
-    # ----------------------------------------------------------- ingenieria de variables autoregresivas -- #
-    # ----------------------------------------------------------- -------------------------------------- -- #
-
-    # funcion para generar variables autoregresivas
-    datos_arf = autoregressive_features(p_data=p_data, p_nmax=p_memory)
-
-    # separacion de variable dependiente
-    datos_y = datos_arf['co_d'].copy()
-
-    # separacion de variable dependiente
-    # datos_timestamp = datos_arf['timestamp'].copy()
-
-    # separacion de variables independientes
-    datos_arf = datos_arf.drop(['timestamp', 'co', 'co_d'], axis=1, inplace=False)
-
-    # ----------------------------------------------------------------- ingenieria de variables hadamard -- #
-    # ----------------------------------------------------------------- -------------------------------- -- #
-
-    # funcion para generar variables con producto hadamard
-    datos_had = hadamard_features(p_data=datos_arf, p_nmax=p_memory)
-
-    # datos para utilizar en la siguiente etapa
-    features_data = pd.concat([datos_y.copy(), datos_arf.copy(), datos_had.copy()], axis=1)
-  
-    return features_data
-
-
-# ------------------------------------------------- FUNCTION: Genetic Programming for Feature Engieering -- #
-# ------------------------------------------------- ------------------------------------------------------- #
-
-def genetic_programed_features(p_data):
-    """
-    El uso de programacion genetica para generar variables independientes simbolicas
-
-    Parameters
-    ----------
-    p_data: pd.DataFrame
-        con datos completos para ajustar modelos
-        p_data = m_folds['periodo_1']
-
-    Returns
-    -------
-    model_data: dict
-        {'train_x': pd.DataFrame, 'train_y': pd.DataFrame, 'test_x': pd.DataFrame, 'test_y': pd.DataFrame}
-
-    References
-    ----------
-    https://stackoverflow.com/questions/3819977/
-    what-are-the-differences-between-genetic-algorithms-and-genetic-programming
-
-    """
-   
-    # separacion de variable dependiente
-    datos_y = p_data['co_d'].copy()
-
-    # separacion de variables independientes
-    datos_had = p_data.drop(['co_d'], axis=1, inplace=False)
-
-    # --------------------------------------------------------------- ingenieria de variables simbolicas -- #
-    # --------------------------------------------------------------- ---------------------------------- -- #
-
-    # Lista de operaciones simbolicas
-    sym_data = symbolic_features(p_x=datos_had, p_y=datos_y, p_params=dt.symbolic_params)
-
-    # variables
-    datos_sym = sym_data['data']
-    datos_sym.columns = ['sym_' + str(i) for i in range(0, len(sym_data['data'].iloc[0, :]))]
-
-    # datos para utilizar en la siguiente etapa
-    datos_modelo = pd.concat([datos_had.copy(), datos_sym.copy()], axis=1)
-    model_data = {}
-
-    # -- -- Dividir datos 80-20
-    xtrain, xtest, ytrain, ytest = train_test_split(datos_modelo, datos_y, test_size=.2, shuffle=False)
-
-    # division de datos
-    model_data['train_x'] = xtrain
-    model_data['train_y'] = ytrain
-    model_data['test_x'] = xtest
-    model_data['test_y'] = ytest
-
-    return {'model_data': model_data, 'sym_data': sym_data}
-
 
 # -------------------------------------------------------------------------- FUNCTION: Genetic Algorithm -- #
 # ------------------------------------------------------- ------------------------------------------------- #
@@ -1357,7 +1356,7 @@ def global_evaluation(p_memory_palace, p_data, p_cases, p_model, p_case):
     global_features = pd.DataFrame(np.hstack((linear_data, global_features)))
 
     # data division    
-    xtrain, xtest, ytrain, ytest = train_test_split(global_features, y_target, test_size=0.99, shuffle=False)
+    xtrain, xtest, ytrain, ytest = train_test_split(global_features, y_target, test_size=0.01, shuffle=False)
 
     global_features = {}
     global_features['train_x'] = xtrain
@@ -1443,22 +1442,26 @@ def model_auc(p_models, p_global_cases, p_data_folds):
 
             # search for every individual in hall of fame
             for i in range(0, len(p_global_cases[model][period]['e_hof'])):
-                print(i)
-                auc_s.append(p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc'])
-                print('casos')
+                
+                # calculate fitness metric the same as in the optimization process
+                c_auc = round((p_global_cases[model][period]['e_hof'][i]['metrics']['train']['auc'] + 
+                               p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc'])/2, 4)
+                
+                # save current auc data for later use
+                auc_s.append(c_auc)
 
                 # -- Case 1
                 # get the individual of all of the HoF that produced the minimum AUC
-                if p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc'] < auc_min:
-                    auc_min = p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc']
+                if c_auc < auc_min:
+                    auc_min = c_auc
                     auc_cases[model]['auc_min']['data'] = p_global_cases[model][period]['e_hof'][i]
                     auc_cases[model]['auc_min']['period'] = period
                     auc_min_params = p_global_cases[model][period]['p_hof']['hof'][i]
 
                 # -- Case 2
                 # get the individual of all of the HoF that produced the maximum AUC
-                elif p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc'] > auc_max:
-                    auc_max = p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc']
+                elif c_auc > auc_max:
+                    auc_max = c_auc
                     auc_cases[model]['auc_max']['data'] = p_global_cases[model][period]['e_hof'][i]
                     auc_cases[model]['auc_max']['period'] = period
                     auc_max_params = p_global_cases[model][period]['p_hof']['hof'][i]

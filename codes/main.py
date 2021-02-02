@@ -80,25 +80,25 @@ plot_2 = vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_2, p_vlines=dates_folds)
 ml_models = list(dt.models.keys())
 
 # File name to save the data
-file_name = 'files/pickle_rick/genetic_net_' + fold_size + '.dat'
+file_name = 'files/pickle_rick/genetic_net_' + fold_size + '_test.dat'
 
 # ---------------------------------------------------------------- WARNING: TAKES HOURS TO RUN THIS PART -- #
 # Measure the begining of the code execution process
-# ini_time = datetime.now()
-# print(ini_time)
+ini_time = datetime.now()
+print(ini_time)
 
 # Feature engineering + hyperparameter optimization + model metrics for every fold
-# memory_palace = fn.fold_evaluation(p_data_folds=t_folds, p_models=ml_models,
-#                                    p_saving=True, p_file_name=file_name)
+memory_palace = fn.fold_evaluation(p_data_folds=t_folds, p_models=ml_models,
+                                   p_saving=True, p_file_name=file_name)
 
 # Measure the end of the code execution process
-# end_time = datetime.now()
-# print(end_time)
+end_time = datetime.now()
+print(end_time)
 # ------------------------------------------------------------------------------------------------------ -- #
 
 # Load previously generated data
-memory_palace = dt.data_save_load(p_data_objects=None, p_data_action='load', p_data_file=file_name)
-memory_palace = memory_palace['memory_palace']
+# memory_palace = dt.data_save_load(p_data_objects=None, p_data_action='load', p_data_file=file_name)
+# memory_palace = memory_palace['memory_palace']
 
 # -- ------------------------------------------------------------------------------- PARAMETER SET CASES -- #
 # -- ------------------------------------------------------------------------------- ------------------- -- #
@@ -185,10 +185,10 @@ global_model = fn.global_evaluation(p_memory_palace=memory_palace, p_data=data, 
 global_model['global_parameters']
 
 # Model auc
-global_model['model']['metrics']['test']['auc']
+global_model['model']['metrics']['train']['auc']
 
 # Model accuracy
-global_model['model']['metrics']['test']['acc']
+global_model['model']['metrics']['train']['acc']
 
 # -- ------------------------------------------------------------- PLOT 5: GLOBAL CLASSIFICATION RESULTS -- #
 # -- ------------------------------------------------------------- ------------------------------------- -- #
