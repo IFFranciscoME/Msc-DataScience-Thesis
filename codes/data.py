@@ -168,8 +168,8 @@ models = {
 # ------------------------------------------------------------------ Parameters for Genetic Optimization -- #
 # ------------------------------------------------------------------ ----------------------------------- -- #
 
-optimization_params = {'halloffame':10, 'tournament': 10, 'population': 10, 'generations': 2,
-                       'mutation': 0.1, 'crossover': 0.8}
+optimization_params = {'halloffame':10, 'tournament': 10, 'population': 10, 'generations': 4,
+                       'mutation': 0.2, 'crossover': 0.8}
 
 # ------------------------------------------------------------------------------------- Themes for plots -- #
 # ------------------------------------------------------------------------------------- ---------------- -- #

@@ -71,6 +71,13 @@ https://github.com/dmlc/xgboost
 # -- TRADING SYSTEM DEFINITION
 # -- ------------------------------------------------------------- ------------------------------------- -- #
 
+# -- Criteria 1: Data
+https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-i-tick-bars-a8b93728b4c5
+https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-volume-and-dollar-bars-6cda27e3201d
+
+# -- Criteria 2: Signal Generation
+# -- Criteria 3: Profit and Loss taking 
+# -- Criteria 4: Position sizing
 
 
 # -- (Pending) For every model, save the mode parameter set among all the T-Folds

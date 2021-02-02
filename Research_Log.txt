@@ -19,13 +19,23 @@
 |   Content        | Models Optimization NeuralNet      | 13:00 31.Jan.2021  | 1.0          |                  |
 |   Coding         | Optimization Process               | 15:00 31.Jan.2021  | 4.5          |                  |
 |   Coding         | AUC mode cases and code comments   | 18:00 01.Feb.2021  | 4.0          |                  |
+|   Organization   | General content and planning       | 10:00 02.Feb.2021  | 2.0          |                  |
 
-# Pending
+
+# -------------------------------------------------------------------------------------- PENDING ACTIVITIES -- #
+
+# -- Necessary
 - extract data for mode cases
 - metrics and other analytics for mode cases
 - table for multi modal cases
-- plot for multi modal cases
-
 - table for symbolic features
-- Parallel RandomForest
-- 
+- Add a new model: RandomForest
+- Computational performance of Machine Learning System (Criteria 1 and 2 of trading system)
+
+# -- Good to have
+- plot for multi modal cases
+- translate every comment to english
+- translate every variable name to english
+- Criteria 3: Profit and Loss taking (scalar, formula, model)
+- Criteria 4: Positions dimensioning (scalar, formula, model)
+- Financial performance of trading strategy (Criteria 3 and 4 of trading system)

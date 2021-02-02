@@ -84,27 +84,28 @@ file_name = 'files/pickle_rick/genetic_net_' + fold_size + '_test.dat'
 
 # ---------------------------------------------------------------- WARNING: TAKES HOURS TO RUN THIS PART -- #
 # Measure the begining of the code execution process
-ini_time = datetime.now()
-print(ini_time)
+# ini_time = datetime.now()
+# print(ini_time)
 
 # Feature engineering + hyperparameter optimization + model metrics for every fold
-memory_palace = fn.fold_evaluation(p_data_folds=t_folds, p_models=ml_models,
-                                   p_saving=True, p_file_name=file_name)
+# memory_palace = fn.fold_evaluation(p_data_folds=t_folds, p_models=ml_models,
+#                                    p_saving=True, p_file_name=file_name)
 
 # Measure the end of the code execution process
-end_time = datetime.now()
-print(end_time)
+# end_time = datetime.now()
+# print(end_time)
 # ------------------------------------------------------------------------------------------------------ -- #
 
 # Load previously generated data
-# memory_palace = dt.data_save_load(p_data_objects=None, p_data_action='load', p_data_file=file_name)
-# memory_palace = memory_palace['memory_palace']
+memory_palace = dt.data_save_load(p_data_objects=None, p_data_action='load', p_data_file=file_name)
+memory_palace = memory_palace['memory_palace']
 
 # -- ------------------------------------------------------------------------------- PARAMETER SET CASES -- #
 # -- ------------------------------------------------------------------------------- ------------------- -- #
 
 # -- Min, max and mode AUC cases
-auc_cases = fn.model_auc(p_models=ml_models, p_global_cases=memory_palace, p_data_folds=t_folds)
+auc_cases = fn.model_auc(p_models=ml_models, p_global_cases=memory_palace, p_data_folds=t_folds,
+                         p_cases_type='train')
 
 # -- ------------------------------------------------------------------------ SYMBOLIC FEATURES ANALYSIS -- #
 # -- ------------------------------------------------------------------------ -------------------------- -- #

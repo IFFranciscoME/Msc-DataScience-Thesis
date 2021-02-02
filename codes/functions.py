@@ -933,14 +933,14 @@ def genetic_algo_optimization(p_data, p_model, p_opt_params):
             train_fit = (train_tp + train_tn) / len(model['results']['data']['train'])
 
             # True positives in test data
-            test_tp = model['results']['matrix']['test'][0, 0]
+            # test_tp = model['results']['matrix']['test'][0, 0]
             # True negatives in test data
-            test_tn = model['results']['matrix']['test'][1, 1]
+            # test_tn = model['results']['matrix']['test'][1, 1]
             # Model accuracy
-            test_fit = (test_tp + test_tn) / len(model['results']['data']['test'])
+            # test_fit = (test_tp + test_tn) / len(model['results']['data']['test'])
 
             # Fitness measure
-            model_fit = np.mean([train_fit, test_fit])
+            model_fit = train_fit
 
             return model_fit,
 
@@ -1035,14 +1035,15 @@ def genetic_algo_optimization(p_data, p_model, p_opt_params):
             train_fit = (train_tp + train_tn) / len(model['results']['data']['train'])
 
             # True positives in test data
-            test_tp = model['results']['matrix']['test'][0, 0]
+            # test_tp = model['results']['matrix']['test'][0, 0]
             # True negatives in test data
-            test_tn = model['results']['matrix']['test'][1, 1]
+            # test_tn = model['results']['matrix']['test'][1, 1]
             # Model accuracy
-            test_fit = (test_tp + test_tn) / len(model['results']['data']['test'])
+            # test_fit = (test_tp + test_tn) / len(model['results']['data']['test'])
 
             # Fitness measure
-            model_fit = np.mean([train_fit, test_fit])
+            # model_fit = np.mean([train_fit, test_fit])
+            model_fit = train_fit
 
             return model_fit,
 
@@ -1139,14 +1140,15 @@ def genetic_algo_optimization(p_data, p_model, p_opt_params):
             train_fit = (train_tp + train_tn) / len(model['results']['data']['train'])
 
             # True positives in test data
-            test_tp = model['results']['matrix']['test'][0, 0]
+            # test_tp = model['results']['matrix']['test'][0, 0]
             # True negatives in test data
-            test_tn = model['results']['matrix']['test'][1, 1]
+            # test_tn = model['results']['matrix']['test'][1, 1]
             # Model accuracy
-            test_fit = (test_tp + test_tn) / len(model['results']['data']['test'])
+            # test_fit = (test_tp + test_tn) / len(model['results']['data']['test'])
 
             # Fitness measure
-            model_fit = np.mean([train_fit, test_fit])
+            # model_fit = np.mean([train_fit, test_fit])
+            model_fit = train_fit
 
             return model_fit,
 
@@ -1387,21 +1389,32 @@ def global_evaluation(p_memory_palace, p_data, p_cases, p_model, p_case):
 # -------------------------------------------------------------------------- Model AUC Min and Max Cases -- #
 # --------------------------------------------------------------------------------------------------------- #
 
-def model_auc(p_models, p_global_cases, p_data_folds):
+def model_auc(p_models, p_global_cases, p_data_folds, p_cases_type):
     """
     AUC min and max cases for the models
+
     Parameters
     ----------
     p_models: list
         with the models name
+
     p_global_cases: dict
         With all the info for the global cases
+
     p_data_folds: dict
         with all the historical data info in folds
+
+    p_cases_type: str
+        'train': the train AUC is used
+        'simple': a simple average is calculated between train and test AUC
+        'weighted': a weighted average is calculated between train (80%) and test (20%) AUC
+        'inv-weighted': an inverse weighted average is calculated between train (20%) and test (80%) AUC
+
     Returns
     -------
     auc_cases:dict
         with all the info of the min and the max case for every model
+
     """
 
     # diccionario para almacenar resultados de busqueda
@@ -1409,7 +1422,7 @@ def model_auc(p_models, p_global_cases, p_data_folds):
                      for i in ['auc_min', 'auc_max', 'hof_metrics']} for j in p_models}
 
     # catch mode on model params
-    i_params = {}
+    auc_mode = {}
 
     # search for every model
     for model in p_models:
@@ -1417,35 +1430,55 @@ def model_auc(p_models, p_global_cases, p_data_folds):
         auc_max = 0
         auc_max_params = {}
         auc_min_params = {}
-        i_params[model] = {}
+        auc_mode[model] = {}
         
         # search for every fold
         for period in p_data_folds:
             auc_cases[model]['hof_metrics']['data'][period] = {}
             auc_s = []
             
-            # -- Case 0
-            # save and comper in search of parameter repetition
+            # -- For debugging -- #
             # p_global_cases = memory_palace
             # model = 'logistic-elasticnet'
             # period = 'b_y_0'
 
+            # -- Case 0
+            # get the number of repeated individuals in the whole HoF
             for p in p_global_cases[model][period]['p_hof']['hof']:
-                # i = params[0]
-                if tuple(p) in list(i_params[model].keys()):
-                    i_params[model][tuple(p)] += 1
-                    print(model)
-                    print(period)
-                    print(tuple(p))
+                if tuple(p) in list(auc_mode[model].keys()):
+                    auc_mode[model][tuple(p)] += 1
                 else:
-                    i_params[model][tuple(p)] = 0
+                    auc_mode[model][tuple(p)] = 0
 
             # search for every individual in hall of fame
             for i in range(0, len(p_global_cases[model][period]['e_hof'])):
                 
-                # calculate fitness metric the same as in the optimization process
-                c_auc = round((p_global_cases[model][period]['e_hof'][i]['metrics']['train']['auc'] + 
-                               p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc'])/2, 4)
+                # initialize value in 0 (in case of error)
+                c_auc = 0
+                
+                if p_cases_type == 'train':
+                    # TYPE 0: TRAIN AUC
+                    c_auc = p_global_cases[model][period]['e_hof'][i]['metrics']['train']['auc']
+
+                # -- Calculate fitness metric the same as in the optimization process
+                elif p_cases_type == 'simple':
+                    # TYPE 1: SIMPLE AVERAGE TRAIN & TEST
+                    c_auc = round((p_global_cases[model][period]['e_hof'][i]['metrics']['train']['auc'] + 
+                                   p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc'])/2, 4)
+
+                elif p_cases_type == 'weighted':
+                    # TYPE 2: WEIGHTED AVERAGE TRAIN & TEST
+                    c_auc = round((p_global_cases[model][period]['e_hof'][i]['metrics']['train']['auc']*.8 + 
+                                   p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc']*.2)/2, 4)
+                
+                elif p_cases_type == 'inv-weighted':
+                    # TYPE 2: WEIGHTED AVERAGE TRAIN & TEST
+                    c_auc = round((p_global_cases[model][period]['e_hof'][i]['metrics']['train']['auc']*.2 + 
+                                   p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc']*.8)/2, 4)
+                
+                # error in parameter input
+                else:
+                    print('type of auc case is wrong')
                 
                 # save current auc data for later use
                 auc_s.append(c_auc)
@@ -1476,6 +1509,6 @@ def model_auc(p_models, p_global_cases, p_data_folds):
             auc_cases[model]['hof_metrics']['data'][period]['auc_min'] = auc_min
             auc_cases[model]['hof_metrics']['data'][period]['auc_min_params'] = auc_min_params
             auc_cases[model]['hof_metrics']['data'][period]['features'] = features
-            auc_cases[model]['hof_metrics']['data'][period]['mode'] = i_params
+            auc_cases[model]['hof_metrics']['data'][period]['mode'] = auc_mode[model]
 
     return auc_cases
