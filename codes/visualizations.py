@@ -11,11 +11,9 @@
 """
 
 import numpy as np
-import pandas as pd
 import plotly.graph_objects as go
 import plotly.io as pio
 import chart_studio
-import chart_studio.plotly as py
 pio.renderers.default = "browser"
 
 # -- ------------------------------------------------------------------------------- CREDENCIALES PLOTLY -- #

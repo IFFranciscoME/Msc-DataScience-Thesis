@@ -17,5 +17,5 @@
 |   Organization   | General content organization       | 16:00 30.Jan.2021  | 1.0          |                  |
 |   Content        | Models Optimization Heuristics     | 09:30 31.Jan.2021  | 2.0          |                  |
 |   Content        | Models Optimization NeuralNet      | 13:00 31.Jan.2021  | 1.0          |                  |
-
-|   Coding         | Optimization Process               | 15:00 31.Jan.2021  | 3.5          |                  |
+|   Coding         | Optimization Process               | 15:00 31.Jan.2021  | 4.5          |                  |
+|   Coding         | AUC mode cases and code comments   | 18:00 01.Feb.2021  | 3.5          |                  |

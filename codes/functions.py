@@ -10,6 +10,9 @@
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 
+from rich import print
+from rich import inspect
+
 import pandas as pd
 import numpy as np
 import random
@@ -1406,31 +1409,54 @@ def model_auc(p_models, p_global_cases, p_data_folds):
     auc_cases = {j: {i: {'data': {}, 'period':''}
                      for i in ['auc_min', 'auc_max', 'hof_metrics']} for j in p_models}
 
-    # ciclo para busqueda de auc_min y auc_max
+    # catch mode on model params
+    i_params = {}
+
+    # search for every model
     for model in p_models:
-        # model = p_models[0]
         auc_min = 1
         auc_max = 0
         auc_max_params = {}
         auc_min_params = {}
+        i_params[model] = {}
+        
+        # search for every fold
         for period in p_data_folds:
-            # period = 'q_01_2011'
             auc_cases[model]['hof_metrics']['data'][period] = {}
             auc_s = []
-            for i in range(0, 10):
+            
+            # -- Case 0
+            # save and comper in search of parameter repetition
+            # p_global_cases = memory_palace
+            # model = 'logistic-elasticnet'
+            # period = 'b_y_0'
+
+            for p in p_global_cases[model][period]['p_hof']['hof']:
+                # i = params[0]
+                if tuple(p) in list(i_params[model].keys()):
+                    i_params[model][tuple(p)] += 1
+                    print(model)
+                    print(period)
+                    print(tuple(p))
+                else:
+                    i_params[model][tuple(p)] = 0
+
+            # search for every individual in hall of fame
+            for i in range(0, len(p_global_cases[model][period]['e_hof'])):
+                print(i)
                 auc_s.append(p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc'])
+                print('casos')
 
                 # -- Case 1
-                # get the individual of all of the HoF 
-                # El individuo de todos los HOF de todos los periodos que produjo la minima AUC
+                # get the individual of all of the HoF that produced the minimum AUC
                 if p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc'] < auc_min:
                     auc_min = p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc']
                     auc_cases[model]['auc_min']['data'] = p_global_cases[model][period]['e_hof'][i]
                     auc_cases[model]['auc_min']['period'] = period
                     auc_min_params = p_global_cases[model][period]['p_hof']['hof'][i]
 
-                # -- caso 2
-                # El individuo de todos los HOF de todos los periodos que produjo la maxima AUC
+                # -- Case 2
+                # get the individual of all of the HoF that produced the maximum AUC
                 elif p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc'] > auc_max:
                     auc_max = p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc']
                     auc_cases[model]['auc_max']['data'] = p_global_cases[model][period]['e_hof'][i]
@@ -1447,5 +1473,6 @@ def model_auc(p_models, p_global_cases, p_data_folds):
             auc_cases[model]['hof_metrics']['data'][period]['auc_min'] = auc_min
             auc_cases[model]['hof_metrics']['data'][period]['auc_min_params'] = auc_min_params
             auc_cases[model]['hof_metrics']['data'][period]['features'] = features
+            auc_cases[model]['hof_metrics']['data'][period]['mode'] = i_params
 
     return auc_cases

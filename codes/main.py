@@ -15,7 +15,6 @@ from rich import inspect
 
 import pandas as pd
 import numpy as np
-import random
 
 from scipy.sparse.construct import random
 from data import ohlc_data as data
@@ -26,6 +25,7 @@ import visualizations as vs
 import data as dt
 
 # Reproducible results
+import random
 random.seed(123)
 
 # --------------------------------------------------------------- PLOT 1: USD/MXN OHLC HISTORICAL PRICES -- #
@@ -40,8 +40,8 @@ plot_1 =vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_1, p_vlines=None)
 # Generate plot online with chartstudio
 # py.plot(plot_1)
 
-# ---------------------------------------------------------------------- TABLE 1: SHORT DATA DESCRIPTION -- #
-# ----------------------------------------------------------------------- ------------------------------ -- #
+# ------------------------------------------------------------------------------- SHORT DATA DESCRIPTION -- #
+# ------------------------------------------------------------------------------- ---------------------- -- #
 
 # Table with data description
 table_1 = data.describe()
@@ -50,12 +50,12 @@ table_1 = data.describe()
 # ------------------------------------------------------------------- ---------------------------------- -- #
 
 # Fold size
-fold_size = 'quarter'
+fold_size = 'bi-year'
 
 # Timeseries data division in t-folds
 t_folds = fn.t_folds(p_data=data, p_period=fold_size)
 
-# -- ----------------------------------------------------------------- PLOT 2: Time Series Block T-Folds -- #
+# -- ----------------------------------------------------------------- PLOT 2: TIME SERIES BLOCK T-FOLDS -- #
 # -- ----------------------------------------------------------------- --------------------------------- -- #
 
 # Dates for vertical lines in the T-Folds plot
@@ -73,40 +73,55 @@ plot_2 = vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_2, p_vlines=dates_folds)
 # Generate plot online with chartstudio
 # py.plot(plot_2)
 
-# -- ------------------------------------------------------------------ PROCESS: Fold Evaluation Process -- #
-# -- ------------------------------------------------------------------ -------------------------------- -- #
+# -- --------------------------------------------------------------------------- FOLD EVALUATION PROCESS -- #
+# -- --------------------------------------------------------------------------- ----------------------- -- #
 
 # List with the names of the models
 ml_models = list(dt.models.keys())
 
 # File name to save the data
-file_name = 'files/pickle_rick/genetic_net_' + fold_size + '_pruebas.dat'
+file_name = 'files/pickle_rick/genetic_net_' + fold_size + '.dat'
 
 # ---------------------------------------------------------------- WARNING: TAKES HOURS TO RUN THIS PART -- #
 # Measure the begining of the code execution process
-ini_time = datetime.now()
-print(ini_time)
+# ini_time = datetime.now()
+# print(ini_time)
 
 # Feature engineering + hyperparameter optimization + model metrics for every fold
-memory_palace = fn.fold_evaluation(p_data_folds=t_folds, p_models=ml_models,
-                                   p_saving=True, p_file_name=file_name)
+# memory_palace = fn.fold_evaluation(p_data_folds=t_folds, p_models=ml_models,
+#                                    p_saving=True, p_file_name=file_name)
 
 # Measure the end of the code execution process
-end_time = datetime.now()
-print(end_time)
+# end_time = datetime.now()
+# print(end_time)
 # ------------------------------------------------------------------------------------------------------ -- #
 
 # Load previously generated data
-# memory_palace = dt.data_save_load(p_data_objects=None, p_data_action='load', p_data_file=file_name)
-# memory_palace = memory_palace['memory_palace']
+memory_palace = dt.data_save_load(p_data_objects=None, p_data_action='load', p_data_file=file_name)
+memory_palace = memory_palace['memory_palace']
 
-# -- ---------------------------------------------------------------------- PROCESS: AUC min & max cases -- #
-# -- ---------------------------------------------------------------------- ---------------------------- -- #
+# -- ------------------------------------------------------------------------------- PARAMETER SET CASES -- #
+# -- ------------------------------------------------------------------------------- ------------------- -- #
 
-# Min and max AUC cases for the models
+# -- Min, max and mode AUC cases
 auc_cases = fn.model_auc(p_models=ml_models, p_global_cases=memory_palace, p_data_folds=t_folds)
 
-# -- --------------------------------------------------------------- PLOT 3: Classification Fold Results -- #
+# -- ------------------------------------------------------------------------ SYMBOLIC FEATURES ANALYSIS -- #
+# -- ------------------------------------------------------------------------ -------------------------- -- #
+
+# memory_palace['logistic-elasticnet']['b_y_0']['sym_features']['best_programs']
+# (pending) parsimony metric
+# (pending) fitness metric
+# (pending) equations description
+
+# -- ----------------------------------------------------------------------------- ALL FEATURES ANALYSIS -- #
+# -- ----------------------------------------------------------------------------- --------------------- -- #
+
+# (pending) correlation
+# (pending) outliers
+# (pending) symmetry
+
+# -- --------------------------------------------------------------- PLOT 3: CLASSIFICATION FOLD RESULTS -- #
 # -- ----------------------------------------------------------------------------- --------------------- -- #
 
 # Pick case
@@ -140,8 +155,8 @@ plot_3 = vs.g_ohlc_class(p_ohlc=ohlc_prices, p_theme=dt.theme_plot_3, p_data_cla
 # Generate plot online with chartstudio
 # py.plot(plot_3)
 
-# -- ------------------------------------------------------------------ PLOT 4: ROC and AUC Fold Results -- #
-# -- ------------------------------------------------------------------ -------------------------------- -- #
+# -- -------------------------------------------------------------------- PLOT 4: ROC & AUC FOLD RESULTS -- #
+# -- -------------------------------------------------------------------- ------------------------------ -- #
 
 # Plot title
 dt.theme_plot_4['p_labels']['title'] = 'in Fold max/min AUC cases'
@@ -155,8 +170,8 @@ plot_4 = vs.g_roc_auc(p_cases=auc_cases, p_type='test', p_models=ml_models, p_th
 # Generate plot online with chartstudio
 # py.plot(plot_4)
 
-# -- --------------------------------------------------------- Global Evaluation for AUC min & max Cases -- #
-# -- --------------------------------------------------------- ----------------------------------------- -- #
+# -- ------------------------------------------------------------------- GLOBAL EVALUATION FOR AUC CASES -- #
+# -- ------------------------------------------------------------------- ------------------------------- -- #
 
 # Case to evaluate
 fold_case = 'auc_max'
@@ -175,7 +190,7 @@ global_model['model']['metrics']['test']['auc']
 # Model accuracy
 global_model['model']['metrics']['test']['acc']
 
-# -- ------------------------------------------------------------- PLOT 5: Global Classification Results -- #
+# -- ------------------------------------------------------------- PLOT 5: GLOBAL CLASSIFICATION RESULTS -- #
 # -- ------------------------------------------------------------- ------------------------------------- -- #
 
 # Get data for prices and predictions
