@@ -40,15 +40,6 @@ plot_1 =vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_1, p_vlines=None)
 # Generate plot online with chartstudio
 # py.plot(plot_1)
 
-# ------------------------------------------------------------------------------- SHORT DATA DESCRIPTION -- #
-# ------------------------------------------------------------------------------- ---------------------- -- #
-
-# Table with data description
-table_1 = data.describe()
-
-# Missing values
-missing_values = 'No missing values (NAs)' if (len(data.notna()) == len(data)) else 'missing'
-
 # ------------------------------------------------------------------- TIMESERIES FOLDS FOR DATA DIVISION -- #
 # ------------------------------------------------------------------- ---------------------------------- -- #
 
@@ -110,6 +101,15 @@ print(end_time)
 auc_cases = fn.model_auc(p_models=ml_models, p_global_cases=memory_palace, p_data_folds=folds,
                          p_cases_type='inv-weighted')
 
+# -- -------------------------------------------------------------------------------------- DATA PROFILE -- #
+# -- -------------------------------------------------------------------------------------- ------------ -- #
+
+# Input data
+# Features
+# Target
+ 
+ # memory_palace[period]['metrics']
+ 
 # -- ------------------------------------------------------------------------ SYMBOLIC FEATURES ANALYSIS -- #
 # -- ------------------------------------------------------------------------ -------------------------- -- #
 
