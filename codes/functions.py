@@ -26,7 +26,9 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.metrics import confusion_matrix, accuracy_score, roc_auc_score, roc_curve
 from sklearn.neural_network import MLPClassifier
-from sklearn.exceptions import ConvergenceWarning
+
+from scipy.stats import kurtosis as m_kurtosis
+from scipy.stats import skew as m_skew
 
 from gplearn.genetic import SymbolicTransformer
 from deap import base, creator, tools, algorithms
@@ -624,6 +626,12 @@ def data_profile(p_data, p_type):
                np.percentile(ohlc_data['hl'], 90, interpolation = 'midpoint'),
                np.percentile(ohlc_data['ol'], 90, interpolation = 'midpoint'),
                np.percentile(ohlc_data['ho'], 90, interpolation = 'midpoint')]
+        
+        skew = [m_skew(ohlc_data['co']), m_skew(ohlc_data['hl']),
+                m_skew(ohlc_data['ol']), m_skew(ohlc_data['ho'])]
+
+        kurt = [m_kurtosis(ohlc_data['co']), m_kurtosis(ohlc_data['hl']),
+                m_kurtosis(ohlc_data['ol']), m_kurtosis(ohlc_data['ho'])]
 
         return 1
 
