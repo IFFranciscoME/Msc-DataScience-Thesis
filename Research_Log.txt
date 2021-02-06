@@ -20,7 +20,11 @@
 |   Coding         | Optimization Process               | 15:00 31.Jan.2021  | 4.5          |                  |
 |   Coding         | AUC mode cases and code comments   | 18:00 01.Feb.2021  | 4.0          |                  |
 |   Organization   | General content and planning       | 10:00 02.Feb.2021  | 2.0          |                  |
-
+|   Organization   | t-fold process layout              | 08:00 05.Feb.2021  | 2.0          |                  |
+|   Coding         | Feature Metrics function           | 11:00 05.Feb.2021  | 1.0          |                  |
+|   Meeting        | With thesis director               | 12:00 05.Feb.2021  | 1.0          |                  |
+|   Coding         | Optimization Function Improvemnt   | 14:00 05.Feb.2021  | 2.0          |                  |
+|   Coding         | General code review and tests      | 18:00 05.Feb.2021  | 1.0          |                  |
 
 # -------------------------------------------------------------------------------------- PENDING ACTIVITIES -- #
 

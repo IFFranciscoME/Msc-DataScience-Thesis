@@ -364,25 +364,28 @@ def linear_features(p_data, p_memory):
     # ----------------------------------------------------------- -------------------------------------- -- #
 
     # funcion para generar variables autoregresivas
-    datos_arf = autoregressive_features(p_data=p_data, p_nmax=p_memory)
+    data_ar = autoregressive_features(p_data=p_data, p_nmax=p_memory)
 
     # separacion de variable dependiente
-    datos_y = datos_arf['co_d'].copy()
+    data_y = data_ar['co_d'].copy()
 
     # separacion de variable dependiente
     # datos_timestamp = datos_arf['timestamp'].copy()
 
     # separacion de variables independientes
-    datos_arf = datos_arf.drop(['timestamp', 'co', 'co_d'], axis=1, inplace=False)
+    data_arf = data_ar.drop(['timestamp', 'co', 'co_d'], axis=1, inplace=False)
 
     # ----------------------------------------------------------------- ingenieria de variables hadamard -- #
     # ----------------------------------------------------------------- -------------------------------- -- #
 
     # funcion para generar variables con producto hadamard
-    datos_had = hadamard_features(p_data=datos_arf, p_nmax=p_memory)
+    datos_had = hadamard_features(p_data=data_arf, p_nmax=p_memory)
 
     # datos para utilizar en la siguiente etapa
-    features_data = pd.concat([datos_y.copy(), datos_arf.copy(), datos_had.copy()], axis=1)
+    features_data = pd.concat([data_y.copy(), datos_had.copy()], axis=1)
+
+    # keep the timestamp as index
+    features_data.index = data_ar['timestamp']
   
     return features_data
 
@@ -518,6 +521,7 @@ def genetic_programed_features(p_data):
     # variables
     datos_sym = sym_data['data']
     datos_sym.columns = ['sym_' + str(i) for i in range(0, len(sym_data['data'].iloc[0, :]))]
+    datos_sym.index = datos_had.index
 
     # datos para utilizar en la siguiente etapa
     datos_modelo = pd.concat([datos_had.copy(), datos_sym.copy()], axis=1)
@@ -533,6 +537,89 @@ def genetic_programed_features(p_data):
     model_data['test_y'] = ytest
 
     return {'model_data': model_data, 'sym_data': sym_data}
+
+
+# --------------------------------------------------------- EXPLORATORY DATA ANALYSIS & FEATURES METRICS -- #
+# --------------------------------------------------------- ----------------------------------------------- #
+
+def data_profile(p_data, p_type):
+    """
+    OHLC Prices Profiling (Inspired in the pandas-profiling existing library)
+
+    Parameters
+    ----------
+
+    p_data: pd.DataFrame
+        A data frame with columns of data to be processed
+
+    p_type: str
+        indication of the data type: 
+            'ohlc': dataframe with TimeStamp-Open-High-Low-Close columns names
+            'ts': dataframe with unknown quantity, meaning and name of the columns 
+
+    Return
+    ------
+    r_data_profile: dict
+        {}
+    
+    References
+    ----------
+    https://github.com/pandas-profiling/pandas-profiling
+
+
+    """
+
+    # p_data.columns
+
+    # -- OHLCV PROFILING -- #
+    if p_type == 'ohlc':
+
+        # -- init and end dates, amount of data, data type, range of values (all values)
+        # -- missing data (granularity vs calendar if data is based on timestamp labeling)
+        # -- CO (grow), HL (volatility), OL (downside move), HO (upside move)
+        # -- -- min, max, mean, median, sd, IQR, 90% quantile, outliers (+/- 1.5*IQR)
+        # -- -- skewness and kurtosis
+
+
+
+        return 1
+
+    # -- TIMESERIES PROFILING -- #
+    elif p_type == 'ts':
+
+        # -- init and end dates, amount of data, data type, range of values (all values)
+        # ts_init = p_data.index.to_list()[0]
+        # ts_end = p_data.index.to_list()[-1]
+        # ts_amo = list(p_data.shape)
+        # ts_tps = [str(p_data[i].dtype) for i in list(p_data.columns)]
+        # ts_des = p_data.describe()
+
+        # -- missing data (granularity vs calendar if data is based on timestamp labeling)
+        # -- For every column in the data frame
+        # -- -- min, max, mean, median, sd, IQR, 90% quantile, outliers (+/- 1.5*IQR)
+        # column_data = p_data[list(p_data.columns)[0]]
+        # tsc_min = min(column_data)
+        # tsc_max = max(column_data)
+        # tsc_mea = np.mean(column_data)
+        # tsc_med = np.median(column_data)
+        # tsc_sd = np.std(column_data)
+        
+        # q1 = np.percentile(column_data, 75, interpolation = 'midpoint')
+        # q3 = np.percentile(column_data, 25, interpolation = 'midpoint')
+
+        # tsc_iqr = q1 - q3
+        # tsc_qr9 = np.percentile(column_data, 90, interpolation = 'midpoint') 
+        # out_lims = [q1 - 1.5*tsc_iqr, q3 + 1.5*tsc_iqr]
+        
+        # outliers = column_data.index(list(column_data) <= out_lims[0] or list(column_data) >= out_lims[1])
+
+        # -- -- skewness and kurtosis
+
+        return 1
+
+    else:
+        print('error: Type of data not correctly specified')
+        return 1
 
 
 # -- ---------------------------------------------------- DATA PROCESSING: Metrics for Model Performance -- # 
@@ -838,23 +925,109 @@ def ann_mlp(p_data, p_params):
 
     return metrics_mlp_model
 
+
+# --------------------------------------------------------------- FUNCTION: Genetic Algorithm Evaluation -- #
+# --------------------------------------------------------------- ----------------------------------------- #
+
+def genetic_algo_evaluate(p_individual, p_data, p_model, p_fit_type):
+    """
+    To evaluate an individual used in the genetic optimization process
+
+    Parameters
+    ----------
+
+    p_model: str
+        with the model name: 'logistic-elasticnet', 'l1-svm', 'ann-mlp'
+
+    p_fit_type: str
+        type of fitness metric for the optimization process:
+        'train': the train AUC is used
+        'test': the test AUC is used
+        'simple': a simple average is calculated between train and test AUC
+        'weighted': a weighted average is calculated between train (80%) and test (20%) AUC
+        'inv-weighted': an inverse weighted average is calculated between train (20%) and test (80%) AUC
+
+    """
+
+    optimization_params = dt.models
+    model_params = list(optimization_params[p_model]['params'].keys())
+
+    # dummy initialization
+    model = {}
+
+    # chromosome construction
+    chromosome = {model_params[param]: p_individual[param] for param in range(0, len(model_params))}
+
+    if p_model == 'logistic-elasticnet':
+        # model results
+        model = logistic_net(p_data=p_data, p_params=chromosome)
+        
+    elif p_model == 'l1-svm':
+        # model results
+        model = l1_svm(p_data=p_data, p_params=chromosome)
+
+    elif p_model == 'ann-mlp':
+      # model results  
+        model = ann_mlp(p_data=p_data, p_params=chromosome)
+   
+    else:
+        print('error en genetic_algo_evaluate')
+
+    # get the AUC of the selected model
+    model_train_auc = model['metrics']['train']['auc'].copy()
+    model_test_auc = model['metrics']['test']['auc'].copy()
+       
+    # -- type of fitness metric for the evaluation of the genetic individual -- #
+        
+    # train AUC
+    if p_fit_type == 'train':
+        return round(model_train_auc, 4)
+
+    elif p_fit_type == 'test':
+        return round(model_test_auc, 4)
+    
+    # simple average of AUC in sample and out of sample
+    elif p_fit_type == 'simple':
+        return round((model_train_auc + model_test_auc)/2, 4)
+
+    # weighted average of AUC in sample and out of sample
+    elif p_fit_type == 'weighted':
+        return round((model_train_auc*0.80 + model_test_auc*0.20)/2, 4)
+
+    # inversely weighted average of AUC in sample and out of sample
+    elif p_fit_type == 'inv-weighted':
+        return round((model_train_auc*0.20 + model_test_auc*0.80)/2, 4)
+
+    else:
+        print('error in type of model fitness metric')
+        return 'error'
+
+
 # -------------------------------------------------------------------------- FUNCTION: Genetic Algorithm -- #
 # ------------------------------------------------------- ------------------------------------------------- #
 
-def genetic_algo_optimization(p_data, p_model, p_opt_params):
+def genetic_algo_optimization(p_data, p_model, p_opt_params, p_fit_type):
     """
     El uso de algoritmos geneticos para optimizacion de hiperparametros de varios modelos
 
     Parameters
     ----------
-    p_model: dict
-        'label' con etiqueta del modelo, 'params' llaves con parametros y listas de sus valores a optimizar
-
     p_data: pd.DataFrame
         data frame con datos del m_fold
     
+    p_model: dict
+        'label' con etiqueta del modelo, 'params' llaves con parametros y listas de sus valores a optimizar
+    
     p_opt_params: dict
         with optimization parameters from data.py
+    
+    p_fit_type: str
+    type of fitness metric for the optimization process:
+        'train': the train AUC is used
+        'test': the test AUC is used
+        'simple': a simple average is calculated between train and test AUC
+        'weighted': a weighted average is calculated between train (80%) and test (20%) AUC
+        'inv-weighted': an inverse weighted average is calculated between train (20%) and test (80%) AUC
 
     Returns
     -------
@@ -916,31 +1089,13 @@ def genetic_algo_optimization(p_data, p_model, p_opt_params):
 
             return individual,
 
-        # --------------------------------------------------- funcion de evaluacion para OLS Elastic Net -- #
+        # ------------------------------------------------ Evaluate Logistic Regression with Elastic Net -- #
         def evaluate_en(eva_individual):
+            # the return of the function has to be always a tupple, thus the inclusion of the ',' at the end
 
-            # output of genetic algorithm
-            chromosome = {'ratio': eva_individual[0], 'c': eva_individual[1]}
-
-            # model results
-            model = logistic_net(p_data=p_data, p_params=chromosome)
-
-            # True positives in train data
-            train_tp = model['results']['matrix']['train'][0, 0]
-            # True negatives in train data
-            train_tn = model['results']['matrix']['train'][1, 1]
-            # Model accuracy
-            train_fit = (train_tp + train_tn) / len(model['results']['data']['train'])
-
-            # True positives in test data
-            # test_tp = model['results']['matrix']['test'][0, 0]
-            # True negatives in test data
-            # test_tn = model['results']['matrix']['test'][1, 1]
-            # Model accuracy
-            # test_fit = (test_tp + test_tn) / len(model['results']['data']['test'])
-
-            # Fitness measure
-            model_fit = train_fit
+            model_fit = genetic_algo_evaluate(p_individual=eva_individual,
+                                              p_data=p_data, p_model='logistic-elasticnet',
+                                              p_fit_type=p_fit_type)
 
             return model_fit,
 
@@ -1019,31 +1174,11 @@ def genetic_algo_optimization(p_data, p_model, p_opt_params):
             return individual,
 
         # ------------------------------------------------------------ funcion de evaluacion para LS SVM -- #
-        def evaluate_svm(eval_individual):
+        def evaluate_svm(eva_individual):
 
-            # output of genetic algorithm
-            chromosome = {'c': eval_individual[0], 'kernel': eval_individual[1], 'gamma': eval_individual[2]}
-
-            # model results
-            model = l1_svm(p_data=p_data, p_params=chromosome)
-
-            # True positives in train data
-            train_tp = model['results']['matrix']['train'][0, 0]
-            # True negatives in train data
-            train_tn = model['results']['matrix']['train'][1, 1]
-            # Model accuracy
-            train_fit = (train_tp + train_tn) / len(model['results']['data']['train'])
-
-            # True positives in test data
-            # test_tp = model['results']['matrix']['test'][0, 0]
-            # True negatives in test data
-            # test_tn = model['results']['matrix']['test'][1, 1]
-            # Model accuracy
-            # test_fit = (test_tp + test_tn) / len(model['results']['data']['test'])
-
-            # Fitness measure
-            # model_fit = np.mean([train_fit, test_fit])
-            model_fit = train_fit
+            model_fit = genetic_algo_evaluate(p_individual=eva_individual,
+                                                p_data=p_data, p_model='l1-svm',
+                                                p_fit_type=p_fit_type)
 
             return model_fit,
 
@@ -1123,32 +1258,11 @@ def genetic_algo_optimization(p_data, p_model, p_opt_params):
             return individual,
 
         # ------------------------------------------------------------ funcion de evaluacion para LS SVM -- #
-        def evaluate_mlp(eval_individual):
+        def evaluate_mlp(eva_individual):
 
-            # output of genetic algorithm
-            chromosome = {'hidden_layers': eval_individual[0], 'activation': eval_individual[1],
-                          'alpha': eval_individual[2], 'learning_rate_init': eval_individual[3]}
-
-            # model results
-            model = ann_mlp(p_data=p_data, p_params=chromosome)
-
-            # True positives in train data
-            train_tp = model['results']['matrix']['train'][0, 0]
-            # True negatives in train data
-            train_tn = model['results']['matrix']['train'][1, 1]
-            # Model accuracy
-            train_fit = (train_tp + train_tn) / len(model['results']['data']['train'])
-
-            # True positives in test data
-            # test_tp = model['results']['matrix']['test'][0, 0]
-            # True negatives in test data
-            # test_tn = model['results']['matrix']['test'][1, 1]
-            # Model accuracy
-            # test_fit = (test_tp + test_tn) / len(model['results']['data']['test'])
-
-            # Fitness measure
-            # model_fit = np.mean([train_fit, test_fit])
-            model_fit = train_fit
+            model_fit = genetic_algo_evaluate(p_individual=eva_individual,
+                                                p_data=p_data, p_model='ann-mlp',
+                                                p_fit_type=p_fit_type)
 
             return model_fit,
 
@@ -1183,7 +1297,7 @@ def genetic_algo_optimization(p_data, p_model, p_opt_params):
 # -------------------------------------------------------------------------- Model Evaluations by period -- #
 # --------------------------------------------------------------------------------------------------------- #
 
-def model_evaluations(p_features, p_optim_data, p_model):
+def model_evaluation(p_features, p_optim_data, p_model):
 
     for params in list(p_optim_data):
 
@@ -1207,7 +1321,7 @@ def model_evaluations(p_features, p_optim_data, p_model):
 # -------------------------------------------------------------------------- Model Evaluations by period -- #
 # --------------------------------------------------------------------------------------------------------- #
 
-def fold_evaluation(p_data_folds, p_models, p_saving, p_file_name):
+def fold_evaluation(p_data_folds, p_models, p_saving, p_file, p_fit_type, p_transform, p_scaling):
     """
     Global evaluations for specified data folds for specified models
 
@@ -1221,6 +1335,14 @@ def fold_evaluation(p_data_folds, p_models, p_saving, p_file_name):
 
     p_file_name: str
 
+    p_fit_type: str
+    type of fitness metric for the optimization process:
+        'train': the train AUC is used
+        'test': the test AUC is used
+        'simple': a simple average is calculated between train and test AUC
+        'weighted': a weighted average is calculated between train (80%) and test (20%) AUC
+        'inv-weighted': an inverse weighted average is calculated between train (20%) and test (80%) AUC
+
     Returns
     -------
     memory_palace: dict
@@ -1229,10 +1351,11 @@ def fold_evaluation(p_data_folds, p_models, p_saving, p_file_name):
 
     # main data structure for calculations
     memory_palace = {j: {i: {'e_hof': [], 'p_hof': {}, 'time': [], 'features': {}}
-                            for i in p_data_folds} for j in list(dt.models.keys())}
+                     for i in list(dt.models.keys())} for j in p_data_folds}
 
     # cycle to iterate all periods
-    for period in p_data_folds:
+    for period in list(p_data_folds.keys()):
+        # period = list(p_data_folds.keys())[1]
 
         # time measurement
         init = datetime.now()
@@ -1246,14 +1369,60 @@ def fold_evaluation(p_data_folds, p_models, p_saving, p_file_name):
         print('')
         print('--------------------- --------------------------------------- ----------------------')
         
-        # scale data of the corresponding fold to evaluate
-        data_folds = data_scaler(p_data=p_data_folds[period].copy(), p_trans='Standard')
+        # p_scaling = 'pre-feature', 'post-feature'
+        # p_transform = 'scale', 'normalize', 'robust'
 
-        # Feature engineering (Autoregressive, Hadamard)
-        linear_data = linear_features(p_data=data_folds, p_memory=7)
+        # Feature metrics for ORIGINAL DATA: OHLCV
+        dt_metrics = data_profile(p_data=p_data_folds[period].copy(), p_type='ohlc')
+
+        # dummy initialization
+        data_folds = {}
+        m_features = {}
+
+        # -- DATA SCALING OPTIONS -- #
         
-        # Symbolic features generation with genetic programming
-        m_features = genetic_programed_features(p_data=linear_data)
+        # OPTION 1: Scaling original data before feature engineering
+        if p_scaling == 'pre-feature':
+            
+            # Original data
+            data_folds = data_scaler(p_data=p_data_folds[period].copy(), p_trans=p_transform)
+        
+            # Feature engineering (Autoregressive, Hadamard)
+            linear_data = linear_features(p_data=data_folds, p_memory=7)
+            
+            # Symbolic features generation with genetic programming
+            m_features = genetic_programed_features(p_data=linear_data)
+
+        # OPTION 2: Scaling original data after feature engineering
+        elif p_scaling == 'post-feature':
+            
+            # Original data
+            data_folds = p_data_folds[period].copy()
+
+            # Feature engineering (Autoregressive, Hadamard)
+            linear_data = linear_features(p_data=data_folds, p_memory=7)
+            
+            # Symbolic features generation with genetic programming
+            m_features = genetic_programed_features(p_data=linear_data)
+
+            # Data scaling
+            m_features['model_data']['train_x'] = data_scaler(p_data=m_features['model_data']['train_x'],
+            p_trans=p_transform)
+
+            m_features['model_data']['test_x'] = data_scaler(p_data=m_features['model_data']['test_x'],
+            p_trans=p_transform)
+        
+        else:
+            print('error in p_scaling value')
+
+        # Feature metrics for FEATURES and TARGET variable
+        ft_metrics = {'train_x': data_profile(p_data=m_features['model_data']['train_x'], p_type='ts'),
+                      'test_x': data_profile(p_data=m_features['model_data']['test_x'], p_type='ts'),
+                      'train_y': data_profile(p_data=m_features['model_data']['train_y'], p_type='ts'),
+                      'test_y': data_profile(p_data=m_features['model_data']['train_y'], p_type='ts')}
+        
+        # save calculated metrics
+        memory_palace[period]['metrics'] = {'data_metrics': dt_metrics, 'feature_metrics': ft_metrics}
 
         print('\n')
         print('------------------- Hyperparameter Optimization on the Current Fold ----------------')
@@ -1262,10 +1431,10 @@ def fold_evaluation(p_data_folds, p_models, p_saving, p_file_name):
         for model in p_models:
 
             # Save data of features used in the evaluation in memory_palace
-            memory_palace[model][period]['features'] = m_features['model_data']
+            memory_palace[period][model]['features'] = m_features['model_data']
 
             # Save equations of features used in the evaluation in memory_palace
-            memory_palace[model][period]['sym_features'] = m_features['sym_data']
+            memory_palace[period][model]['sym_features'] = m_features['sym_data']
 
             # Optimization
             
@@ -1278,35 +1447,33 @@ def fold_evaluation(p_data_folds, p_models, p_saving, p_file_name):
             # -- model optimization and evaluation for every element in the Hall of Fame for every period
             # optimization process
             hof_model = genetic_algo_optimization(p_data=m_features['model_data'], p_model=dt.models[model],
-                                                  p_opt_params=dt.optimization_params)
+                                                  p_opt_params=dt.optimization_params, p_fit_type=p_fit_type)
 
             # evaluation process
             for i in range(0, len(list(hof_model['hof']))):
-                hof_eval = model_evaluations(p_features=m_features['model_data'], p_model=model,
-                                                p_optim_data=hof_model['hof'])
+                hof_eval = model_evaluation(p_features=m_features['model_data'], p_model=model,
+                                            p_optim_data=hof_model['hof'])
 
                 # save evaluation in memory_palace
-                memory_palace[model][period]['e_hof'].append(hof_eval)
+                memory_palace[period][model]['e_hof'].append(hof_eval)
 
             # save the parameters from optimization process
-            memory_palace[model][period]['p_hof'] = hof_model
+            memory_palace[period][model]['p_hof'] = hof_model
 
             # time measurement
             end = datetime.now()
             print("\nElapsed Time =", end - init)
-            memory_palace[model][period]['time'] = end - init
+            memory_palace[period][model]['time'] = end - init
 
     # -- --------------------------------------------------------------------- Save Data for offline use -- #
 
     if p_saving:
         # objects to be saved
-        pickle_rick = {'data': dt.ohlc_data, 'models': p_models,
-                       't_folds': p_data_folds, 'memory_palace': memory_palace}
+        pickle_rick = {'data': dt.ohlc_data, 'models': p_models, 't_folds': p_data_folds,
+                       'memory_palace': memory_palace}
 
         # pickle format function
-        dt.data_save_load(p_data_objects=pickle_rick,
-                          p_data_file=p_file_name,
-                          p_data_action='save')
+        dt.data_save_load(p_data_objects=pickle_rick, p_data_file=p_file, p_data_action='save')
 
     return memory_palace
 
@@ -1426,6 +1593,7 @@ def model_auc(p_models, p_global_cases, p_data_folds, p_cases_type):
 
     # search for every model
     for model in p_models:
+        # dummy initializations
         auc_min = 1
         auc_max = 0
         auc_max_params = {}
@@ -1435,6 +1603,7 @@ def model_auc(p_models, p_global_cases, p_data_folds, p_cases_type):
         # search for every fold
         for period in p_data_folds:
             auc_cases[model]['hof_metrics']['data'][period] = {}
+            # Dummy initialization
             auc_s = []
             
             # -- For debugging -- #
@@ -1442,7 +1611,7 @@ def model_auc(p_models, p_global_cases, p_data_folds, p_cases_type):
             # model = 'logistic-elasticnet'
             # period = 'b_y_0'
 
-            # -- Case 0
+            # -- Case 0 (MODE INDIVIDUAL)
             # get the number of repeated individuals in the whole HoF
             for p in p_global_cases[model][period]['p_hof']['hof']:
                 if tuple(p) in list(auc_mode[model].keys()):
@@ -1456,25 +1625,30 @@ def model_auc(p_models, p_global_cases, p_data_folds, p_cases_type):
                 # initialize value in 0 (in case of error)
                 c_auc = 0
                 
+                # -- Calculate fitness metric 
+
+                # using only train data
                 if p_cases_type == 'train':
-                    # TYPE 0: TRAIN AUC
-                    c_auc = p_global_cases[model][period]['e_hof'][i]['metrics']['train']['auc']
+                    c_auc = p_global_cases[period][model]['e_hof'][i]['metrics']['train']['auc']
 
-                # -- Calculate fitness metric the same as in the optimization process
+                # using only test data
+                elif p_cases_type == 'test':
+                    c_auc = p_global_cases[period][model]['e_hof'][i]['metrics']['test']['auc']
+
+                # a simple average with train and test data
                 elif p_cases_type == 'simple':
-                    # TYPE 1: SIMPLE AVERAGE TRAIN & TEST
-                    c_auc = round((p_global_cases[model][period]['e_hof'][i]['metrics']['train']['auc'] + 
-                                   p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc'])/2, 4)
+                    c_auc = round((p_global_cases[period][model]['e_hof'][i]['metrics']['train']['auc'] + 
+                                   p_global_cases[period][model]['e_hof'][i]['metrics']['test']['auc'])/2, 4)
 
+                # a weighted average with train and test data
                 elif p_cases_type == 'weighted':
-                    # TYPE 2: WEIGHTED AVERAGE TRAIN & TEST
-                    c_auc = round((p_global_cases[model][period]['e_hof'][i]['metrics']['train']['auc']*.8 + 
-                                   p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc']*.2)/2, 4)
+                    c_auc = round((p_global_cases[period][model]['e_hof'][i]['metrics']['train']['auc']*.8 + 
+                                   p_global_cases[period][model]['e_hof'][i]['metrics']['test']['auc']*.2)/2, 4)
                 
+                # an inversely weighted average with train and test data
                 elif p_cases_type == 'inv-weighted':
-                    # TYPE 2: WEIGHTED AVERAGE TRAIN & TEST
-                    c_auc = round((p_global_cases[model][period]['e_hof'][i]['metrics']['train']['auc']*.2 + 
-                                   p_global_cases[model][period]['e_hof'][i]['metrics']['test']['auc']*.8)/2, 4)
+                    c_auc = round((p_global_cases[period][model]['e_hof'][i]['metrics']['train']['auc']*.2 + 
+                                   p_global_cases[period][model]['e_hof'][i]['metrics']['test']['auc']*.8)/2, 4)
                 
                 # error in parameter input
                 else:
@@ -1483,7 +1657,7 @@ def model_auc(p_models, p_global_cases, p_data_folds, p_cases_type):
                 # save current auc data for later use
                 auc_s.append(c_auc)
 
-                # -- Case 1
+                # -- Case 1 (MIN INDIVIDUAL)
                 # get the individual of all of the HoF that produced the minimum AUC
                 if c_auc < auc_min:
                     auc_min = c_auc
@@ -1491,7 +1665,7 @@ def model_auc(p_models, p_global_cases, p_data_folds, p_cases_type):
                     auc_cases[model]['auc_min']['period'] = period
                     auc_min_params = p_global_cases[model][period]['p_hof']['hof'][i]
 
-                # -- Case 2
+                # -- Case 2 (MAX INDIVIDUAL)
                 # get the individual of all of the HoF that produced the maximum AUC
                 elif c_auc > auc_max:
                     auc_max = c_auc

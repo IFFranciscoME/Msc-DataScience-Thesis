@@ -46,6 +46,9 @@ plot_1 =vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_1, p_vlines=None)
 # Table with data description
 table_1 = data.describe()
 
+# Missing values
+missing_values = 'No missing values (NAs)' if (len(data.notna()) == len(data)) else 'missing'
+
 # ------------------------------------------------------------------- TIMESERIES FOLDS FOR DATA DIVISION -- #
 # ------------------------------------------------------------------- ---------------------------------- -- #
 
@@ -53,16 +56,16 @@ table_1 = data.describe()
 fold_size = 'bi-year'
 
 # Timeseries data division in t-folds
-t_folds = fn.t_folds(p_data=data, p_period=fold_size)
+folds = fn.t_folds(p_data=data, p_period=fold_size)
 
 # -- ----------------------------------------------------------------- PLOT 2: TIME SERIES BLOCK T-FOLDS -- #
 # -- ----------------------------------------------------------------- --------------------------------- -- #
 
 # Dates for vertical lines in the T-Folds plot
 dates_folds = []
-for fold in list(t_folds.keys()):
-    dates_folds.append(t_folds[fold]['timestamp'].iloc[0])
-    dates_folds.append(t_folds[fold]['timestamp'].iloc[-1])
+for n_fold in list(folds.keys()):
+    dates_folds.append(folds[n_fold]['timestamp'].iloc[0])
+    dates_folds.append(folds[n_fold]['timestamp'].iloc[-1])
 
 # Plot_1 with t-folds vertical lines
 plot_2 = vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_2, p_vlines=dates_folds)
@@ -80,32 +83,32 @@ plot_2 = vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_2, p_vlines=dates_folds)
 ml_models = list(dt.models.keys())
 
 # File name to save the data
-file_name = 'files/pickle_rick/genetic_net_' + fold_size + '_test.dat'
+file_name = 'files/pickle_rick/genetic_net_' + fold_size + '.dat'
 
 # ---------------------------------------------------------------- WARNING: TAKES HOURS TO RUN THIS PART -- #
 # Measure the begining of the code execution process
-# ini_time = datetime.now()
-# print(ini_time)
+ini_time = datetime.now()
+print(ini_time)
 
 # Feature engineering + hyperparameter optimization + model metrics for every fold
-# memory_palace = fn.fold_evaluation(p_data_folds=t_folds, p_models=ml_models,
-#                                    p_saving=True, p_file_name=file_name)
+memory_palace = fn.fold_evaluation(p_data_folds=folds, p_models=ml_models, p_saving=True, p_file=file_name,
+                                   p_fit_type='inv-weighted', p_scaling='post-feature', p_transform='robust')
 
 # Measure the end of the code execution process
-# end_time = datetime.now()
-# print(end_time)
+end_time = datetime.now()
+print(end_time)
 # ------------------------------------------------------------------------------------------------------ -- #
 
 # Load previously generated data
-memory_palace = dt.data_save_load(p_data_objects=None, p_data_action='load', p_data_file=file_name)
-memory_palace = memory_palace['memory_palace']
+# memory_palace = dt.data_save_load(p_data_objects=None, p_data_action='load', p_data_file=file_name)
+# memory_palace = memory_palace['memory_palace']
 
 # -- ------------------------------------------------------------------------------- PARAMETER SET CASES -- #
 # -- ------------------------------------------------------------------------------- ------------------- -- #
 
 # -- Min, max and mode AUC cases
-auc_cases = fn.model_auc(p_models=ml_models, p_global_cases=memory_palace, p_data_folds=t_folds,
-                         p_cases_type='train')
+auc_cases = fn.model_auc(p_models=ml_models, p_global_cases=memory_palace, p_data_folds=folds,
+                         p_cases_type='inv-weighted')
 
 # -- ------------------------------------------------------------------------ SYMBOLIC FEATURES ANALYSIS -- #
 # -- ------------------------------------------------------------------------ -------------------------- -- #
@@ -143,7 +146,7 @@ train_y = auc_cases[auc_model]['auc' + '_' + case]['data']['results']['data']['t
 test_y = auc_cases[auc_model]['auc' + '_' + case]['data']['results']['data']['test']
 
 # Get data for prices and predictions
-ohlc_prices = t_folds[auc_cases[auc_model]['auc' + '_' + case]['period']]
+ohlc_prices = folds[auc_cases[auc_model]['auc' + '_' + case]['period']]
 ohlc_class = {'train_y': train_y['y_train'], 'train_y_pred': train_y['y_train_pred'],
               'test_y': test_y['y_test'], 'test_y_pred': test_y['y_test_pred']}
 

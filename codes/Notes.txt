@@ -1,13 +1,17 @@
-# -- Check for the presence of the simpson paradox 
-# -- Simpson's paradox is one of many reasons why it’s important to evaluate your models on different slices of data.
-# -- Model 1 outperforms model 2 on group A and group B separately, but model 2 can still outperform model 1 overall.
+# -- Akaike Criteria
+In order to compare between models and between different parameter configurations of the same model
+
+# -- Simpson paradox 
+Simpson's paradox is one of many reasons why it’s important to evaluate your models on different slices of data. Model 1 outperforms Model 2 on group A and group B separately, but model 2 can still outperform model 1 with the overall data.
+https://en.wikipedia.org/wiki/Simpson%27s_paradox
+Here is a multivariable procedure that explicitly maximizes classification accuracy and prevents paradoxical confounding. [5, 6]
+https://www.researchgate.net/post/How_do_you_explain_higher_discrimination_using_a_SVM_score_index_unsupervised_from_a_supervised_SVM_model_using_same_dataset
 
 # -- Usefull Difference between AUC & ACC
-# -- ------------------------------------------------------------- ------------------------------------- -- #
 https://datascience.stackexchange.com/questions/806/advantages-of-auc-vs-standard-accuracy
 http://notmatthancock.github.io/2015/11/11/auc-and-accuracy.html
 
-# -- HOW DOES BATCH SIZE AFFECT CONVERGENCE OF SGD AND WHY ?
+# -- How does batch size affect convergence of SGD and why
 https://stats.stackexchange.com/questions/316464/how-does-batch-size-affect-convergence-of-sgd-and-why
 
 # -- How to Control the Stability of Training Neural Networks With the Batch Size
@@ -19,25 +23,51 @@ https://www.heatonresearch.com/2017/06/01/hidden-layers.html
 https://en.wikipedia.org/wiki/Universal_approximation_theorem
 https://stats.stackexchange.com/questions/181/how-to-choose-the-number-of-hidden-layers-and-nodes-in-a-feedforward-neural-netw
 
-# -- XGBoost
-https://github.com/dmlc/xgboost
-
+# -- RandomForest
+https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html
 
 # -- ------------------------------------------------------------- ------------------------------------- -- #
 # -- T-FOLD PROCESS
 # -- ------------------------------------------------------------- ------------------------------------- -- #
 # -- Define T-Fold longitudes: Quarter, Semester, Year, Bi-year, 80-20
-# -- With each T-Fold
+
+# -- Within each T-Fold
 # -- -- Separate data in 80% (in sample) - 20% (out of sample)
-# -- -- Scale data with a Standarization process (with in sample and out of sample data)
-# -- -- Create Autoregressive and Hadamard features (with in sample and out of sample data)
-# -- -- Create Symbolic Features (genetic programming) (with in sample and out of sample data)
-# -- -- Conduct the hyperparameter optimization for all models (genetic algorithms)
-# -- -- -- train with in sample and fitness with tp+tn/total
-# -- -- Save the HoF with best N individuals (parameter set)
-# -- -- Save the parameter set that produces the max, min value of the fitness metric
+
+# -- -- (OPTION 1) From the begining Scale data with 3 options
+# -- -- -- (OPTION 1) Normlize x/max(x)
+# -- -- -- (OPTION 2) Standarize (x-mean(x))/sd(x)
+# -- -- -- (OPTION 3) Robust Scale (x - median(x))/IQR
+
+# -- -- -- Create Autoregressive and Hadamard features
+# -- -- -- Create Symbolic Features (genetic programming)
+# -- -- Continue
+
+# -- -- (OPTION 2) After generating Symbolic Features Scale all the data with 3 options
+# -- -- -- (OPTION 1) Normlize x/max(x)
+# -- -- -- (OPTION 2) Standarize (x-mean(x))/sd(x)
+# -- -- -- (OPTION 3) Robust Scale (x - median(x))/IQR
+# -- -- Continue
+
+# -- -- Conduct the hyperparameter optimization for all models (Genetic Algorithms with its own parameters)
+# -- -- Select the fitness metric for the optimization
+        (OPTION 1) AUC with train data
+        (OPTION 2) AUC with test data
+        (OPTION 3) mean of train and test AUC
+        (OPTION 4) weighted-mean (80-20) of train and test AUC
+        (OPTION 5) inv-weighted-mean (20-80) of train and test AUC
+
+# -- -- Save the HoF with best N individuals
 # -- -- Calculate model metrics for the entire Hall of Fame
-# -- -- -- metrics: AUC and ACC
+# -- -- Calculate Model-inFold Performance Metric to find max and min in the fold: 
+        (OPTION 1) AUC with train data
+        (OPTION 2) AUC with test data
+        (OPTION 3) mean of train and test AUC
+        (OPTION 4) weighted-mean (80-20) of train and test AUC
+        (OPTION 5) inv-weighted-mean (20-80) of train and test AUC
+
+# -- -- Save the parameter set that produces the max, min value of the Choosen Performance Metric
+# -- -- Save the number of occurrences of every parameter set (extract the modes)
 
 # -- ------------------------------------------------------------- ------------------------------------- -- #
 # -- SYMBOLIC FEATURE ENGINEERING
@@ -65,7 +95,7 @@ https://github.com/dmlc/xgboost
 # -- Basic - Logistic Regression with regularization
 # -- Statistical Learning - Support Vector Machines with L1 regularization
 # -- Machine Learning - Aritificial Neural Network - Multi Layer Pereceptron
-# -- Tree-based-ensemble method - XGBoost trees
+# -- Tree-based-ensemble method - RandomForest
 
 # -- ------------------------------------------------------------- ------------------------------------- -- #
 # -- TRADING SYSTEM DEFINITION
@@ -76,15 +106,22 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-i-tick
 https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-volume-and-dollar-bars-6cda27e3201d
 
 # -- Criteria 2: Signal Generation
+
+- Reference 1
+- Reference 2
+
 # -- Criteria 3: Profit and Loss taking 
+
+- Reference 1
+- Reference 2
+
 # -- Criteria 4: Position sizing
 
-
-# -- (Pending) For every model, save the mode parameter set among all the T-Folds
-# -- (Pending) add other t-fold sizes (bi-anual, 80-20)
+- Reference 1
+- Reference 2
 
 # -- (Pending) search for the max, min, mode cases among all the folds
-# -- -- display metrics
+# -- -- display metrics of de lowest min and the highest max 
 # -- -- display plots
 
 # -- (Pending) with min, max, mode cases found, evaluate with the rest of T-Folds data
@@ -95,14 +132,15 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 # -- -- -- Amount/dates of data
 # -- -- -- Balance of the clases
 
-# -- -- MODEL ANALYSIS
-# -- -- -- change in accuracy
-# -- -- -- change in auc
-
 # -- -- FEATURE ANALYSIS
 # -- -- -- correlation matrix among features
 # -- -- -- outliers presence in features
 # -- -- -- Features parsimony (length and depth of program)
+
+# -- -- MODEL ANALYSIS
+# -- -- -- change in accuracy
+# -- -- -- change in auc
+# -- -- -- change in parameters
 
 # -- PARAMETER ESTABILITY
 # -- -- for every model in every T-Fold evaluate the best and worst of the HoF of the fold
@@ -114,11 +152,11 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 # -- Possible questions to answer:
 # -- -- is this method useful to find a parameter set that does not change a lot in time ?
 # -- -- is this method useful to have a stable generalization error of the model ?
-# -- -- does this method shows that a linear combination of non-linear features performs well in financial timeseries forecasting ?
+# -- -- does this method shows that a linear combination of non-linear features performs well
+        in financial timeseries forecasting ?
 # -- -- what role plays the feature complexity in this method ?
 # -- -- What is the time complexity of this method ? 
 # -- -- What is the memory complexity of this method ? 
-
 
 # -- ANN-MLP
 # -- -- HYPERPARAMETERS
@@ -131,10 +169,14 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 # -- Exploratory Data Analysis: Linear and Symbolic Features Statistics ----------------------------------- #
 # -- ------------------------------------------------------------------ -------------------------------- -- #
 
-# exploratory visuals and metrics
-# -- boxplot for outliers (individual)
+# exploratory data analysis (base price data (nor target variable or exploratory variables))
+
+# target variable
+# -- balance (among classes)
+# -- boxplot for outliers 
 # -- histogram and measurement of symmetry (individual)
 # -- Correlation heatmap (all)
+
 # -- parsimony vs outliers
 # -- parsimony vs symmetry
 
