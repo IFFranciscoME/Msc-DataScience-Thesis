@@ -580,7 +580,50 @@ def data_profile(p_data, p_type):
         # -- -- min, max, mean, median, sd, IQR, 90% quantile, outliers (+/- 1.5*IQR)
         # -- -- skewness and kurtosis
 
+        # initial data
+        ohlc_data = p_data.copy()
 
+        # interquantile range
+        def f_iqr(param_data):
+            q1 = np.percentile(param_data, 75, interpolation = 'midpoint')
+            q3 = np.percentile(param_data, 25, interpolation = 'midpoint')
+            return  q1 - q3
+        
+        # outliers function
+        def f_out(param_data):
+            # param_data = ohlc_data['co']
+            inf = param_data - 1.5*f_iqr(param_data)
+            sup = param_data + 1.5*f_iqr(param_data)
+            return [inf, sup]
+
+        # data calculations
+        ohlc_data['co'] = round((ohlc_data['close'] - ohlc_data['open'])*10000, 2)
+        ohlc_data['hl'] = round((ohlc_data['high'] - ohlc_data['low'])*10000, 2)
+        ohlc_data['ol'] = round((ohlc_data['open'] - ohlc_data['low'])*10000, 2)
+        ohlc_data['ho'] = round((ohlc_data['high'] - ohlc_data['open'])*10000, 2)
+
+        mins = [min(ohlc_data['co']), min(ohlc_data['hl']), 
+                min(ohlc_data['ol']), min(ohlc_data['ho'])]
+
+        maxs = [max(ohlc_data['co']), max(ohlc_data['hl']), 
+                max(ohlc_data['ol']), max(ohlc_data['ho'])]
+
+        means = [np.mean(ohlc_data['co']), np.mean(ohlc_data['hl']), 
+                 np.mean(ohlc_data['ol']), np.mean(ohlc_data['ho'])]
+
+        median = [np.median(ohlc_data['co']), np.median(ohlc_data['hl']), 
+                  np.median(ohlc_data['ol']), np.median(ohlc_data['ho'])]
+
+        sd = [np.std(ohlc_data['co']), np.std(ohlc_data['hl']), 
+              np.std(ohlc_data['ol']), np.std(ohlc_data['ho'])]
+
+        iqr = [f_iqr(ohlc_data['co']), f_iqr(ohlc_data['hl']), 
+               f_iqr(ohlc_data['ol']), f_iqr(ohlc_data['ho'])]
+        
+        q90 = [np.percentile(ohlc_data['co'], 90, interpolation = 'midpoint'),
+               np.percentile(ohlc_data['hl'], 90, interpolation = 'midpoint'),
+               np.percentile(ohlc_data['ol'], 90, interpolation = 'midpoint'),
+               np.percentile(ohlc_data['ho'], 90, interpolation = 'midpoint')]
 
         return 1
 
