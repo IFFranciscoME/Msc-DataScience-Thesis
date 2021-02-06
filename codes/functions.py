@@ -613,11 +613,11 @@ def data_profile(p_data, p_type):
         means = [np.mean(ohlc_data['co']), np.mean(ohlc_data['hl']), 
                  np.mean(ohlc_data['ol']), np.mean(ohlc_data['ho'])]
 
-        median = [np.median(ohlc_data['co']), np.median(ohlc_data['hl']), 
-                  np.median(ohlc_data['ol']), np.median(ohlc_data['ho'])]
+        medians = [np.median(ohlc_data['co']), np.median(ohlc_data['hl']), 
+                   np.median(ohlc_data['ol']), np.median(ohlc_data['ho'])]
 
-        sd = [np.std(ohlc_data['co']), np.std(ohlc_data['hl']), 
-              np.std(ohlc_data['ol']), np.std(ohlc_data['ho'])]
+        sds = [np.std(ohlc_data['co']), np.std(ohlc_data['hl']), 
+               np.std(ohlc_data['ol']), np.std(ohlc_data['ho'])]
 
         iqr = [f_iqr(ohlc_data['co']), f_iqr(ohlc_data['hl']), 
                f_iqr(ohlc_data['ol']), f_iqr(ohlc_data['ho'])]
@@ -633,12 +633,17 @@ def data_profile(p_data, p_type):
         kurt = [m_kurtosis(ohlc_data['co']), m_kurtosis(ohlc_data['hl']),
                 m_kurtosis(ohlc_data['ol']), m_kurtosis(ohlc_data['ho'])]
 
-        return 1
+        # final data
+        profile = pd.DataFrame({'mins': mins, 'maxs': maxs, 'means': means, 'medians': medians,
+                                'sds': sds, 'iqr': iqr, 'q_90': q90, 'skew': skew, 'kurt': kurt})
+
+        return profile
 
     # -- TIMESERIES PROFILING -- #
     elif p_type == 'ts':
 
         # -- init and end dates, amount of data, data type, range of values (all values)
+        
         # ts_init = p_data.index.to_list()[0]
         # ts_end = p_data.index.to_list()[-1]
         # ts_amo = list(p_data.shape)
@@ -648,6 +653,7 @@ def data_profile(p_data, p_type):
         # -- missing data (granularity vs calendar if data is based on timestamp labeling)
         # -- For every column in the data frame
         # -- -- min, max, mean, median, sd, IQR, 90% quantile, outliers (+/- 1.5*IQR)
+        
         # column_data = p_data[list(p_data.columns)[0]]
         # tsc_min = min(column_data)
         # tsc_max = max(column_data)
