@@ -191,3 +191,10 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 # -- Regularization effects in logistic regression
 # -- kernel in SVM
 # -- training time in ANN-MLP
+
+
+# -------- CHANGE LOG -------- #
+
+create a new document.py file with all the codes necessary to produce the elements that will be
+added to the thesis document.
+

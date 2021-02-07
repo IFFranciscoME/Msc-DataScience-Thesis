@@ -14,7 +14,21 @@ import pickle
 import pandas as pd
 from os import listdir, path
 from os.path import isfile, join
+import itertools
 
+# ---------------------------------------------------------------------------------- PARALLEL EXPERIMENT -- #
+# ---------------------------------------------------------------------------------- ------------------- -- #
+
+# Values for T-Fold size
+iter_fold = ['quarter', 'semester', 'year', 'bi-year', '80-20']
+
+# Values for three parameters inside the optimization process
+iter_opt = {'fitness': ['train', 'test', 'simple', 'weighted', 'inv-weighted'],
+            'transform': ['scale', 'normalize', 'robust'],
+            'scaling': ['post-feature', 'pre-feature']}
+
+# Iterative/Parallel Experiment Data
+iter_exp = list(itertools.product(*[iter_opt['fitness'], iter_opt['transform'], iter_opt['scaling']]))
 
 # -------------------------------------------------------------------- Historical Minute Prices Grouping -- #
 # -------------------------------------------------------------------- --------------------------------- -- #

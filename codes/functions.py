@@ -1378,7 +1378,7 @@ def model_evaluation(p_features, p_optim_data, p_model):
 # -------------------------------------------------------------------------- Model Evaluations by period -- #
 # --------------------------------------------------------------------------------------------------------- #
 
-def fold_evaluation(p_data_folds, p_models, p_saving, p_file, p_fit_type, p_transform, p_scaling):
+def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
     """
     Global evaluations for specified data folds for specified models
 
@@ -1387,10 +1387,6 @@ def fold_evaluation(p_data_folds, p_models, p_saving, p_file, p_fit_type, p_tran
     p_data_folds: dict
 
     p_models: list
-
-    p_saving: bool
-
-    p_file_name: str
 
     p_fit_type: str
     type of fitness metric for the optimization process:
@@ -1405,7 +1401,7 @@ def fold_evaluation(p_data_folds, p_models, p_saving, p_file, p_fit_type, p_tran
     memory_palace: dict
 
     """
-
+    
     # main data structure for calculations
     memory_palace = {j: {i: {'e_hof': [], 'p_hof': {}, 'time': [], 'features': {}}
                      for i in list(dt.models.keys())} for j in p_data_folds}
@@ -1521,16 +1517,6 @@ def fold_evaluation(p_data_folds, p_models, p_saving, p_file, p_fit_type, p_tran
             end = datetime.now()
             print("\nElapsed Time =", end - init)
             memory_palace[period][model]['time'] = end - init
-
-    # -- --------------------------------------------------------------------- Save Data for offline use -- #
-
-    if p_saving:
-        # objects to be saved
-        pickle_rick = {'data': dt.ohlc_data, 'models': p_models, 't_folds': p_data_folds,
-                       'memory_palace': memory_palace}
-
-        # pickle format function
-        dt.data_save_load(p_data_objects=pickle_rick, p_data_file=p_file, p_data_action='save')
 
     return memory_palace
 
