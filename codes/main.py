@@ -60,8 +60,8 @@ if __name__ == "__main__":
         ml_models = list(dt.models.keys())
 
         # Create a pool of workers with as many cores as the computer has
-        # workers = cpu_count()-1
-        workers = 1
+        workers = cpu_count()-1
+        # workers = 1
         pool = mp.Pool(workers)
         
         # Parallel Asyncronous Process 
@@ -70,6 +70,8 @@ if __name__ == "__main__":
                                                                for exp in iter_exp])}
         # close pool
         pool.close()
+        # rejoin sepparated
+        pool.join()
 
         # -- ------------------------------------------------------------------------------- DATA BACKUP -- #
         # -- ------------------------------------------------------------------------------- ----------- -- #
@@ -78,7 +80,7 @@ if __name__ == "__main__":
         file_name = 'files/pickle_rick/genetic_net_' + iteration + '.dat'
 
         # objects to be saved
-        pickle_rick = {'data': dt.ohlc_data, 't_folds': folds, 'memory_palace': fold_process}
+        pickle_rick = {'data': dt.ohlc_data, 't_folds': folds, 'fold_process': fold_process}
 
         # pickle format function
         dt.data_save_load(p_data_objects=pickle_rick, p_data_file=file_name, p_data_action='save')

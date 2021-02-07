@@ -10,15 +10,13 @@
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 
-from rich import print
-from rich import inspect
-
-import pandas as pd
-import numpy as np
 import random
 import warnings
+import logging
+import sys
+import pandas as pd
+import numpy as np
 import data as dt
-from datetime import datetime
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, RobustScaler, MaxAbsScaler
@@ -27,6 +25,7 @@ from sklearn.svm import SVC
 from sklearn.metrics import confusion_matrix, accuracy_score, roc_auc_score, roc_curve
 from sklearn.neural_network import MLPClassifier
 
+from datetime import datetime
 from scipy.stats import kurtosis as m_kurtosis
 from scipy.stats import skew as m_skew
 
@@ -1176,7 +1175,7 @@ def genetic_algo_optimization(p_data, p_model, p_opt_params, p_fit_type):
 
         # transform the deap objects into list so it can be serialized and stored with pickle
         en_pop = [list(pop) for pop in list(en_pop)]
-        en_log = [list(log) for log in list(en_log)]
+        # r_log = [list(log) for log in list(en_log)]
         en_hof = [list(hof) for hof in list(en_hof)]
 
         return {'population': en_pop, 'logs': en_log, 'hof': en_hof}
@@ -1259,7 +1258,7 @@ def genetic_algo_optimization(p_data, p_model, p_opt_params, p_fit_type):
 
         # transform the deap objects into list so it can be serialized and stored with pickle
         svm_pop = [list(pop) for pop in list(svm_pop)]
-        svm_log = [list(log) for log in list(svm_log)]
+        # svm_log = [list(log) for log in list(svm_log)]
         svm_hof = [list(hof) for hof in list(svm_hof)]
 
         return {'population': svm_pop, 'logs': svm_log, 'hof': svm_hof}
@@ -1343,7 +1342,7 @@ def genetic_algo_optimization(p_data, p_model, p_opt_params, p_fit_type):
 
         # transform the deap objects into list so it can be serialized and stored with pickle
         mlp_pop = [list(pop) for pop in list(mlp_pop)]
-        mlp_log = [list(log) for log in list(mlp_log)]
+        # mlp_log = [list(log) for log in list(mlp_log)]
         mlp_hof = [list(hof) for hof in list(mlp_hof)]
 
         return {'population': mlp_pop, 'logs': mlp_log, 'hof': mlp_hof}
@@ -1374,6 +1373,20 @@ def model_evaluation(p_features, p_optim_data, p_model):
 
             return ann_mlp(p_data=p_features, p_params=parameters)
 
+
+# ----------------------------------------------------------------------------- Parallel Loggin Function -- #
+# --------------------------------------------------------------------------------------------------------- #
+
+def setup_logger(name_logfile, path_logfile):
+                      
+        logger = logging.getLogger(name_logfile)
+        formatter = logging.Formatter('%(asctime)s: %(message)s', datefmt='%H:%M:%S')
+        fileHandler = logging.FileHandler(path_logfile, mode='w')
+        fileHandler.setFormatter(formatter)
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(fileHandler)
+
+        return logger
 
 # -------------------------------------------------------------------------- Model Evaluations by period -- #
 # --------------------------------------------------------------------------------------------------------- #
@@ -1406,6 +1419,12 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
     memory_palace = {j: {i: {'e_hof': [], 'p_hof': {}, 'time': [], 'features': {}}
                      for i in list(dt.models.keys())} for j in p_data_folds}
 
+    # Construct the file name for the logfile
+    name_log = p_fit_type + '_' + p_transform + '_' + p_scaling
+
+    # Create logfile
+    logger = setup_logger('log%s' %name_log, 'files/logs/%s.txt' %name_log)
+    
     # cycle to iterate all periods
     for period in list(p_data_folds.keys()):
         # period = list(p_data_folds.keys())[1]
@@ -1413,18 +1432,14 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
         # time measurement
         init = datetime.now()
 
-        print('\n')
-        print('----------------------------')
-        print('period:', period)
-        print('----------------------------')
-        print('\n')
-        print('--------------------- Feature Engineering on the Current Fold ----------------------')
-        print('')
-        print('--------------------- --------------------------------------- ----------------------')
+        logger.debug('\n')
+        logger.debug('----------------------------')
+        logger.debug('period:' + period)
+        logger.debug('----------------------------\n')
         
-        # p_scaling = 'pre-feature', 'post-feature'
-        # p_transform = 'scale', 'normalize', 'robust'
-
+        logger.debug('------------------- Feature Engineering on the Current Fold ---------------------')
+        logger.debug('------------------- --------------------------------------- ---------------------')
+        
         # Feature metrics for ORIGINAL DATA: OHLCV
         dt_metrics = data_profile(p_data=p_data_folds[period].copy(), p_type='ohlc')
 
@@ -1446,6 +1461,11 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
             # Symbolic features generation with genetic programming
             m_features = genetic_programed_features(p_data=linear_data)
 
+            # print to have it in the log
+            df_log = pd.DataFrame(m_features['sym_data']['details'])
+            df_log.columns = ['gen', 'avg_len', 'avg_fit', 'best_len', 'best_fit', 'best_oob', 'gen_time']
+            logger.debug('\n\n{}\n'.format(df_log))
+
         # OPTION 2: Scaling original data after feature engineering
         elif p_scaling == 'post-feature':
             
@@ -1457,6 +1477,11 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
             
             # Symbolic features generation with genetic programming
             m_features = genetic_programed_features(p_data=linear_data)
+
+            # print to have it in the log
+            df_log_2 = pd.DataFrame(m_features['sym_data']['details'])
+            df_log_2.columns = ['gen', 'avg_len', 'avg_fit', 'best_len', 'best_fit', 'best_oob', 'gen_time']
+            logger.debug('\n\n{}\n'.format(df_log_2))
 
             # Data scaling
             m_features['model_data']['train_x'] = data_scaler(p_data=m_features['model_data']['train_x'],
@@ -1477,12 +1502,12 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
         # save calculated metrics
         memory_palace[period]['metrics'] = {'data_metrics': dt_metrics, 'feature_metrics': ft_metrics}
 
-        print('\n')
-        print('------------------- Hyperparameter Optimization on the Current Fold ----------------')
-        print('')
-        print('---- Fitness:', p_fit_type)
-        print('---- Scaling object:', p_scaling)
-        print('---- Transformation:', p_transform)
+        logger.debug('----------------- Hyperparameter Optimization on the Current Fold ---------------')
+        logger.debug('------------------- --------------------------------------- ---------------------\n')
+
+        logger.debug('---- Fitness: ' + p_fit_type)
+        logger.debug('---- Scaling object: ' + p_scaling)
+        logger.debug('---- Transformation: ' + p_transform + '\n')
 
         # cycle to iterate all models
         for model in p_models:
@@ -1495,16 +1520,17 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
 
             # Optimization
             
-            print('')
-            print('------------------------------------------------------------------------------------')
-            print('model: ', model,)
-            print('------------------------------------------------------------------------------------')
-            print('')
+            logger.debug('---------------------------------------------------------------------------------')
+            logger.debug('model: ' + model)
+            logger.debug('---------------------------------------------------------------------------------\n')
 
             # -- model optimization and evaluation for every element in the Hall of Fame for every period
             # optimization process
             hof_model = genetic_algo_optimization(p_data=m_features['model_data'], p_model=dt.models[model],
                                                   p_opt_params=dt.optimization_params, p_fit_type=p_fit_type)
+
+            # log the result of genetic algorithm
+            logger.info('\n\n{}\n\n'.format(hof_model['logs']))
 
             # evaluation process
             for i in range(0, len(list(hof_model['hof']))):
@@ -1519,8 +1545,9 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
 
             # time measurement
             end = datetime.now()
-            print("\nElapsed Time =", end - init)
             memory_palace[period][model]['time'] = end - init
+
+            logger.info("Elapsed Time = " + str(end - init) + '\n')
 
     return memory_palace
 
