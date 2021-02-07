@@ -1479,6 +1479,10 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
 
         print('\n')
         print('------------------- Hyperparameter Optimization on the Current Fold ----------------')
+        print('')
+        print('---- Fitness:', p_fit_type)
+        print('---- Scaling object:', p_scaling)
+        print('---- Transformation:', p_transform)
 
         # cycle to iterate all models
         for model in p_models:
