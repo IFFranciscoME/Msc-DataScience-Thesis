@@ -196,12 +196,12 @@ def t_folds(p_data, p_period):
         years = sorted(list(set(time.year for time in list(p_data['timestamp']))))
         
         # dict to store data
-        a_80 = int(len(years)*0.80) 
-        a_20 = int(len(years)*0.20)
+        a_8 = int(len(years)*0.80) 
+        a_2 = int(len(years)*0.20)
         
         # data construction
-        y_80_20_data = {'80': p_data[pd.to_datetime(p_data['timestamp']).dt.year.isin(years[0:a_80])],
-                        '20': p_data[pd.to_datetime(p_data['timestamp']).dt.year.isin(years[a_80:a_80+a_20])]}
+        y_80_20_data = {'h_8': p_data[pd.to_datetime(p_data['timestamp']).dt.year.isin(years[0:a_8])],
+                        'h_2': p_data[pd.to_datetime(p_data['timestamp']).dt.year.isin(years[a_8:a_8+a_2])]}
     
         return y_80_20_data
 
@@ -1419,12 +1419,32 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
     memory_palace = {j: {i: {'e_hof': [], 'p_hof': {}, 'time': [], 'features': {}}
                      for i in list(dt.models.keys())} for j in p_data_folds}
 
+    iteration = list(p_data_folds.keys())[0][0]
+
+    if iteration == 'q':
+        msg = 'quarter'
+    elif iteration == 's':
+        msg = 'semester'
+    elif iteration == 'y':
+        msg = 'year'
+    elif iteration == 'b':
+        msg = 'bi-year'
+    elif iteration == 'h':
+        msg = '80-20'
+    else:
+        msg = 'na'
+
     # Construct the file name for the logfile
-    name_log = p_fit_type + '_' + p_transform + '_' + p_scaling
+    name_log = iteration + '_' + p_fit_type + '_' + p_transform + '_' + p_scaling
 
     # Create logfile
     logger = setup_logger('log%s' %name_log, 'files/logs/%s.txt' %name_log)
-    
+
+    logger.debug('                                                            ')
+    logger.debug(' ********************************************************************************')
+    logger.debug('                           T-FOLD SIZE: ' + msg + '                              ')
+    logger.debug(' ********************************************************************************\n')
+
     # cycle to iterate all periods
     for period in list(p_data_folds.keys()):
         # period = list(p_data_folds.keys())[1]
@@ -1432,10 +1452,9 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
         # time measurement
         init = datetime.now()
 
-        logger.debug('\n')
-        logger.debug('----------------------------')
-        logger.debug('period:' + period)
-        logger.debug('----------------------------\n')
+        logger.debug('|| ---------------------- ||')
+        logger.debug('|| period: ' + period)
+        logger.debug('|| ---------------------- ||\n')
         
         logger.debug('------------------- Feature Engineering on the Current Fold ---------------------')
         logger.debug('------------------- --------------------------------------- ---------------------')
@@ -1450,7 +1469,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
         # -- DATA SCALING OPTIONS -- #
         
         # OPTION 1: Scaling original data before feature engineering
-        if p_scaling == 'pre-feature':
+        if p_scaling == 'pre-features':
             
             # Original data
             data_folds = data_scaler(p_data=p_data_folds[period].copy(), p_trans=p_transform)
@@ -1467,7 +1486,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
             logger.debug('\n\n{}\n'.format(df_log))
 
         # OPTION 2: Scaling original data after feature engineering
-        elif p_scaling == 'post-feature':
+        elif p_scaling == 'post-features':
             
             # Original data
             data_folds = p_data_folds[period].copy()
@@ -1505,9 +1524,11 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
         logger.debug('----------------- Hyperparameter Optimization on the Current Fold ---------------')
         logger.debug('------------------- --------------------------------------- ---------------------\n')
 
-        logger.debug('---- Fitness: ' + p_fit_type)
-        logger.debug('---- Scaling object: ' + p_scaling)
-        logger.debug('---- Transformation: ' + p_transform + '\n')
+        logger.debug('---- Optimization Fitness: ' + p_fit_type)
+        logger.debug('---- Data Scaling Order: ' + p_scaling)
+        logger.debug('---- Data Transformation: ' + p_transform + '\n')
+
+        logger.info("Feature Engineering in Fold done in = " + str(datetime.now() - init) + '\n')
 
         # cycle to iterate all models
         for model in p_models:
@@ -1530,7 +1551,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
                                                   p_opt_params=dt.optimization_params, p_fit_type=p_fit_type)
 
             # log the result of genetic algorithm
-            logger.info('\n\n{}\n\n'.format(hof_model['logs']))
+            logger.info('\n\n{}\n'.format(hof_model['logs']))
 
             # evaluation process
             for i in range(0, len(list(hof_model['hof']))):
@@ -1544,10 +1565,22 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
             memory_palace[period][model]['p_hof'] = hof_model
 
             # time measurement
-            end = datetime.now()
-            memory_palace[period][model]['time'] = end - init
+            memory_palace[period][model]['time'] = datetime.now() - init
 
-            logger.info("Elapsed Time = " + str(end - init) + '\n')
+            logger.info("Model Optimization in Fold done in = " + str(datetime.now() - init) + '\n')
+    
+    # -- ------------------------------------------------------------------------------- DATA BACKUP -- #
+    # -- ------------------------------------------------------------------------------- ----------- -- #
+
+    # File name to save the data
+    route = 'files/pickle_rick/'
+    file_name = route + period[0] + '_' + p_fit_type + '_' + p_scaling + '_' + p_transform + '.dat'
+
+    # objects to be saved
+    pickle_rick = {'data': dt.ohlc_data, 't_folds': period, 'memory_palace': memory_palace}
+
+    # pickle format function
+    dt.data_save_load(p_data_objects=pickle_rick, p_data_file=file_name, p_data_action='save')
 
     return memory_palace
 

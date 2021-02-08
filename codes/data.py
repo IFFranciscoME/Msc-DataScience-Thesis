@@ -19,13 +19,19 @@ import itertools
 # ---------------------------------------------------------------------------------- PARALLEL EXPERIMENT -- #
 # ---------------------------------------------------------------------------------- ------------------- -- #
 
+# Short Version for Testing
+iter_fold = ['quarter', 'semester']
+iter_opt = {'fitness': ['train', 'test'],
+            'transform': ['scale', 'normalize'],
+            'scaling': ['post-features', 'pre-features']}
+   
 # Values for T-Fold size
-iter_fold = ['quarter', 'semester', 'year', 'bi-year', '80-20']
+# iter_fold = ['quarter', 'semester', 'year', 'bi-year', '80-20']
 
 # Values for three parameters inside the optimization process
-iter_opt = {'fitness': ['train', 'test', 'simple', 'weighted', 'inv-weighted'],
-            'transform': ['scale', 'normalize', 'robust'],
-            'scaling': ['post-feature', 'pre-feature']}
+# iter_opt = {'fitness': ['train', 'test', 'simple', 'weighted', 'inv-weighted'],
+#             'transform': ['scale', 'normalize', 'robust'],
+#             'scaling': ['post-features', 'pre-features']}
 
 # Iterative/Parallel Experiment Data
 iter_exp = list(itertools.product(*[iter_opt['fitness'], iter_opt['transform'], iter_opt['scaling']]))
@@ -104,21 +110,21 @@ for file_f in files_f:
         price_data['MP_D_' + year_f] = data_f
 
 # One period data concatenation (Fast run of main.py)
-# ohlc_data = pd.concat([price_data[list(price_data.keys())[0]]])
+ohlc_data = pd.concat([price_data[list(price_data.keys())[0]]])
 
 # All periods data concatenation (Slow run of main.py)
-ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
-                       price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
-                       price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]],
-                       price_data[list(price_data.keys())[6]], price_data[list(price_data.keys())[7]],
-                       price_data[list(price_data.keys())[8]], price_data[list(price_data.keys())[9]]])
+# ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
+#                        price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
+#                        price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]],
+#                        price_data[list(price_data.keys())[6]], price_data[list(price_data.keys())[7]],
+#                        price_data[list(price_data.keys())[8]], price_data[list(price_data.keys())[9]]])
 
 
 # --------------------------------------------------------------------- Parameters for Symbolic Features -- #
 # --------------------------------------------------------------------- -------------------------------- -- #
 
 symbolic_params = {'functions': ["sub", "add", 'inv', 'mul', 'div', 'abs', 'log'],
-                   'population': 5000, 'tournament':20, 'hof': 20, 'generations': 5, 'n_features':10,
+                   'population': 5000, 'tournament':20, 'hof': 20, 'generations': 2, 'n_features':10,
                    'init_depth': (4,8), 'init_method': 'half and half', 'parsimony': 0, 'constants': None,
                    'metric': 'pearson', 'metric_goal': 0.65, 
                    'prob_cross': 0.4, 'prob_mutation_subtree': 0.3,
@@ -182,7 +188,7 @@ models = {
 # ------------------------------------------------------------------ Parameters for Genetic Optimization -- #
 # ------------------------------------------------------------------ ----------------------------------- -- #
 
-optimization_params = {'halloffame':10, 'tournament': 10, 'population': 10, 'generations': 4,
+optimization_params = {'halloffame':10, 'tournament': 10, 'population': 10, 'generations': 2,
                        'mutation': 0.2, 'crossover': 0.8}
 
 # ------------------------------------------------------------------------------------- Themes for plots -- #
@@ -243,7 +249,7 @@ def data_save_load(p_data_objects, p_data_action, p_data_file):
     Message if data file is saved or data objects if data file is loaded
     """
 
-    # if saving is required
+    # if saving is required`
     if p_data_action == 'save':
         # define and create file
         pick = p_data_file

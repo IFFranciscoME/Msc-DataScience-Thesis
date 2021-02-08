@@ -39,11 +39,6 @@ if __name__ == "__main__":
     # main loop to test all t-fold sizes
     for iteration in iter_fold:
     
-        print('                                                            ')
-        print(' ***********************************************************')
-        print(' ***************** ITERATION: ' + iteration + ' *********************')
-        print(' ***********************************************************')
-
         # Measure the begining of the code execution process
         ini_time = datetime.now()
 
@@ -72,18 +67,6 @@ if __name__ == "__main__":
         pool.close()
         # rejoin sepparated
         pool.join()
-
-        # -- ------------------------------------------------------------------------------- DATA BACKUP -- #
-        # -- ------------------------------------------------------------------------------- ----------- -- #
-
-        # File name to save the data
-        file_name = 'files/pickle_rick/genetic_net_' + iteration + '.dat'
-
-        # objects to be saved
-        pickle_rick = {'data': dt.ohlc_data, 't_folds': folds, 'fold_process': fold_process}
-
-        # pickle format function
-        dt.data_save_load(p_data_objects=pickle_rick, p_data_file=file_name, p_data_action='save')
 
         # Measure the end of the code execution process
         end_time = datetime.now()

@@ -20,18 +20,25 @@
 |   Coding         | Optimization Process               | 15:00 31.Jan.2021  | 4.5          |                  |
 |   Coding         | AUC mode cases and code comments   | 18:00 01.Feb.2021  | 4.0          |                  |
 |   Organization   | General content and planning       | 10:00 02.Feb.2021  | 2.0          |                  |
-
 |   Organization   | t-fold process layout              | 08:00 05.Feb.2021  | 2.0          |                  |
 |   Coding         | Feature Metrics function           | 11:00 05.Feb.2021  | 1.0          |                  |
 |   Meeting        | With thesis director               | 12:00 05.Feb.2021  | 1.0          |                  |
 |   Coding         | Optimization Function Improvemnt   | 14:00 05.Feb.2021  | 2.0          |                  |
 |   Coding         | General code review and tests      | 18:00 05.Feb.2021  | 1.0          |                  |
-
 |   Coding         | Data profile progress              | 20:00 05.Feb.2021  | 2.0          |                  |
+|   Coding         | Data profile and parallelization   | 14:00 06.Feb.2021  | 4.0          |                  |
+|   Coding         | Parallelization improvements       | 20:00 06.Feb.2021  | 2.0          |                  |
+|   Coding         | Parallelization and logging        | 08:00 07.Feb.2021  | 4.5          |                  |
+
+|   Coding         | Parallelization and logging        | 10:00 08.Feb.2021  | 1.5          |                  |
 
 # -------------------------------------------------------------------------------------- PENDING ACTIVITIES -- #
 
 # -- Necessary
+- Data Profile for OHLC prices
+- Data Profile for Features
+- Description of Genetic Programms
+
 - extract data for mode cases
 - metrics and other analytics for mode cases
 - table for multi modal cases
@@ -46,3 +53,8 @@
 - Criteria 3: Profit and Loss taking (scalar, formula, model)
 - Criteria 4: Positions dimensioning (scalar, formula, model)
 - Financial performance of trading strategy (Criteria 3 and 4 of trading system)
+
+# -- Done
+- T-Fold complete features
+- Parallelization capabilities of the project
+- Log registration with every worker in the paralelization

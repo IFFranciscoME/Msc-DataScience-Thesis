@@ -16,6 +16,9 @@ codes/Msc_Thesis_venv/
 # folder with Pickle Rick !! files
 codes/files/pickle_rick
 
+# folder with Pickle Rick !! files
+codes/files/logs
+
 # ---------- ------------- ---------- #
 
 # Byte-compiled / optimized / DLL files
