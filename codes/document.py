@@ -27,27 +27,8 @@ import data as dt
 import random
 random.seed(123)
 
-# ------------------------------------------------------------------------ DATA FACTORS AND GENERAL INFO -- #
-# ------------------------------------------------------------------------ ----------------------------- -- #
-
-# Fold size
-fold_size = 'bi-year'
-
-# Timeseries data division in t-folds
-folds = fn.t_folds(p_data=data, p_period=fold_size)
-
-# List with the names of the models
-ml_models = list(dt.models.keys())
-
-# File name to save the data
-file_name = 'files/pickle_rick/genetic_net_' + fold_size + '.dat'
-
-# Load previously generated data
-memory_palace = dt.data_save_load(p_data_objects=None, p_data_action='load', p_data_file=file_name)
-memory_palace = memory_palace['memory_palace']
-
-# --------------------------------------------------------------- PLOT 1: USD/MXN OHLC HISTORICAL PRICES -- #
-# --------------------------------------------------------------- -------------------------------------- -- #
+# ---------------------------------------------------------------- PLOT 1: OHLC DATA PLOT (ALL DATA SET) -- #
+# ---------------------------------------------------------------- ------------------------------------- -- #
 
 # Candlestick chart for historical OHLC prices
 plot_1 =vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_1, p_vlines=None)
@@ -57,6 +38,25 @@ plot_1 =vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_1, p_vlines=None)
 
 # Generate plot online with chartstudio
 # py.plot(plot_1)
+
+# ------------------------------------------------------------------------------------ LOAD RESULTS DATA -- #
+# ------------------------------------------------------------------------------------ ----------------- -- #
+
+# Fold size
+fold_size = 'quarter'
+
+# Timeseries data division in t-folds
+folds = fn.t_folds(p_data=data, p_period=fold_size)
+
+# List with the names of the models
+ml_models = list(dt.models.keys())
+
+# File name to save the data
+file_name = 'files/pickle_rick/q_train_pre-features_scale.dat'
+
+# Load previously generated data
+memory_palace = dt.data_save_load(p_data_objects=None, p_data_action='load', p_data_file=file_name)
+memory_palace = memory_palace['memory_palace']
 
 # -- ----------------------------------------------------------------- PLOT 2: TIME SERIES BLOCK T-FOLDS -- #
 # -- ----------------------------------------------------------------- --------------------------------- -- #
@@ -75,6 +75,23 @@ plot_2 = vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_2, p_vlines=dates_folds)
 
 # Generate plot online with chartstudio
 # py.plot(plot_2)
+
+# ----------------------------------------------------------------------------------------- DATA PROFILE -- #
+# ----------------------------------------------------------------------------------------- ------------ -- #
+
+# period to explore results
+period = list(folds.keys())[0]
+
+# models to explore results
+model = list(dt.models.keys())[0]
+
+# get data
+# memory_palace[period]['metrics']['data_metrics']
+
+# test = fn.data_profile(p_data=, p_type, p_mult)
+
+# --------------------------------------------------------------------------------------- VISUAL PROFILE -- #
+# ----------------------------------------------------------------------------------------- ------------ -- #
 
 # -- ------------------------------------------------------------------------------- PARAMETER SET CASES -- #
 # -- ------------------------------------------------------------------------------- ------------------- -- #

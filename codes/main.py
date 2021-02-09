@@ -34,7 +34,7 @@ if __name__ == "__main__":
     print('                                                            ')
     print(' -- ---------------- ------------------- ---------------- --')
     print(' -- ----------------   Start execution   ---------------- --')
-    print(' -- ---------------- ------------------- ---------------- --')
+    print(' -- ---------------- ------------------- ---------------- --\n\n')
 
     # main loop to test all t-fold sizes
     for iteration in iter_fold:
@@ -55,8 +55,8 @@ if __name__ == "__main__":
         ml_models = list(dt.models.keys())
 
         # Create a pool of workers with as many cores as the computer has
-        workers = cpu_count()-1
-        # workers = 1
+        # workers = cpu_count()-1
+        workers = 1
         pool = mp.Pool(workers)
         
         # Parallel Asyncronous Process 

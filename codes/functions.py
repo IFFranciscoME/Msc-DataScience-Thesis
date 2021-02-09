@@ -10,10 +10,11 @@
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 
+from pickle import TRUE
 import random
 import warnings
 import logging
-import sys
+from numpy.lib.function_base import percentile
 import pandas as pd
 import numpy as np
 import data as dt
@@ -543,7 +544,7 @@ def genetic_programed_features(p_data):
 # --------------------------------------------------------- EXPLORATORY DATA ANALYSIS & FEATURES METRICS -- #
 # --------------------------------------------------------- ----------------------------------------------- #
 
-def data_profile(p_data, p_type):
+def data_profile(p_data, p_type, p_mult):
     """
     OHLC Prices Profiling (Inspired in the pandas-profiling existing library)
 
@@ -556,7 +557,12 @@ def data_profile(p_data, p_type):
     p_type: str
         indication of the data type: 
             'ohlc': dataframe with TimeStamp-Open-High-Low-Close columns names
-            'ts': dataframe with unknown quantity, meaning and name of the columns 
+            'ts': dataframe with unknown quantity, meaning and name of the columns
+    
+    p_mult: int
+        multiplier to re-express calculation with prices,
+        from 100 to 10000 in forex, units multiplication in cryptos, 1 for fiat money based assets
+        p_mult = 10000
 
     Return
     ------
@@ -598,10 +604,10 @@ def data_profile(p_data, p_type):
             return [inf, sup]
 
         # data calculations
-        ohlc_data['co'] = round((ohlc_data['close'] - ohlc_data['open'])*10000, 2)
-        ohlc_data['hl'] = round((ohlc_data['high'] - ohlc_data['low'])*10000, 2)
-        ohlc_data['ol'] = round((ohlc_data['open'] - ohlc_data['low'])*10000, 2)
-        ohlc_data['ho'] = round((ohlc_data['high'] - ohlc_data['open'])*10000, 2)
+        ohlc_data['co'] = round((ohlc_data['close'] - ohlc_data['open'])*p_mult, 2)
+        ohlc_data['hl'] = round((ohlc_data['high'] - ohlc_data['low'])*p_mult, 2)
+        ohlc_data['ol'] = round((ohlc_data['open'] - ohlc_data['low'])*p_mult, 2)
+        ohlc_data['ho'] = round((ohlc_data['high'] - ohlc_data['open'])*p_mult, 2)
 
         mins = [min(ohlc_data['co']), min(ohlc_data['hl']), 
                 min(ohlc_data['ol']), min(ohlc_data['ho'])]
@@ -633,36 +639,54 @@ def data_profile(p_data, p_type):
                 m_kurtosis(ohlc_data['ol']), m_kurtosis(ohlc_data['ho'])]
 
         # final data
-        profile = pd.DataFrame({'mins': mins, 'maxs': maxs, 'means': means, 'medians': medians,
-                                'sds': sds, 'iqr': iqr, 'q_90': q90, 'skew': skew, 'kurt': kurt})
+        profile = pd.DataFrame({'min': mins, 'max': maxs, 'mean': means, 'median': medians,
+                                'sd': sds, 'iqr': iqr, 'q_90': q90, 'skew': skew, 'kurt': kurt}).T
 
-        return profile
+        profile.columns = ['co', 'hl', 'ol', 'ho']
+
+        return np.round(profile, 2)
 
     # -- TIMESERIES PROFILING -- #
     elif p_type == 'ts':
 
-        # -- init and end dates, amount of data, data type, range of values (all values)
+        # initial data
+        ts_data = p_data.copy()
+
+        # interquantile range
+        def f_iqr(param_data):
+            q1 = np.percentile(param_data, 75, interpolation = 'midpoint')
+            q3 = np.percentile(param_data, 25, interpolation = 'midpoint')
+            return  q1 - q3
         
-        # ts_init = p_data.index.to_list()[0]
-        # ts_end = p_data.index.to_list()[-1]
-        # ts_amo = list(p_data.shape)
-        # ts_tps = [str(p_data[i].dtype) for i in list(p_data.columns)]
-        # ts_des = p_data.describe()
+        # outliers function
+        def f_out(param_data):
+            # param_data = ohlc_data['co']
+            inf = param_data - 1.5*f_iqr(param_data)
+            sup = param_data + 1.5*f_iqr(param_data)
+            return [inf, sup]
+        
+        ts_des = ts_data.describe(percentiles=[0.25, 0.50, 0.75, 0.90])
+
+        # skews = pd.DataFrame(m_skew(ts_data)).T
+        # skews.columns = list(ts_data.columns)
+        # ts_data = ts_data.append(skews, ignore_index=True)
+
+        # kurts = pd.DataFrame(m_kurtosis(ts_data)).T
+        # kurts.columns = list(ts_data.columns)
+        # ts_data = p_data.append(kurts, ignore_index=True)
+        
+        # p_data.iloc[:, 1]
+
+        # negative_out = []
+        # positive_out = []
+        
+        # rows = ['count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max', 'skewness', 'kurtosis',
+                # 'negative_out', 'positive_out']
 
         # -- missing data (granularity vs calendar if data is based on timestamp labeling)
         # -- For every column in the data frame
         # -- -- min, max, mean, median, sd, IQR, 90% quantile, outliers (+/- 1.5*IQR)
         
-        # column_data = p_data[list(p_data.columns)[0]]
-        # tsc_min = min(column_data)
-        # tsc_max = max(column_data)
-        # tsc_mea = np.mean(column_data)
-        # tsc_med = np.median(column_data)
-        # tsc_sd = np.std(column_data)
-        
-        # q1 = np.percentile(column_data, 75, interpolation = 'midpoint')
-        # q3 = np.percentile(column_data, 25, interpolation = 'midpoint')
-
         # tsc_iqr = q1 - q3
         # tsc_qr9 = np.percentile(column_data, 90, interpolation = 'midpoint') 
         # out_lims = [q1 - 1.5*tsc_iqr, q3 + 1.5*tsc_iqr]
@@ -671,7 +695,7 @@ def data_profile(p_data, p_type):
 
         # -- -- skewness and kurtosis
 
-        return 1
+        return ts_des
 
     else:
         print('error: Type of data not correctly specified')
@@ -711,7 +735,6 @@ def model_metrics(p_model, p_data):
     probs_train = p_model.predict_proba(p_data['x_train'])
     # in case of a nan, replace it with zero (to prevent errors)
     probs_train = np.nan_to_num(probs_train)
-    
 
     # Accuracy rate
     acc_train = round(accuracy_score(list(p_data['y_train']), p_y_train_d), 4)
@@ -1355,23 +1378,21 @@ def genetic_algo_optimization(p_data, p_model, p_opt_params, p_fit_type):
 
 def model_evaluation(p_features, p_optim_data, p_model):
 
-    for params in list(p_optim_data):
+    if p_model == 'logistic-elasticnet':
+        parameters = {'ratio': p_optim_data[0], 'c': p_optim_data[1]}
 
-        if p_model == 'logistic-elasticnet':
-            parameters = {'ratio': params[0], 'c': params[1]}
+        return logistic_net(p_data=p_features, p_params=parameters)
 
-            return logistic_net(p_data=p_features, p_params=parameters)
+    elif p_model == 'l1-svm':
+        parameters = {'c': p_optim_data[0], 'kernel': p_optim_data[1], 'gamma': p_optim_data[2]}
 
-        elif p_model == 'l1-svm':
-            parameters = {'c': params[0], 'kernel': params[1], 'gamma': params[2]}
+        return l1_svm(p_data=p_features, p_params=parameters)
 
-            return l1_svm(p_data=p_features, p_params=parameters)
+    elif p_model == 'ann-mlp':
+        parameters = {'hidden_layers': p_optim_data[0], 'activation': p_optim_data[1],
+                      'alpha': p_optim_data[2], 'learning_rate_init': p_optim_data[3]}
 
-        elif p_model == 'ann-mlp':
-            parameters = {'hidden_layers': params[0], 'activation': params[1], 'alpha': params[2],
-                          'learning_rate_init': params[3]}
-
-            return ann_mlp(p_data=p_features, p_params=parameters)
+        return ann_mlp(p_data=p_features, p_params=parameters)
 
 
 # ----------------------------------------------------------------------------- Parallel Loggin Function -- #
@@ -1398,16 +1419,34 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
     Parameters
     ----------
     p_data_folds: dict
+        with all the folds of data
+        p_data_folds = folds
 
     p_models: list
+        with the name of the models
 
     p_fit_type: str
-    type of fitness metric for the optimization process:
-        'train': the train AUC is used
-        'test': the test AUC is used
-        'simple': a simple average is calculated between train and test AUC
-        'weighted': a weighted average is calculated between train (80%) and test (20%) AUC
-        'inv-weighted': an inverse weighted average is calculated between train (20%) and test (80%) AUC
+        type of fitness metric for the optimization process:
+            'train': the train AUC is used
+            'test': the test AUC is used
+            'simple': a simple average is calculated between train and test AUC
+            'weighted': a weighted average is calculated between train (80%) and test (20%) AUC
+            'inv-weighted': an inverse weighted average is calculated between train (20%) and test (80%) AUC
+    
+    p_transform: str
+        type of transformation to perform to the data
+        'scale': x/max(x)
+        'standard': [x - mean(x)] / sd(x)
+        'robust': x - median(x) / iqr(x)
+
+        p_transform = 'scale'
+
+    p_scaling: str
+        Order to perform the data transformation
+        'pre-features': previous to the feature engineering (features will not be transformed)
+        'post-features': after the feature engineering (features will be transformed)       
+
+        p_scaling = 'pre-features'
 
     Returns
     -------
@@ -1447,7 +1486,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
 
     # cycle to iterate all periods
     for period in list(p_data_folds.keys()):
-        # period = list(p_data_folds.keys())[1]
+        # period = list(p_data_folds.keys())[0]
 
         # time measurement
         init = datetime.now()
@@ -1460,7 +1499,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
         logger.debug('------------------- --------------------------------------- ---------------------')
         
         # Feature metrics for ORIGINAL DATA: OHLCV
-        dt_metrics = data_profile(p_data=p_data_folds[period].copy(), p_type='ohlc')
+        dt_metrics = data_profile(p_data=p_data_folds[period].copy(), p_type='ohlc', p_mult=10000)
 
         # dummy initialization
         data_folds = {}
@@ -1502,10 +1541,11 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
             df_log_2.columns = ['gen', 'avg_len', 'avg_fit', 'best_len', 'best_fit', 'best_oob', 'gen_time']
             logger.debug('\n\n{}\n'.format(df_log_2))
 
-            # Data scaling
+            # Data scaling in train
             m_features['model_data']['train_x'] = data_scaler(p_data=m_features['model_data']['train_x'],
             p_trans=p_transform)
 
+            # Data scaling in test
             m_features['model_data']['test_x'] = data_scaler(p_data=m_features['model_data']['test_x'],
             p_trans=p_transform)
         
@@ -1513,10 +1553,14 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
             print('error in p_scaling value')
 
         # Feature metrics for FEATURES and TARGET variable
-        ft_metrics = {'train_x': data_profile(p_data=m_features['model_data']['train_x'], p_type='ts'),
-                      'test_x': data_profile(p_data=m_features['model_data']['test_x'], p_type='ts'),
-                      'train_y': data_profile(p_data=m_features['model_data']['train_y'], p_type='ts'),
-                      'test_y': data_profile(p_data=m_features['model_data']['train_y'], p_type='ts')}
+        ft_metrics = {'train_x': data_profile(p_data=m_features['model_data']['train_x'],
+                                              p_type='ts', p_mult=10000),
+                      'test_x': data_profile(p_data=m_features['model_data']['test_x'],
+                                             p_type='ts', p_mult=10000),
+                      'train_y': data_profile(p_data=m_features['model_data']['train_y'],
+                                              p_type='ts', p_mult=10000),
+                      'test_y': data_profile(p_data=m_features['model_data']['train_y'],
+                                             p_type='ts', p_mult=10000)}
         
         # save calculated metrics
         memory_palace[period]['metrics'] = {'data_metrics': dt_metrics, 'feature_metrics': ft_metrics}
@@ -1530,14 +1574,14 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
 
         logger.info("Feature Engineering in Fold done in = " + str(datetime.now() - init) + '\n')
 
+        # Save data of features used in the evaluation in memory_palace (only once per fold)
+        memory_palace[period]['features'] = m_features['model_data']
+
+        # Save equations of features used in the evaluation in memory_palace (only once per fold)
+        memory_palace[period]['sym_features'] = m_features['sym_data']
+
         # cycle to iterate all models
         for model in p_models:
-
-            # Save data of features used in the evaluation in memory_palace
-            memory_palace[period][model]['features'] = m_features['model_data']
-
-            # Save equations of features used in the evaluation in memory_palace
-            memory_palace[period][model]['sym_features'] = m_features['sym_data']
 
             # Optimization
             
@@ -1556,7 +1600,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
             # evaluation process
             for i in range(0, len(list(hof_model['hof']))):
                 hof_eval = model_evaluation(p_features=m_features['model_data'], p_model=model,
-                                            p_optim_data=hof_model['hof'])
+                                            p_optim_data=hof_model['hof'][i])
 
                 # save evaluation in memory_palace
                 memory_palace[period][model]['e_hof'].append(hof_eval)

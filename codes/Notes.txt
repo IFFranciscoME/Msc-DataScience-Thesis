@@ -193,8 +193,28 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 # -- training time in ANN-MLP
 
 
-# -------- CHANGE LOG -------- #
+# ------------------------------------------------------------------------------------------- CHANGE LOG -- #
+# ------------------------------------------------------------------------------------------- ---------- -- #
 
-create a new document.py file with all the codes necessary to produce the elements that will be
-added to the thesis document.
+- create a new document.py file with all the codes necessary to produce the elements that will be
+  added to the thesis document.
+
+- mapped all variations of factors to run the general experiment 
+- - different types of data pre-processing (Normalize, Standarize, Robust Standarization)
+- - data pre-processing order (pre/post features)
+- - fitness metric in optimization process (train, test, simple, weighted, inv-weighted)
+
+- added asyncronous parallelization capabilities for the project
+
+- added logging method that support parallelization
+
+- added pickle_rick data saving method that support parallelization
+
+- added data_profile for OHLC and timeseries data profiling
+
+- (pending) visual_profile for OHLC and timeseries visual profiling
+
+- (pending) add RandomForest classification model
+
+- (pending) add criteria 3 and criteria 4 for trading simulation
 
