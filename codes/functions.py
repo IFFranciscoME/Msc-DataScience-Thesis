@@ -10,6 +10,7 @@
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 
+from operator import index
 from pickle import TRUE
 import random
 import warnings
@@ -60,30 +61,33 @@ def data_scaler(p_data, p_trans):
 
     """
 
-    if p_trans == 'Standard':
+    # hardcopy of the data
+    data = p_data.copy()
+    
+    # list with columns to transform
+    lista = data[list(data.columns[1:])]
 
-        # estandarizacion de todas las variables independientes
-        lista = p_data[list(p_data.columns[1:])]
+    if p_trans == 'standard':
+        
+        # armar objeto de salida
+        data[list(data.columns[1:])] = StandardScaler().fit_transform(lista)
+        return data
+
+    elif p_trans == 'robust':
 
         # armar objeto de salida
-        p_data[list(p_data.columns[1:])] = StandardScaler().fit_transform(lista)
+        data[list(data.columns[1:])] = RobustScaler().fit_transform(lista)
+        return data
 
-    elif p_trans == 'Robust':
-
-        # estandarizacion de todas las variables independientes
-        lista = p_data[list(p_data.columns[1:])]
+    elif p_trans == 'scale':
 
         # armar objeto de salida
-        p_data[list(p_data.columns[1:])] = RobustScaler().fit_transform(lista)
+        data[list(data.columns[1:])] = MaxAbsScaler().fit_transform(lista)
+        return data
+    
+    else:
+        print('error, p_trans not valid')
 
-    elif p_trans == 'Scale':
-
-        # estandarizacion de todas las variables independientes
-        lista = p_data[list(p_data.columns[1:])]
-
-        p_data[list(p_data.columns[1:])] = MaxAbsScaler().fit_transform(lista)
-
-    return p_data
 
 
 # --------------------------------------------------------------------------- Divide the data in T-Folds -- #
@@ -576,32 +580,37 @@ def data_profile(p_data, p_type, p_mult):
 
     """
 
-    # p_data.columns
+    # copy of input data
+    f_data = p_data.copy()
+
+    # interquantile range
+    def f_iqr(param_data):
+        q1 = np.percentile(param_data, 75, interpolation = 'midpoint')
+        q3 = np.percentile(param_data, 25, interpolation = 'midpoint')
+        return  q1 - q3
+    
+    # outliers function
+    def f_out(param_data):
+        q1 = np.percentile(param_data, 75, interpolation = 'midpoint')
+        q3 = np.percentile(param_data, 25, interpolation = 'midpoint')
+        lower_out = len(np.where(param_data < q1 - 1.5*f_iqr(param_data))[0])
+        upper_out = len(np.where(param_data > q3 + 1.5*f_iqr(param_data))[0])
+        return [lower_out, upper_out]
+
+    # in the case of a binary target variable
+    if p_type == 'target_class':
+        df_count= pd.DataFrame({'class_0': len(np.where(p_data == 0)[0]),
+                                'class_1': len(np.where(p_data == 1)[0])}, index=[0,1])
+        return df_count
 
     # -- OHLCV PROFILING -- #
-    if p_type == 'ohlc':
+    elif p_type == 'ohlc':
 
         # -- init and end dates, amount of data, data type, range of values (all values)
         # -- missing data (granularity vs calendar if data is based on timestamp labeling)
-        # -- CO (grow), HL (volatility), OL (downside move), HO (upside move)
-        # -- -- min, max, mean, median, sd, IQR, 90% quantile, outliers (+/- 1.5*IQR)
-        # -- -- skewness and kurtosis
 
         # initial data
-        ohlc_data = p_data.copy()
-
-        # interquantile range
-        def f_iqr(param_data):
-            q1 = np.percentile(param_data, 75, interpolation = 'midpoint')
-            q3 = np.percentile(param_data, 25, interpolation = 'midpoint')
-            return  q1 - q3
-        
-        # outliers function
-        def f_out(param_data):
-            # param_data = ohlc_data['co']
-            inf = param_data - 1.5*f_iqr(param_data)
-            sup = param_data + 1.5*f_iqr(param_data)
-            return [inf, sup]
+        ohlc_data = p_data[['open', 'high', 'low', 'close', 'volume']].copy()
 
         # data calculations
         ohlc_data['co'] = round((ohlc_data['close'] - ohlc_data['open'])*p_mult, 2)
@@ -609,97 +618,34 @@ def data_profile(p_data, p_type, p_mult):
         ohlc_data['ol'] = round((ohlc_data['open'] - ohlc_data['low'])*p_mult, 2)
         ohlc_data['ho'] = round((ohlc_data['high'] - ohlc_data['open'])*p_mult, 2)
 
-        mins = [min(ohlc_data['co']), min(ohlc_data['hl']), 
-                min(ohlc_data['ol']), min(ohlc_data['ho'])]
-
-        maxs = [max(ohlc_data['co']), max(ohlc_data['hl']), 
-                max(ohlc_data['ol']), max(ohlc_data['ho'])]
-
-        means = [np.mean(ohlc_data['co']), np.mean(ohlc_data['hl']), 
-                 np.mean(ohlc_data['ol']), np.mean(ohlc_data['ho'])]
-
-        medians = [np.median(ohlc_data['co']), np.median(ohlc_data['hl']), 
-                   np.median(ohlc_data['ol']), np.median(ohlc_data['ho'])]
-
-        sds = [np.std(ohlc_data['co']), np.std(ohlc_data['hl']), 
-               np.std(ohlc_data['ol']), np.std(ohlc_data['ho'])]
-
-        iqr = [f_iqr(ohlc_data['co']), f_iqr(ohlc_data['hl']), 
-               f_iqr(ohlc_data['ol']), f_iqr(ohlc_data['ho'])]
+        # original data + co, hl, ol, ho columns
+        f_data = ohlc_data.copy()
         
-        q90 = [np.percentile(ohlc_data['co'], 90, interpolation = 'midpoint'),
-               np.percentile(ohlc_data['hl'], 90, interpolation = 'midpoint'),
-               np.percentile(ohlc_data['ol'], 90, interpolation = 'midpoint'),
-               np.percentile(ohlc_data['ho'], 90, interpolation = 'midpoint')]
-        
-        skew = [m_skew(ohlc_data['co']), m_skew(ohlc_data['hl']),
-                m_skew(ohlc_data['ol']), m_skew(ohlc_data['ho'])]
+    # basic data description
+    data_des = f_data.describe(percentiles=[0.25, 0.50, 0.75, 0.90])
 
-        kurt = [m_kurtosis(ohlc_data['co']), m_kurtosis(ohlc_data['hl']),
-                m_kurtosis(ohlc_data['ol']), m_kurtosis(ohlc_data['ho'])]
+    # add skewness metric
+    skews = pd.DataFrame(m_skew(f_data)).T
+    skews.columns = list(f_data.columns)
+    data_des = data_des.append(skews, ignore_index=False)
 
-        # final data
-        profile = pd.DataFrame({'min': mins, 'max': maxs, 'mean': means, 'median': medians,
-                                'sd': sds, 'iqr': iqr, 'q_90': q90, 'skew': skew, 'kurt': kurt}).T
+    # add kurtosis metric
+    kurts = pd.DataFrame(m_kurtosis(f_data)).T
+    kurts.columns = list(f_data.columns)
+    data_des = data_des.append(kurts, ignore_index=False)
+    
+    # add outliers count
+    outliers = [f_out(param_data=f_data[col]) for col in list(f_data.columns)]
+    negative_series = pd.Series([i[0] for i in outliers], index = data_des.columns)
+    positive_series = pd.Series([i[1] for i in outliers], index = data_des.columns)
+    data_des = data_des.append(negative_series, ignore_index=True)
+    data_des = data_des.append(positive_series, ignore_index=True)
+    
+    # index names
+    data_des.index = ['count', 'mean', 'std', 'min', 'q1', 'median', 'q3', 'p90',
+                      'max', 'skew', 'kurt', 'n_out', 'p_out']
 
-        profile.columns = ['co', 'hl', 'ol', 'ho']
-
-        return np.round(profile, 2)
-
-    # -- TIMESERIES PROFILING -- #
-    elif p_type == 'ts':
-
-        # initial data
-        ts_data = p_data.copy()
-
-        # interquantile range
-        def f_iqr(param_data):
-            q1 = np.percentile(param_data, 75, interpolation = 'midpoint')
-            q3 = np.percentile(param_data, 25, interpolation = 'midpoint')
-            return  q1 - q3
-        
-        # outliers function
-        def f_out(param_data):
-            # param_data = ohlc_data['co']
-            inf = param_data - 1.5*f_iqr(param_data)
-            sup = param_data + 1.5*f_iqr(param_data)
-            return [inf, sup]
-        
-        ts_des = ts_data.describe(percentiles=[0.25, 0.50, 0.75, 0.90])
-
-        # skews = pd.DataFrame(m_skew(ts_data)).T
-        # skews.columns = list(ts_data.columns)
-        # ts_data = ts_data.append(skews, ignore_index=True)
-
-        # kurts = pd.DataFrame(m_kurtosis(ts_data)).T
-        # kurts.columns = list(ts_data.columns)
-        # ts_data = p_data.append(kurts, ignore_index=True)
-        
-        # p_data.iloc[:, 1]
-
-        # negative_out = []
-        # positive_out = []
-        
-        # rows = ['count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max', 'skewness', 'kurtosis',
-                # 'negative_out', 'positive_out']
-
-        # -- missing data (granularity vs calendar if data is based on timestamp labeling)
-        # -- For every column in the data frame
-        # -- -- min, max, mean, median, sd, IQR, 90% quantile, outliers (+/- 1.5*IQR)
-        
-        # tsc_iqr = q1 - q3
-        # tsc_qr9 = np.percentile(column_data, 90, interpolation = 'midpoint') 
-        # out_lims = [q1 - 1.5*tsc_iqr, q3 + 1.5*tsc_iqr]
-        
-        # outliers = column_data.index(list(column_data) <= out_lims[0] or list(column_data) >= out_lims[1])
-
-        # -- -- skewness and kurtosis
-
-        return ts_des
-
-    else:
-        print('error: Type of data not correctly specified')
-        return 1
+    return np.round(data_des, 2)
 
 
 # -- ---------------------------------------------------- DATA PROCESSING: Metrics for Model Performance -- # 
@@ -1420,10 +1366,13 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
     ----------
     p_data_folds: dict
         with all the folds of data
+        
         p_data_folds = folds
 
     p_models: list
         with the name of the models
+
+        p_models = ['logistic-elasticnet', 'l1-svm', 'ann-mlp']
 
     p_fit_type: str
         type of fitness metric for the optimization process:
@@ -1432,6 +1381,8 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
             'simple': a simple average is calculated between train and test AUC
             'weighted': a weighted average is calculated between train (80%) and test (20%) AUC
             'inv-weighted': an inverse weighted average is calculated between train (20%) and test (80%) AUC
+        
+        p_fit_type = 'train'
     
     p_transform: str
         type of transformation to perform to the data
@@ -1486,6 +1437,8 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
 
     # cycle to iterate all periods
     for period in list(p_data_folds.keys()):
+        
+        # debugging
         # period = list(p_data_folds.keys())[0]
 
         # time measurement
@@ -1558,9 +1511,9 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
                       'test_x': data_profile(p_data=m_features['model_data']['test_x'],
                                              p_type='ts', p_mult=10000),
                       'train_y': data_profile(p_data=m_features['model_data']['train_y'],
-                                              p_type='ts', p_mult=10000),
+                                              p_type='target_class', p_mult=10000),
                       'test_y': data_profile(p_data=m_features['model_data']['train_y'],
-                                             p_type='ts', p_mult=10000)}
+                                             p_type='target_class', p_mult=10000)}
         
         # save calculated metrics
         memory_palace[period]['metrics'] = {'data_metrics': dt_metrics, 'feature_metrics': ft_metrics}

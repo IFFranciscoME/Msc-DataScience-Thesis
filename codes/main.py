@@ -38,6 +38,9 @@ if __name__ == "__main__":
 
     # main loop to test all t-fold sizes
     for iteration in iter_fold:
+
+        # debugging
+        # iteration = iter_fold[0]
     
         # Measure the begining of the code execution process
         ini_time = datetime.now()

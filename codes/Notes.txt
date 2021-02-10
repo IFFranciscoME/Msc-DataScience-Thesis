@@ -205,16 +205,18 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 - - fitness metric in optimization process (train, test, simple, weighted, inv-weighted)
 
 - added asyncronous parallelization capabilities for the project
-
 - added logging method that support parallelization
-
 - added pickle_rick data saving method that support parallelization
+- added data_profile function for OHLC and timeseries data profiling
 
-- added data_profile for OHLC and timeseries data profiling
+- (pending) validation of data_scaling function in all the cases
+
+- (error) m_features results with repeated symbolic variable?
 
 - (pending) visual_profile for OHLC and timeseries visual profiling
 
 - (pending) add RandomForest classification model
 
-- (pending) add criteria 3 and criteria 4 for trading simulation
+- (pending) add criteria 3 and criteria 4 for trading simulation function
 
+- (pending) ROC curves of all HoF in the fold

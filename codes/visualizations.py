@@ -22,7 +22,6 @@ pio.renderers.default = "browser"
 chart_studio.tools.set_credentials_file(username='IFFranciscoME', api_key='Wv3JHvYz5h5jHGpuxvJQ')
 chart_studio.tools.set_config_file(world_readable=True, sharing='public')
 
-
 # -- -------------------------------------------------------- PLOT: OHLC Price Chart with Vertical Lines -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 
