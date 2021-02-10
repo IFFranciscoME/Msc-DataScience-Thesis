@@ -52,7 +52,7 @@ folds = fn.t_folds(p_data=data, p_period=fold_size)
 ml_models = list(dt.models.keys())
 
 # File name to save the data
-file_name = 'files/pickle_rick/s_train_post-features_scale.dat'
+file_name = 'files/pickle_rick/s_weighted_post-features_scale.dat'
 
 # Load previously generated data
 memory_palace = dt.data_save_load(p_data_objects=None, p_data_action='load', p_data_file=file_name)
@@ -85,12 +85,14 @@ period = list(folds.keys())[0]
 # models to explore results
 model = list(dt.models.keys())[0]
 
-# get data
-# memory_palace[period]
+# input data profile
+in_profile = memory_palace['s_01_2011']['metrics']['data_metrics']
 
-# test = fn.data_profile(p_data=memory_palace[period]['features']['train_x'], p_type='ts', p_mult=10000)
-# test = fn.data_profile(p_data=memory_palace[period]['features']['train_x'], p_type='ts', p_mult=10000)
-# test = fn.data_profile(p_data=folds['s_01_2011'], p_type='ohlc', p_mult=10000)
+# linear features profile
+lf_profile = 0
+
+# symbolic features profile
+sm_profile = 0
 
 # --------------------------------------------------------------------------------------- VISUAL PROFILE -- #
 # ----------------------------------------------------------------------------------------- ------------ -- #

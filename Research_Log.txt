@@ -29,32 +29,7 @@
 |   Coding         | Data profile and parallelization   | 14:00 06.Feb.2021  | 4.0          |                  |
 |   Coding         | Parallelization improvements       | 20:00 06.Feb.2021  | 2.0          |                  |
 |   Coding         | Parallelization and logging        | 08:00 07.Feb.2021  | 4.5          |                  |
-
 |   Coding         | Parallelization and logging        | 10:00 08.Feb.2021  | 1.5          |                  |
+|   Coding         | Data Profile                       | 08:00 09.Feb.2021  | 4.0          |                  |
 
-# -------------------------------------------------------------------------------------- PENDING ACTIVITIES -- #
-
-# -- Necessary
-- Data Profile for OHLC prices
-- Data Profile for Features
-- Description of Genetic Programms
-
-- extract data for mode cases
-- metrics and other analytics for mode cases
-- table for multi modal cases
-- table for symbolic features
-- Add a new model: RandomForest
-- Computational performance of Machine Learning System (Criteria 1 and 2 of trading system)
-
-# -- Good to have
-- plot for multi modal cases
-- translate every comment to english
-- translate every variable name to english
-- Criteria 3: Profit and Loss taking (scalar, formula, model)
-- Criteria 4: Positions dimensioning (scalar, formula, model)
-- Financial performance of trading strategy (Criteria 3 and 4 of trading system)
-
-# -- Done
-- T-Fold complete features
-- Parallelization capabilities of the project
-- Log registration with every worker in the paralelization
+|   Coding         | Feature related code review        | 9:00 10.Feb.2021   | 1.0          |                  |

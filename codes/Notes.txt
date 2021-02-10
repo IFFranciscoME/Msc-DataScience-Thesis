@@ -1,3 +1,4 @@
+
 # -- Akaike Criteria
 In order to compare between models and between different parameter configurations of the same model
 
@@ -26,9 +27,10 @@ https://stats.stackexchange.com/questions/181/how-to-choose-the-number-of-hidden
 # -- RandomForest
 https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html
 
-# -- ------------------------------------------------------------- ------------------------------------- -- #
-# -- T-FOLD PROCESS
-# -- ------------------------------------------------------------- ------------------------------------- -- #
+
+# -- ------------------------------------------------------------------------------------ T-FOLD PROCESS -- # 
+# -- --------------------------------------------------------------------------------------------------- -- #
+
 # -- Define T-Fold longitudes: Quarter, Semester, Year, Bi-year, 80-20
 
 # -- Within each T-Fold
@@ -69,37 +71,35 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 # -- -- Save the parameter set that produces the max, min value of the Choosen Performance Metric
 # -- -- Save the number of occurrences of every parameter set (extract the modes)
 
-# -- ------------------------------------------------------------- ------------------------------------- -- #
-# -- SYMBOLIC FEATURE ENGINEERING
-# -- ------------------------------------------------------------- ------------------------------------- -- #
+
+# -- ---------------------------------------------------------------------- SYMBOLIC FEATURE ENGINEERING -- # 
+# -- --------------------------------------------------------------------------------------------------- -- #
 
 # -- Autoregressive features
 # -- Hadamard features
 
 # -- Genetic Programming for Symbolic Features
+# -- -- iterative genetic parameters: Functions, Population, Generations, Tournament, HoF, output features
 # -- -- Heuristics 
-# -- -- -- Genetic Diversity
-# -- -- -- Fitness for feature selection
+# -- -- -- Fitness for feature selection: Largest pearson coefficient between
+		   symbolic continuous variables & target binary variable
 # -- -- -- Feature parsimony
 
-# -- ------------------------------------------------------------- ------------------------------------- -- #
-# -- CALIBRATION TECHNIQUE
-# -- ------------------------------------------------------------- ------------------------------------- -- #
+# -- ----------------------------------------------------------------------------- CALIBRATION TECHNIQUE -- # 
+# -- --------------------------------------------------------------------------------------------------- -- #
 
 # -- Optimization Function
 
-# -- ------------------------------------------------------------- ------------------------------------- -- #
-# -- MODEL DIVERSITY
-# -- ------------------------------------------------------------- ------------------------------------- -- #
+# -- ----------------------------------------------------------------------------------- MODEL DIVERSITY -- # 
+# -- --------------------------------------------------------------------------------------------------- -- #
 
 # -- Basic - Logistic Regression with regularization
 # -- Statistical Learning - Support Vector Machines with L1 regularization
 # -- Machine Learning - Aritificial Neural Network - Multi Layer Pereceptron
 # -- Tree-based-ensemble method - RandomForest
 
-# -- ------------------------------------------------------------- ------------------------------------- -- #
-# -- TRADING SYSTEM DEFINITION
-# -- ------------------------------------------------------------- ------------------------------------- -- #
+# -- ------------------------------------------------------------------------- TRADING SYSTEM DEFINITION -- # 
+# ------------------------------------------------------------------------------------------- ---------- -- #
 
 # -- Criteria 1: Data
 https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-i-tick-bars-a8b93728b4c5
@@ -119,6 +119,107 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 
 - Reference 1
 - Reference 2
+
+# ------------------------------------------------------------------------------------ SUBJECTS BY CLASS -- #
+# ------------------------------------------------------------------------------------------- ---------- -- #
+
+- Machine Learning
+- - (Done) Used K-fold Cross-Validation technique as a basis and proposed some variations in order to use
+	it in financial time series data, this in line with what is included in hastie & tibshirani 
+	Elements of Statistical Learning.
+
+- - (Pending) Gradient descent vs Genetic Algorithm as methods of learning for the models
+    SAGA: A Fast Incremental Gradient Method WithSupport for Non-Strongly Convex CompositeObjectives.
+    SGD: Stochastic Gradient Descent.
+    Loss functions for binary classification models ??
+
+- - (Extra) Regularization factors L1, and L2 combined in Elastic Net
+
+- Time Series
+- - (Done) Base properties of time series data
+- - (Pending) AIC and BIC criterias for model selection
+
+- Convex Optimization
+- - (Pending) Convexity of loss function utilized for training the models
+- - (Done) Logistic Regression model
+- - (Done) Support Vector Machines model
+- - (Done) Regularization factors L1, and L2 combined in Elastic Net
+
+- Predictive Modeling
+- - (pending) Data profiling
+- - (pending) RandomForest model use for binary classification
+
+- Analysis and Design of Algorithms
+- - (Pending) Complexity analysis of T-Fold technique
+- - (Pending) Complexity analysis of predictive models
+- - (Pending) Calibration technique design and complexity analysis
+- - (Pending) Genetic Algorithms 
+
+- Previously
+- - (Done) Multilayer Pereceptron model
+
+# ------------------------------------------------------------------------------------------- CHANGE LOG -- #
+# ------------------------------------------------------------------------------------------- ---------- -- #
+
+- create a new document.py file with all the codes necessary to produce the elements that will be
+  added to the thesis document.
+
+- T-Fold complete features
+- Parallelization capabilities of the project
+- Log registration with every worker in the paralelization
+
+- mapped all variations of factors to run the general experiment 
+- - different types of data pre-processing (Normalize, Standarize, Robust Standarization)
+- - data pre-processing order (pre/post features)
+- - fitness metric in optimization process (train, test, simple, weighted, inv-weighted)
+
+- added asyncronous parallelization capabilities for the project
+- added logging method that support parallelization
+- added pickle_rick data saving method that support parallelization
+- added data_profile function for OHLC and timeseries data profiling
+
+# ---------------------------------------------------------------------------------------------- BACKLOG -- # 
+# ---------------------------------------------------------------------------------------------- ------- -- #
+
+# -- NECESSARY
+
+- (error) m_features results with repeated symbolic variable?
+
+- (pending) table with balance of classes in target variable
+- (pending) visualization: boxplot matrix with outliers for feature variables
+- (pending) visualization: histograms for feature variables
+- (pending) table: Data profile for feature variables
+- (pending) visualization: Correlation heatmap for feature variables
+- (pending) table: Correlation table for feature variables vs target variable
+
+- (pending) validation of data_scaling function in all the cases
+- (pending) visual_profile for OHLC and timeseries visual profiling
+- (pending) add RandomForest classification model with scikit learn
+- (pending) migrate ann-mlp model from scikit learn to keras
+- (pending) add criteria 3 and criteria 4 for trading simulation function
+- (pending) visualization ROC curves of all HoF in the fold
+- (pending) calibration 
+- (pending) validate Data Profile for OHLC prices
+- (pending) Data Profile for Features
+- (pending) Statistical description of Genetic Programms
+
+- (pending) extract data for mode cases
+- (pending) metrics and other analytics for mode cases
+- (pending) table for multi modal cases
+- (pending) table for symbolic features
+- (pending) Computational performance of Machine Learning System (Criteria 1 and 2 of trading system)
+
+# -- GOOD TO HAVE
+- (pending) plot for multi modal cases
+- (pending) translate every comment to english
+- (pending) translate every variable name to english
+- (pending) Criteria 3: Profit and Loss taking (scalar, formula, model)
+- (pending) Criteria 4: Positions dimensioning (scalar, formula, model)
+- (pending) Financial performance of trading strategy (Criteria 3 and 4 of trading system)
+
+
+***************************************************************************************** UNORGANIZED NOTES 
+***********************************************************************************************************
 
 # -- (Pending) search for the max, min, mode cases among all the folds
 # -- -- display metrics of de lowest min and the highest max 
@@ -166,20 +267,6 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 # -- -- -- activation: Activation function for the hidden layer.
 # -- -- -- learning_rate_init: The initial learning rate used. It controls the step-size in updating the weights.
 
-# -- Exploratory Data Analysis: Linear and Symbolic Features Statistics ----------------------------------- #
-# -- ------------------------------------------------------------------ -------------------------------- -- #
-
-# exploratory data analysis (base price data (nor target variable or exploratory variables))
-
-# target variable
-# -- balance (among classes)
-# -- boxplot for outliers 
-# -- histogram and measurement of symmetry (individual)
-# -- Correlation heatmap (all)
-
-# -- parsimony vs outliers
-# -- parsimony vs symmetry
-
 # cross analysis (Winning Fold Vs Global Test)
 # -- outliers vs regularization
 # -- symmetry vs regularization
@@ -191,67 +278,3 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 # -- Regularization effects in logistic regression
 # -- kernel in SVM
 # -- training time in ANN-MLP
-
-# ------------------------------------------------------------------------------------ SUBJECTS BY CLASS -- #
-# ------------------------------------------------------------------------------------------- ---------- -- #
-
-- Machine Learning
-- - Used K-fold Cross-Validation technique as a basis and proposed some variations in order to use it in 
-    financial time series data, this in line with what is included in hastie & tibshirani Elements of Statistical Learning.
-
-- - Gradient descent as a learning algorithm
-    SAGA: A Fast Incremental Gradient Method WithSupport for Non-Strongly Convex CompositeObjectives.
-    SGD: Stochastic Gradient Descent.
-
-- - (Extra) Regularization factors L1, and L2 combined in Elastic Net
-
-- Time Series
-- - (Done) Base properties of time series data
-- - (Pending) AIC and BIC criterias for model selection
-
-- Convex Optimization
-- - (Pending) Convexity of loss function utilized for training the models
-- - (Done) Logistic Regression model
-- - (Done) Support Vector Machines model
-- - (Done) Regularization factors L1, and L2 combined in Elastic Net
-
-- Predictive Modeling
-- - (pending) Data profiling
-- - (pending) RandomForest model use for binary classification
-
-- Analysis and Design of Algorithms
-- - (Pending) Complexity analysis of T-Fold technique
-- - (Pending) Complexity analysis of predictive models
-- - (Pending) Calibration technique design and complexity analysis
-- - (Pending) Genetic Algorithms 
-
-- Previously
-- - (Done) Multilayer Pereceptron model
-
-# ------------------------------------------------------------------------------------------- CHANGE LOG -- #
-# ------------------------------------------------------------------------------------------- ---------- -- #
-
-- create a new document.py file with all the codes necessary to produce the elements that will be
-  added to the thesis document.
-
-- mapped all variations of factors to run the general experiment 
-- - different types of data pre-processing (Normalize, Standarize, Robust Standarization)
-- - data pre-processing order (pre/post features)
-- - fitness metric in optimization process (train, test, simple, weighted, inv-weighted)
-
-- added asyncronous parallelization capabilities for the project
-- added logging method that support parallelization
-- added pickle_rick data saving method that support parallelization
-- added data_profile function for OHLC and timeseries data profiling
-
-- (pending) validation of data_scaling function in all the cases
-
-- (error) m_features results with repeated symbolic variable?
-
-- (pending) visual_profile for OHLC and timeseries visual profiling
-
-- (pending) add RandomForest classification model
-
-- (pending) add criteria 3 and criteria 4 for trading simulation function
-
-- (pending) ROC curves of all HoF in the fold

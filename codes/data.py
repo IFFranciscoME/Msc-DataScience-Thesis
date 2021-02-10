@@ -20,8 +20,8 @@ import itertools
 # ---------------------------------------------------------------------------------- ------------------- -- #
 
 # Short Version for Testing
-iter_fold = ['quarter', 'semester']
-iter_opt = {'fitness': ['weighted', 'inv-weighted'], 'transform': ['scale'], 'scaling': ['post-features']}
+iter_fold = ['semester']
+iter_opt = {'fitness': ['weighted'], 'scaling': ['post-features'], 'transform': ['scale']}
 
 # Values for T-Fold size
 # iter_fold = ['quarter', 'semester', 'year', 'bi-year', '80-20']

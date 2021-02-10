@@ -526,7 +526,7 @@ def genetic_programed_features(p_data):
     sym_data = symbolic_features(p_x=datos_had, p_y=datos_y, p_params=dt.symbolic_params)
 
     # variables
-    datos_sym = sym_data['data']
+    datos_sym = sym_data['data'].copy()
     datos_sym.columns = ['sym_' + str(i) for i in range(0, len(sym_data['data'].iloc[0, :]))]
     datos_sym.index = datos_had.index
 
@@ -538,10 +538,10 @@ def genetic_programed_features(p_data):
     xtrain, xtest, ytrain, ytest = train_test_split(datos_modelo, datos_y, test_size=.2, shuffle=False)
 
     # division de datos
-    model_data['train_x'] = xtrain
-    model_data['train_y'] = ytrain
-    model_data['test_x'] = xtest
-    model_data['test_y'] = ytest
+    model_data['train_x'] = xtrain.copy()
+    model_data['train_y'] = ytrain.copy()
+    model_data['test_x'] = xtest.copy()
+    model_data['test_y'] = ytest.copy()
 
     return {'model_data': model_data, 'sym_data': sym_data}
 
@@ -600,9 +600,8 @@ def data_profile(p_data, p_type, p_mult):
 
     # in the case of a binary target variable
     if p_type == 'target_class':
-        df_count= pd.DataFrame({'class_0': len(np.where(p_data == 0)[0]),
-                                'class_1': len(np.where(p_data == 1)[0])}, index=[0,1])
-        return df_count
+        # print(type(p_data))
+        return p_data.value_counts()
 
     # -- OHLCV PROFILING -- #
     elif p_type == 'ohlc':
@@ -1513,7 +1512,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
                                              p_type='ts', p_mult=10000),
                       'train_y': data_profile(p_data=m_features['model_data']['train_y'],
                                               p_type='target_class', p_mult=10000),
-                      'test_y': data_profile(p_data=m_features['model_data']['train_y'],
+                      'test_y': data_profile(p_data=m_features['model_data']['test_y'],
                                              p_type='target_class', p_mult=10000)}
         
         # save calculated metrics
