@@ -121,9 +121,9 @@ ohlc_data = pd.concat([price_data[list(price_data.keys())[0]]])
 # --------------------------------------------------------------------- -------------------------------- -- #
 
 symbolic_params = {'functions': ["sub", "add", 'inv', 'mul', 'div', 'abs', 'log'],
-                   'population': 5000, 'tournament':20, 'hof': 20, 'generations': 2, 'n_features':10,
+                   'population': 5000, 'tournament':20, 'hof': 20, 'generations': 10, 'n_features':10,
                    'init_depth': (4,8), 'init_method': 'half and half', 'parsimony': 0, 'constants': None,
-                   'metric': 'pearson', 'metric_goal': 0.65, 
+                   'metric': 'pearson', 'metric_goal': 0.60, 
                    'prob_cross': 0.4, 'prob_mutation_subtree': 0.3,
                    'prob_mutation_hoist': 0.1, 'prob_mutation_point': 0.2,
                    'verbose': True, 'parallelization': True, 'warm_start': True}

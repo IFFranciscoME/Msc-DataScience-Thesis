@@ -370,11 +370,14 @@ def linear_features(p_data, p_memory):
 
     """
 
+    # hardcopy of data
+    data = p_data.copy()
+
     # ----------------------------------------------------------- ingenieria de variables autoregresivas -- #
     # ----------------------------------------------------------- -------------------------------------- -- #
 
     # funcion para generar variables autoregresivas
-    data_ar = autoregressive_features(p_data=p_data, p_nmax=p_memory)
+    data_ar = autoregressive_features(p_data=data, p_nmax=p_memory)
 
     # separacion de variable dependiente
     data_y = data_ar['co_d'].copy()
@@ -440,7 +443,7 @@ def symbolic_features(p_x, p_y, p_params):
     https://gplearn.readthedocs.io/en/stable/reference.html#gplearn.genetic.SymbolicTransformer
     
     """
-    
+   
     # Function to produce Symbolic Features
     model = SymbolicTransformer(function_set=p_params['functions'], population_size=p_params['population'],
                                 tournament_size=p_params['tournament'], hall_of_fame=p_params['hof'],
@@ -1382,7 +1385,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
             'weighted': a weighted average is calculated between train (80%) and test (20%) AUC
             'inv-weighted': an inverse weighted average is calculated between train (20%) and test (80%) AUC
         
-        p_fit_type = 'train'
+        p_fit_type = 'weighted'
     
     p_transform: str
         type of transformation to perform to the data
@@ -1620,7 +1623,7 @@ def global_evaluation(p_memory_palace, p_data, p_cases, p_model, p_case):
     fold_mod_params = p_cases[p_model]['hof_metrics']['data'][fold_period][p_case + '_params']
 
     # Get all the linear features 
-    linear_data = linear_features(p_data=p_data.copy(), p_memory=7)
+    linear_data = linear_features(p_data=p_data, p_memory=7)
     y_target = linear_data['co_d'].copy()
     linear_data = linear_data.drop(['co_d'], axis=1, inplace=False)
 

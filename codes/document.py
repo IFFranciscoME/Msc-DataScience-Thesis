@@ -81,18 +81,29 @@ plot_2 = vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_2, p_vlines=dates_folds)
 
 # period to explore results
 period = list(folds.keys())[0]
+period = 's_01_2011'
 
 # models to explore results
 model = list(dt.models.keys())[0]
 
 # input data profile
-in_profile = memory_palace['s_01_2011']['metrics']['data_metrics']
+in_profile = memory_palace[period]['metrics']['data_metrics']
+
+# target variable
+tv_profile_train = memory_palace[period]['metrics']['feature_metrics']['train_y']
+tv_profile_test = memory_palace[period]['metrics']['feature_metrics']['test_y']
+
+# amount of symbolic features
+n_sf = dt.symbolic_params['n_features']
 
 # linear features profile
-lf_profile = 0
+lf_profile_train = memory_palace[period]['metrics']['feature_metrics']['train_x'].iloc[:, :-n_sf]
+lf_profile_test = memory_palace[period]['metrics']['feature_metrics']['test_x'].iloc[:, :-n_sf]
 
 # symbolic features profile
-sm_profile = 0
+sm_profile_train = memory_palace[period]['metrics']['feature_metrics']['train_x'].iloc[:, -n_sf:]
+sm_profile_test = memory_palace[period]['metrics']['feature_metrics']['test_x'].iloc[:, -n_sf:]
+
 
 # --------------------------------------------------------------------------------------- VISUAL PROFILE -- #
 # ----------------------------------------------------------------------------------------- ------------ -- #
