@@ -192,6 +192,41 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 # -- kernel in SVM
 # -- training time in ANN-MLP
 
+# ------------------------------------------------------------------------------------ SUBJECTS BY CLASS -- #
+# ------------------------------------------------------------------------------------------- ---------- -- #
+
+- Machine Learning
+- - Used K-fold Cross-Validation technique as a basis and proposed some variations in order to use it in 
+    financial time series data, this in line with what is included in hastie & tibshirani Elements of Statistical Learning.
+
+- - Gradient descent as a learning algorithm
+    SAGA: A Fast Incremental Gradient Method WithSupport for Non-Strongly Convex CompositeObjectives.
+    SGD: Stochastic Gradient Descent.
+
+- - (Extra) Regularization factors L1, and L2 combined in Elastic Net
+
+- Time Series
+- - (Done) Base properties of time series data
+- - (Pending) AIC and BIC criterias for model selection
+
+- Convex Optimization
+- - (Pending) Convexity of loss function utilized for training the models
+- - (Done) Logistic Regression model
+- - (Done) Support Vector Machines model
+- - (Done) Regularization factors L1, and L2 combined in Elastic Net
+
+- Predictive Modeling
+- - (pending) Data profiling
+- - (pending) RandomForest model use for binary classification
+
+- Analysis and Design of Algorithms
+- - (Pending) Complexity analysis of T-Fold technique
+- - (Pending) Complexity analysis of predictive models
+- - (Pending) Calibration technique design and complexity analysis
+- - (Pending) Genetic Algorithms 
+
+- Previously
+- - (Done) Multilayer Pereceptron model
 
 # ------------------------------------------------------------------------------------------- CHANGE LOG -- #
 # ------------------------------------------------------------------------------------------- ---------- -- #

@@ -59,7 +59,7 @@ if __name__ == "__main__":
 
         # Create a pool of workers with as many cores as the computer has
         # workers = cpu_count()-1
-        workers = 1
+        workers = 6
         pool = mp.Pool(workers)
         
         # Parallel Asyncronous Process 

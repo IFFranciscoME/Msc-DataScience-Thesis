@@ -321,6 +321,9 @@ def hadamard_features(p_data, p_nmax):
 
     """
 
+    # reasignar datos
+    data = p_data.copy()
+
     # ciclo para crear una combinacion secuencial
     for n in range(p_nmax):
 
@@ -332,11 +335,12 @@ def hadamard_features(p_data, p_nmax):
 
         # producto hadamard con los features previos
         for x in list_hadamard:
-            p_data['h_' + x + '_' + 'ma_ol_' + str(n + 1)] = p_data[x] * p_data['ma_ol_' + str(n + 1)]
-            p_data['h_' + x + '_' + 'ma_ho_' + str(n + 1)] = p_data[x] * p_data['ma_ho_' + str(n + 1)]
-            p_data['h_' + x + '_' + 'ma_hl_' + str(n + 1)] = p_data[x] * p_data['ma_hl_' + str(n + 1)]
+            data['h_' + x + '_' + 'ma_ol_' + str(n + 1)] = data[x] * data['ma_ol_' + str(n + 1)]
+            data['h_' + x + '_' + 'ma_ho_' + str(n + 1)] = data[x] * data['ma_ho_' + str(n + 1)]
+            data['h_' + x + '_' + 'ma_hl_' + str(n + 1)] = data[x] * data['ma_hl_' + str(n + 1)]
+            data['h_' + x + '_' + 'ma_vol_' + str(n + 1)] = data[x] * data['ma_vol_' + str(n + 1)]
 
-    return p_data
+    return data
 
 
 # --------------------------------------------- FUNCTION: Autoregressive and Hadamard Feature Engieering -- #
@@ -375,9 +379,6 @@ def linear_features(p_data, p_memory):
     # separacion de variable dependiente
     data_y = data_ar['co_d'].copy()
 
-    # separacion de variable dependiente
-    # datos_timestamp = datos_arf['timestamp'].copy()
-
     # separacion de variables independientes
     data_arf = data_ar.drop(['timestamp', 'co', 'co_d'], axis=1, inplace=False)
 
@@ -388,12 +389,12 @@ def linear_features(p_data, p_memory):
     datos_had = hadamard_features(p_data=data_arf, p_nmax=p_memory)
 
     # datos para utilizar en la siguiente etapa
-    features_data = pd.concat([data_y.copy(), datos_had.copy()], axis=1)
+    next_data = pd.concat([data_y.copy(), datos_had.copy()], axis=1)
 
     # keep the timestamp as index
-    features_data.index = data_ar['timestamp']
+    next_data.index = data_ar['timestamp'].copy()
   
-    return features_data
+    return next_data
 
 
 # ------------------------------------------------------------------ MODEL: Symbolic Features Generation -- #
@@ -516,7 +517,7 @@ def genetic_programed_features(p_data):
     datos_y = p_data['co_d'].copy()
 
     # separacion de variables independientes
-    datos_had = p_data.drop(['co_d'], axis=1, inplace=False)
+    datos_had = p_data.copy().drop(['co_d'], axis=1, inplace=False)
 
     # --------------------------------------------------------------- ingenieria de variables simbolicas -- #
     # --------------------------------------------------------------- ---------------------------------- -- #
@@ -1397,7 +1398,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
         'pre-features': previous to the feature engineering (features will not be transformed)
         'post-features': after the feature engineering (features will be transformed)       
 
-        p_scaling = 'pre-features'
+        p_scaling = 'post-features'
 
     Returns
     -------
@@ -1464,7 +1465,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
         if p_scaling == 'pre-features':
             
             # Original data
-            data_folds = data_scaler(p_data=p_data_folds[period].copy(), p_trans=p_transform)
+            data_folds = data_scaler(p_data=p_data_folds[period], p_trans=p_transform)
         
             # Feature engineering (Autoregressive, Hadamard)
             linear_data = linear_features(p_data=data_folds, p_memory=7)

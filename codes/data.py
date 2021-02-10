@@ -20,8 +20,8 @@ import itertools
 # ---------------------------------------------------------------------------------- ------------------- -- #
 
 # Short Version for Testing
-iter_fold = ['semester']
-iter_opt = {'fitness': ['train'], 'transform': ['scale'], 'scaling': ['post-features']}
+iter_fold = ['quarter', 'semester']
+iter_opt = {'fitness': ['weighted', 'inv-weighted'], 'transform': ['scale'], 'scaling': ['post-features']}
 
 # Values for T-Fold size
 # iter_fold = ['quarter', 'semester', 'year', 'bi-year', '80-20']
@@ -70,7 +70,6 @@ def group_daily():
 
     return r_data
 
-# group_daily()
 
 # ---------------------------------------------------------------------------- Historical Prices Reading -- #
 # ---------------------------------------------------------------------------- ------------------------- -- #
