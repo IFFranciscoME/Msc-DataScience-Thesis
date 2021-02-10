@@ -187,25 +187,20 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 
 # -- NECESSARY
 
-- (pending) visualization: boxplot matrix with outliers for feature variables
-- (pending) visualization: histograms for feature variables
-- (pending) visualization: Correlation heatmap for feature variables
-
-- (pending) validation of data_scaling function in all the cases
-- (pending) visual_profile for OHLC and timeseries visual profiling
-- (pending) add RandomForest classification model with scikit learn
-- (pending) migrate ann-mlp model from scikit learn to keras
-- (pending) add criteria 3 and criteria 4 for trading simulation function
-- (pending) visualization ROC curves of all HoF in the fold
-- (pending) calibration 
-- (pending) validate Data Profile for OHLC prices
-- (pending) Data Profile for Features
-- (pending) Statistical description of Genetic Programms
-
 - (pending) extract data for mode cases
 - (pending) metrics and other analytics for mode cases
 - (pending) table for multi modal cases
-- (pending) table for symbolic features
+
+- (pending) Statistical description of Genetic Programms
+
+- (pending) visual profile: boxplot matrix with outliers for feature variables
+- (pending) visual profile: histograms for feature variables
+- (pending) visual profile: Correlation heatmap for feature variables
+- (pending) visual profile: ROC curves of all HoF in the fold
+
+- (pending) add RandomForest classification model with scikit learn
+- (pending) migrate ann-mlp model from scikit learn to keras
+
 - (pending) Computational performance of Machine Learning System (Criteria 1 and 2 of trading system)
 
 # -- GOOD TO HAVE
@@ -215,7 +210,8 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 - (pending) Criteria 3: Profit and Loss taking (scalar, formula, model)
 - (pending) Criteria 4: Positions dimensioning (scalar, formula, model)
 - (pending) Financial performance of trading strategy (Criteria 3 and 4 of trading system)
-
+- (pending) calibration  model
+- (pending) calibration  results analysis
 
 ***************************************************************************************** UNORGANIZED NOTES 
 ***********************************************************************************************************
@@ -231,11 +227,6 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 # -- -- DATA ANALYSIS
 # -- -- -- Amount/dates of data
 # -- -- -- Balance of the clases
-
-# -- -- FEATURE ANALYSIS
-# -- -- -- correlation matrix among features
-# -- -- -- outliers presence in features
-# -- -- -- Features parsimony (length and depth of program)
 
 # -- -- MODEL ANALYSIS
 # -- -- -- change in accuracy
