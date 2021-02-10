@@ -178,8 +178,9 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 - added pickle_rick data saving method that support parallelization
 - added data_profile function for OHLC and timeseries data profiling
 
-- Data profile for target variable (balance of classes)
-- Data profile for feature variables (descriptive statistics)
+- added Data profile for target variable (balance of classes)
+- added Data profile for feature variables (descriptive statistics)
+- added table Correlation between features and features vs target variable
 
 # ---------------------------------------------------------------------------------------------- BACKLOG -- # 
 # ---------------------------------------------------------------------------------------------- ------- -- #
@@ -189,7 +190,6 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 - (pending) visualization: boxplot matrix with outliers for feature variables
 - (pending) visualization: histograms for feature variables
 - (pending) visualization: Correlation heatmap for feature variables
-- (pending) table: Correlation table for feature variables vs target variable
 
 - (pending) validation of data_scaling function in all the cases
 - (pending) visual_profile for OHLC and timeseries visual profiling

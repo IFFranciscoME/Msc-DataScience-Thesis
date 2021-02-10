@@ -104,6 +104,15 @@ lf_profile_test = memory_palace[period]['metrics']['feature_metrics']['test_x'].
 sm_profile_train = memory_palace[period]['metrics']['feature_metrics']['train_x'].iloc[:, -n_sf:]
 sm_profile_test = memory_palace[period]['metrics']['feature_metrics']['test_x'].iloc[:, -n_sf:]
 
+# all variables correlation table
+all_corr_train = memory_palace[period]['features']['train_x'].corr()
+all_corr_test = memory_palace[period]['features']['test_x'].corr()
+
+# All variables with target variable
+tgv_corr_train = pd.concat([memory_palace[period]['features']['train_y'],
+                            memory_palace[period]['features']['train_x']], axis=1).corr().iloc[:, 0]
+tgv_corr_test = pd.concat([memory_palace[period]['features']['test_y'],
+                           memory_palace[period]['features']['test_x']], axis=1).corr().iloc[:, 0]
 
 # --------------------------------------------------------------------------------------- VISUAL PROFILE -- #
 # ----------------------------------------------------------------------------------------- ------------ -- #
