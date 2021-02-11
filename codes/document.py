@@ -176,17 +176,43 @@ plot_3 = vs.g_ohlc_class(p_ohlc=ohlc_prices, p_theme=dt.theme_plot_3, p_data_cla
 # Generate plot online with chartstudio
 # py.plot(plot_3)
 
-# -- -------------------------------------------------------------------- PLOT 4: ROC & AUC FOLD RESULTS -- #
-# -- -------------------------------------------------------------------- ------------------------------ -- #
+# -- -------------------------------------------------------------------------- PLOT 4: All ROCs in FOLD -- #
+# -- -------------------------------------------------------------------------- ------------------------ -- #
+
+# metric to plot
+metric = 'auc'
+
+# metric to plot
+case = 'met_max'
+
+# Model to evaluate
+model = 'ann-mlp'
+
+# data subset to use
+subset = 'train'
+
+# period 
+period = 's_01_2011'
+
+# parameters of the evaluated models
+d_params = memory_palace[period][model]['p_hof']['hof']
+
+# get all fps and tps for a particular model in a particular fold
+d_plot_4 = {i: {'tpr': memory_palace[period][model]['e_hof'][i]['metrics'][subset]['tpr'],
+                'fpr': memory_palace[period][model]['e_hof'][i]['metrics'][subset]['fpr'],
+                'auc': memory_palace[period][model]['e_hof'][i]['metrics'][subset]['auc'],
+                'acc': memory_palace[period][model]['e_hof'][i]['metrics'][subset]['acc'],
+                'logloss': memory_palace[period][model]['e_hof'][i]['metrics'][subset]['logloss']}
+            for i in range(0, len(d_params))}
 
 # Plot title
-dt.theme_plot_4['p_labels']['title'] = 'in Fold max/min AUC cases'
+dt.theme_plot_4['p_labels']['title'] = 'in Fold max & min ' + metric + ' ' + subset + ' data'
 
 # Timeseries of the AUCs
-plot_4 = vs.g_roc_auc(p_cases=met_cases, p_type='test', p_models=ml_models, p_theme=dt.theme_plot_4)
+plot_4 = vs.g_multiroc(p_data=d_plot_4, p_metric=metric, p_theme=dt.theme_plot_4)
 
 # Show plot in script
-# plot_4.show()
+plot_4.show()
 
 # Generate plot online with chartstudio
 # py.plot(plot_4)

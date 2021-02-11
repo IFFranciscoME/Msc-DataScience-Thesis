@@ -253,68 +253,6 @@ def g_ohlc_class(p_ohlc, p_theme, p_data_class, p_vlines):
 
     return fig_g_ohlc
 
-# -- ----------------------------------------------------------------------------------- PLOT: ROC + ACU -- #
-# -- --------------------------------------------------------------------------------------------------- -- #
-
-def g_roc_auc(p_casos, p_theme):
-
-    # default value for lables to use in main title, and both x and y axisp_fonts
-    if p_theme['p_labels'] is not None:
-        p_labels = p_theme['p_labels']
-    else:
-        p_labels = {'title': 'Main title', 'x_title': 'x axis title', 'y_title': 'y axis title'}
-
-    # p_casos = casos
-    fig_rocs = go.Figure()
-    fig_rocs.update_layout(
-        title=dict(x=0.5, text='Grafica 4:' + '<b> ' + p_theme['p_labels']['title'] + ' </b>'),
-        xaxis=dict(title_text=p_theme['p_labels']['x_title'],
-                   tickfont=dict(color='grey', size=p_theme['p_theme']['font_axis'])),
-        yaxis=dict(title_text=p_theme['p_labels']['y_title'],
-                   tickfont=dict(color='grey', size=p_theme['p_theme']['font_axis'])))
-
-    # Layout for margin, and both x and y axes
-    fig_rocs.update_layout(margin=go.layout.Margin(l=50, r=50, b=20, t=60, pad=20),
-                             xaxis=dict(title_text=p_labels['x_title']),
-                             yaxis=dict(title_text=p_labels['y_title']))
-                             
-    fig_rocs.add_shape(type='line', line=dict(width=3, dash='dash', color='grey'), x0=0, x1=1, y0=0, y1=1)
-    model_name = ''
-    for model in ['model_1', 'model_2', 'model_3']:
-        for auc_type in ['auc_min', 'auc_max']:
-            p_fpr = p_casos[model][auc_type]['data']['metrics']['train']['fpr']
-            p_tpr = p_casos[model][auc_type]['data']['metrics']['train']['tpr']
-
-            if model == 'model_1':
-                model_name = 'logistic-elasticnet'
-            elif model == 'model_2':
-                model_name = 'l1-svm'
-            elif model == 'model_3':
-                model_name = 'ann-mlp'
-
-            if auc_type == 'auc_min':
-                fig_rocs.add_trace(go.Scatter(x=p_fpr, y=p_tpr, name=model_name,
-                                              mode='lines+markers', line=dict(width=2, color='red')))
-            elif auc_type == 'auc_max':
-                fig_rocs.add_trace(go.Scatter(x=p_fpr, y=p_tpr, name=model_name,
-                                              mode='lines+markers', line=dict(width=2, color='blue')))
-
-    # Legend format
-    fig_rocs.update_layout(legend=go.layout.Legend(x=.35, y=-.3, orientation='h',
-                                                     bordercolor='dark grey',
-                                                     borderwidth=1,
-                                                     font=dict(size=p_theme['p_fonts']['font_axis'])))
-
-    # Formato de tamanos
-    fig_rocs.layout.autosize = True
-    fig_rocs.layout.width = p_theme['p_dims']['width']
-    fig_rocs.layout.height = p_theme['p_dims']['height']
-
-    # Mostrar la grafica
-    fig_rocs.show()
-
-    return fig_rocs
-
 
 # -- ----------------------------------------------------------------------------------- PLOT: ROC + ACU -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
@@ -425,10 +363,10 @@ def g_timeseries_auc(p_data_auc, p_theme):
     return fig_ts_auc
 
 
-# -- ----------------------------------------------------------------------------------- PLOT: ROC + ACU -- #
+# -- ------------------------------------------------------------------------------------ PLOT: ALL ROCs -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 
-def g_roc_auc(p_cases, p_models, p_type, p_theme):
+def g_multiroc(p_data, p_theme, p_metric):
 
     # default value for lables to use in main title, and both x and y axisp_fonts
     if p_theme['p_labels'] is not None:
@@ -453,31 +391,39 @@ def g_roc_auc(p_cases, p_models, p_type, p_theme):
 
     fig_rocs.add_shape(type='line', line=dict(width=3, dash='dash', color='grey'), x0=0, x1=1, y0=0, y1=1)
 
-    for model in p_models:
-        for auc_type in ['auc_min', 'auc_max']:
-            p_fpr = p_cases[model][auc_type]['data']['metrics'][p_type]['fpr']
-            p_tpr = p_cases[model][auc_type]['data']['metrics'][p_type]['tpr']
+    # n line colors (max, min, other)
+    line_colors = ['#047CFB', '#FB5D41', '#ABABAB']
 
-            if auc_type == 'auc_min':
-                fig_rocs.add_trace(go.Scatter(x=p_fpr, y=p_tpr, name='auc_min: ' + model,
-                                              mode='lines+markers', line=dict(width=2, color='red')))
-            elif auc_type == 'auc_max':
-                fig_rocs.add_trace(go.Scatter(x=p_fpr, y=p_tpr, name='auc_max: ' + model,
-                                              mode='lines+markers', line=dict(width=2, color='blue')))
+    # max metric
+    metrics = [p_data[i][p_metric] for i in list(p_data.keys())]
+    max_metric = np.argmax(metrics)
+    min_metric = np.argmin(metrics)
+
+    for i in list(p_data.keys()):
+        model = p_data[i]
+        p_fpr = model['fpr']
+        p_tpr = model['tpr']
+        p_color = line_colors[2]
+        p_size = 1
+        p_name = p_metric + '_generic: ' +  str(round(metrics[i], 2))
+        
+        if i == max_metric:
+            p_color = line_colors[0]
+            p_size = 2
+            p_name = p_metric + '_max: ' + str(round(metrics[i], 2))
+        elif i == min_metric:
+            p_color = line_colors[1]
+            p_size = 2
+            p_name = p_metric + '_min: ' +  str(round(metrics[i], 2))
+
+        fig_rocs.add_trace(go.Scatter(x=p_fpr, y=p_tpr, name=p_name,
+                                        mode='lines', line=dict(width=p_size, color=p_color)))
 
     # Legend format
-    fig_rocs.update_layout(legend=go.layout.Legend(x=.34, y=-.26, orientation='h',
+    fig_rocs.update_layout(legend=go.layout.Legend(x=1.05, y=1.05, orientation='v',
                                                    bordercolor='dark grey',
                                                    borderwidth=1,
                                                    font=dict(size=p_theme['p_fonts']['font_axis'])))
-
-    # Update layout for the background
-    fig_rocs.update_layout(title_font_size=p_theme['p_fonts']['font_title'],
-                           title=dict(x=0.5, text='<b> ' + p_labels['title'] + ' </b>'),
-                           yaxis=dict(title=p_labels['y_title'],
-                                      titlefont=dict(size=p_theme['p_fonts']['font_axis'] + 4)),
-                           xaxis=dict(title=p_labels['x_title'], rangeslider=dict(visible=False),
-                                      titlefont=dict(size=p_theme['p_fonts']['font_axis'] + 4)))
 
     # Formato de tamanos
     fig_rocs.layout.autosize = True
@@ -485,4 +431,3 @@ def g_roc_auc(p_cases, p_models, p_type, p_theme):
     fig_rocs.layout.height = p_theme['p_dims']['height']
 
     return fig_rocs
-

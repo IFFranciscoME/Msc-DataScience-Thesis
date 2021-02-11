@@ -1823,7 +1823,7 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
                 met_s.append(c_met)
 
                 # -- Case 1 (MIN INDIVIDUAL)
-                # get the individual of all of the HoF that produced the minimum AUC
+                # get the individual of all of the HoF that produced the minimum metrics
                 if c_met < met_min:
                     met_min = c_met
                     met_cases[model]['met_min']['data'] = p_global_cases[period][model]['e_hof'][i]
@@ -1831,14 +1831,14 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
                     met_min_params = p_global_cases[period][model]['p_hof']['hof'][i]
 
                 # -- Case 2 (MAX INDIVIDUAL)
-                # get the individual of all of the HoF that produced the maximum AUC
+                # get the individual of all of the HoF that produced the maximum metrics
                 elif c_met > met_max:
                     met_max = c_met
                     met_cases[model]['met_max']['data'] = p_global_cases[period][model]['e_hof'][i]
                     met_cases[model]['met_max']['period'] = period
                     met_max_params = p_global_cases[period][model]['p_hof']['hof'][i]
 
-            # Get features used for every case, therefore, for min and max AUC cases
+            # Get features used for every case, therefore, for min and max metric cases
             features = {'features': p_global_cases[period]['features'],
                         'sym_features': p_global_cases[period]['sym_features']}
 
