@@ -121,7 +121,7 @@ tgv_corr_test = pd.concat([memory_palace[period]['features']['test_y'],
 # -- ------------------------------------------------------------------------------- ------------------- -- #
 
 # -- Min, max and mode AUC cases
-auc_cases = fn.model_auc(p_models=ml_models, p_global_cases=memory_palace, p_data_folds=folds,
+auc_cases = fn.best_case(p_models=ml_models, p_global_cases=memory_palace, p_data_folds=folds,
                          p_cases_type='logloss-mean')
 
 # -- -------------------------------------------------------------------------------------- DATA PROFILE -- #
