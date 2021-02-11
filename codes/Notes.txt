@@ -1,12 +1,33 @@
 
+# -- -------------------------------------------------------------------------- QUESTIONS AND REFERENCES -- # 
+# -- --------------------------------------------------------------------------------------------------- -- #
+
+# -- AUC vs Logloss as cost functions, which is better for binary classification
+
+Whereas the AUC is computed with regards to binary classification with a varying decision threshold,
+logloss actually takes "certainty" of classification into account.
+
+Therefore to my understanding, logloss conceptually goes beyond AUC and is especially relevant in cases
+with imbalanced data or in case of unequally distributed error cost 
+(for example detection of a deadly disease).
+
+https://stats.stackexchange.com/questions/322408/logloss-vs-gini-auc
+https://stats.stackexchange.com/questions/235089/optimizing-auc-vs-logloss-in-binary-classification-
+problems
+
 # -- Akaike Criteria
 In order to compare between models and between different parameter configurations of the same model
 
 # -- Simpson paradox 
-Simpson's paradox is one of many reasons why it’s important to evaluate your models on different slices of data. Model 1 outperforms Model 2 on group A and group B separately, but model 2 can still outperform model 1 with the overall data.
+Simpson's paradox is one of many reasons why it’s important to evaluate your models on different slices 
+of data. Model 1 outperforms Model 2 on group A and group B separately, but model 2 can still 
+outperform model 1 with the overall data.
+
 https://en.wikipedia.org/wiki/Simpson%27s_paradox
-Here is a multivariable procedure that explicitly maximizes classification accuracy and prevents paradoxical confounding. [5, 6]
-https://www.researchgate.net/post/How_do_you_explain_higher_discrimination_using_a_SVM_score_index_unsupervised_from_a_supervised_SVM_model_using_same_dataset
+Here is a multivariable procedure that explicitly maximizes classification accuracy and prevents
+paradoxical confounding. [5, 6]
+https://www.researchgate.net/post/How_do_you_explain_higher_discrimination_using_a_SVM_score_
+index_unsupervised_from_a_supervised_SVM_model_using_same_dataset
 
 # -- Usefull Difference between AUC & ACC
 https://datascience.stackexchange.com/questions/806/advantages-of-auc-vs-standard-accuracy
@@ -16,13 +37,15 @@ http://notmatthancock.github.io/2015/11/11/auc-and-accuracy.html
 https://stats.stackexchange.com/questions/316464/how-does-batch-size-affect-convergence-of-sgd-and-why
 
 # -- How to Control the Stability of Training Neural Networks With the Batch Size
-https://machinelearningmastery.com/how-to-control-the-speed-and-stability-of-training-neural-networks-with-gradient-descent-batch-size/
+https://machinelearningmastery.com/how-to-control-the-speed-and-stability-of-training-neural-networks
+-with-gradient-descent-batch-size/
 
 # -- Number of hidden layers / number of neurons & Universal Aproximation Theorem.
 https://www.researchgate.net/post/How-to-decide-the-number-of-hidden-layers-and-nodes-in-a-hidden-layer
 https://www.heatonresearch.com/2017/06/01/hidden-layers.html
 https://en.wikipedia.org/wiki/Universal_approximation_theorem
-https://stats.stackexchange.com/questions/181/how-to-choose-the-number-of-hidden-layers-and-nodes-in-a-feedforward-neural-netw
+https://stats.stackexchange.com/questions/181/how-to-choose-the-number-of-hidden-layers-and-nodes-
+in-a-feedforward-neural-netw
 
 # -- RandomForest
 https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html
@@ -187,6 +210,8 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 
 # -- NECESSARY
 
+- (pending) Resolve wich will be the different cost functions to use in all the models
+
 - (pending) extract data for mode cases
 - (pending) metrics and other analytics for mode cases
 - (pending) table for multi modal cases
@@ -215,6 +240,11 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 
 ***************************************************************************************** UNORGANIZED NOTES 
 ***********************************************************************************************************
+
+# -- For each model show
+# -- -- Objective function
+# -- -- Cost function 
+# -- -- Learning/Optimizing algorithm (Genetic algorithms because categorical data)
 
 # -- (Pending) search for the max, min, mode cases among all the folds
 # -- -- display metrics of de lowest min and the highest max 
@@ -268,3 +298,6 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 # -- Regularization effects in logistic regression
 # -- kernel in SVM
 # -- training time in ANN-MLP
+
+- Genetic algorithms vs other learning algorithm for the hyperparameter optimization:
+  in my case Genetic Algorithms is OK because the hyperparameters are both numerical and categorical

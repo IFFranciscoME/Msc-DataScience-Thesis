@@ -21,13 +21,14 @@ import itertools
 
 # Short Version for Testing
 iter_fold = ['semester']
-iter_opt = {'fitness': ['weighted'], 'scaling': ['post-features'], 'transform': ['scale']}
+iter_opt = {'fitness': ['logloss-mean'], 'scaling': ['post-features'], 'transform': ['scale']}
 
 # Values for T-Fold size
 # iter_fold = ['quarter', 'semester', 'year', 'bi-year', '80-20']
 
 # Values for three parameters inside the optimization process
-# iter_opt = {'fitness': ['train', 'test', 'simple', 'weighted', 'inv-weighted'],
+# iter_opt = {'fitness': ['auc-mean', 'auc-weighted', 'auc-inv-weighted',
+#                         'logloss-mean', 'logloss-weighted', 'logloss-inv-weighted'],
 #             'transform': ['scale', 'normalize', 'robust'],
 #             'scaling': ['post-features', 'pre-features']}
 

@@ -32,4 +32,5 @@
 |   Coding         | Parallelization and logging        | 10:00 08.Feb.2021  | 1.5          |                  |
 |   Coding         | Data Profile                       | 08:00 09.Feb.2021  | 4.0          |                  |
 
-|   Coding         | Feature related code review        | 9:00 10.Feb.2021   | 1.0          |                  |
+|   Coding         | Feature related code review        | 09:00 10.Feb.2021  | 1.0          |                  |
+|   Coding         | code review                        | 11:00 10.Feb.2021  | 2.0          |                  |

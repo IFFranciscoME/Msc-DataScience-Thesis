@@ -24,7 +24,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, RobustScaler, MaxAbsScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
-from sklearn.metrics import confusion_matrix, accuracy_score, roc_auc_score, roc_curve
+from sklearn.metrics import confusion_matrix, accuracy_score, roc_auc_score, roc_curve, log_loss
 from sklearn.neural_network import MLPClassifier
 
 from datetime import datetime
@@ -692,6 +692,9 @@ def model_metrics(p_model, p_data):
     # Area Under the Curve (ROC) for train data
     auc_train = round(roc_auc_score(list(p_data['y_train']), probs_train[:, 1]), 4)
 
+    # Logloss (Binary cross-entropy function)
+    logloss_train = log_loss(p_data['y_train'], p_y_train_d)
+
     # fitted test values
     p_y_test_d = p_model.predict(p_data['x_test'])
     p_y_result_test = pd.DataFrame({'y_test': p_data['y_test'], 'y_test_pred': p_y_test_d})
@@ -708,14 +711,20 @@ def model_metrics(p_model, p_data):
     # Area Under the Curve (ROC) for train data
     auc_test = round(roc_auc_score(list(p_data['y_test']), probs_test[:, 1]), 4)
 
+    # Logloss (Binary cross-entropy function)
+    logloss_test = log_loss(p_data['y_test'], p_y_test_d)
+
      # Return the result of the model
     r_model_metrics = {'results': {'data': {'train': p_y_result_train, 'test': p_y_result_test},
                                    'matrix': {'train': cm_train, 'test': cm_test}},
                        'model': p_model, 
                        'metrics': {'train': {'acc': acc_train, 'tpr': tpr_train, 'fpr': fpr_train,
-                                      'probs': probs_train, 'auc': auc_train},
+                                             'probs': probs_train, 'auc': auc_train,
+                                             'logloss': logloss_train},
+
                                    'test': {'acc': acc_test, 'tpr': tpr_test, 'fpr': fpr_test,
-                                            'probs': probs_test, 'auc': auc_test}}}
+                                            'probs': probs_test, 'auc': auc_test,
+                                            'logloss': logloss_test}}}
 
     return r_model_metrics
 
@@ -1004,27 +1013,36 @@ def genetic_algo_evaluate(p_individual, p_data, p_model, p_fit_type):
     # get the AUC of the selected model
     model_train_auc = model['metrics']['train']['auc'].copy()
     model_test_auc = model['metrics']['test']['auc'].copy()
+
+    # get the logloss of the selected model
+    model_train_logloss = model['metrics']['train']['logloss'].copy()
+    model_test_logloss = model['metrics']['test']['logloss'].copy()
        
     # -- type of fitness metric for the evaluation of the genetic individual -- #
         
-    # train AUC
-    if p_fit_type == 'train':
-        return round(model_train_auc, 4)
-
-    elif p_fit_type == 'test':
-        return round(model_test_auc, 4)
-    
     # simple average of AUC in sample and out of sample
-    elif p_fit_type == 'simple':
+    if p_fit_type == 'auc-mean':
         return round((model_train_auc + model_test_auc)/2, 4)
 
     # weighted average of AUC in sample and out of sample
-    elif p_fit_type == 'weighted':
+    elif p_fit_type == 'auc-weighted':
         return round((model_train_auc*0.80 + model_test_auc*0.20)/2, 4)
 
     # inversely weighted average of AUC in sample and out of sample
-    elif p_fit_type == 'inv-weighted':
+    elif p_fit_type == 'auc-inv-weighted':
         return round((model_train_auc*0.20 + model_test_auc*0.80)/2, 4)
+    
+    # simple average of AUC in sample and out of sample
+    if p_fit_type == 'logloss-mean':
+        return round((model_train_logloss + model_test_logloss)/2, 4)
+
+    # weighted average of AUC in sample and out of sample
+    elif p_fit_type == 'logloss-weighted':
+        return round((model_train_logloss*0.80 + model_test_logloss*0.20)/2, 4)
+
+    # inversely weighted average of AUC in sample and out of sample
+    elif p_fit_type == 'logloss-inv-weighted':
+        return round((model_train_logloss*0.20 + model_test_logloss*0.80)/2, 4)
 
     else:
         print('error in type of model fitness metric')
