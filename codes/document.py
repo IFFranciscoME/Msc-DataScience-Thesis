@@ -126,50 +126,44 @@ tgv_corr_test = pd.concat([memory_palace[period]['features']['test_y'],
 # --------------------------------------------------------------------------------------- VISUAL PROFILE -- #
 # ----------------------------------------------------------------------------------------- ------------ -- #
 
+# (pending)
+
 # -- ------------------------------------------------------------------------------- PARAMETER SET CASES -- #
 # -- ------------------------------------------------------------------------------- ------------------- -- #
 
 # -- Min, max and mode AUC cases
-auc_cases = fn.model_cases(p_models=ml_models, p_global_cases=memory_palace, p_data_folds=folds,
+met_cases = fn.model_cases(p_models=ml_models, p_global_cases=memory_palace, p_data_folds=folds,
                            p_cases_type='logloss-mean')
  
 # -- ------------------------------------------------------------------------ SYMBOLIC FEATURES ANALYSIS -- #
 # -- ------------------------------------------------------------------------ -------------------------- -- #
 
-# memory_palace['logistic-elasticnet']['b_y_0']['sym_features']['best_programs']
 # (pending) parsimony metric
 # (pending) fitness metric
 # (pending) equations description
-
-# -- ----------------------------------------------------------------------------- ALL FEATURES ANALYSIS -- #
-# -- ----------------------------------------------------------------------------- --------------------- -- #
-
-# (pending) correlation
-# (pending) outliers
-# (pending) symmetry
 
 # -- --------------------------------------------------------------- PLOT 3: CLASSIFICATION FOLD RESULTS -- #
 # -- ----------------------------------------------------------------------------- --------------------- -- #
 
 # Pick case
-case = 'max'
+case = 'met_max'
 
 # Pick model to generate the plot
-auc_model = 'logistic-elasticnet'
+case_model = 'logistic-elasticnet'
 
 # Generate title
-auc_title = 'in Fold max AUC for: ' + auc_model + ' found in period: ' + \
-             auc_cases[auc_model]['auc_max']['period']
+plot_title = 'in Fold max ' + case + ' for: ' + case_model + ' found in period: ' + \
+             met_cases[case_model]['met_max']['period']
 
 # Plot title
-dt.theme_plot_3['p_labels']['title'] = auc_title
+dt.theme_plot_3['p_labels']['title'] = plot_title
 
 # Get data from auc_cases
-train_y = auc_cases[auc_model]['auc' + '_' + case]['data']['results']['data']['train']
-test_y = auc_cases[auc_model]['auc' + '_' + case]['data']['results']['data']['test']
+train_y = met_cases[case_model][case]['data']['results']['data']['train']
+test_y = met_cases[case_model][case]['data']['results']['data']['test']
 
 # Get data for prices and predictions
-ohlc_prices = folds[auc_cases[auc_model]['auc' + '_' + case]['period']]
+ohlc_prices = folds[met_cases[case_model][case]['period']]
 ohlc_class = {'train_y': train_y['y_train'], 'train_y_pred': train_y['y_train_pred'],
               'test_y': test_y['y_test'], 'test_y_pred': test_y['y_test_pred']}
 
@@ -189,7 +183,7 @@ plot_3 = vs.g_ohlc_class(p_ohlc=ohlc_prices, p_theme=dt.theme_plot_3, p_data_cla
 dt.theme_plot_4['p_labels']['title'] = 'in Fold max/min AUC cases'
 
 # Timeseries of the AUCs
-plot_4 = vs.g_roc_auc(p_cases=auc_cases, p_type='test', p_models=ml_models, p_theme=dt.theme_plot_4)
+plot_4 = vs.g_roc_auc(p_cases=met_cases, p_type='test', p_models=ml_models, p_theme=dt.theme_plot_4)
 
 # Show plot in script
 # plot_4.show()
@@ -201,12 +195,12 @@ plot_4 = vs.g_roc_auc(p_cases=auc_cases, p_type='test', p_models=ml_models, p_th
 # -- ------------------------------------------------------------------- ------------------------------- -- #
 
 # Case to evaluate
-fold_case = 'auc_max'
+case = 'logloss-mean'
 # Model to evaluate
 fold_model = 'logistic-elasticnet'
 # Function
-global_model = fn.global_evaluation(p_memory_palace=memory_palace, p_data=data, p_cases=auc_cases, 
-                                    p_model=fold_model, p_case=fold_case)
+global_model = fn.global_evaluation(p_memory_palace=memory_palace, p_data=data, p_cases=met_cases, 
+                                    p_model=fold_model, p_case=case)
 
 # Model parameters
 global_model['global_parameters']

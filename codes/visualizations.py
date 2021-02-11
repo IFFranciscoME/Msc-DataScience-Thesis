@@ -134,6 +134,9 @@ def g_ohlc(p_ohlc, p_theme, p_vlines):
 # -- --------------------------------------------------------------------------------------------------- -- #
 
 def g_ohlc_class(p_ohlc, p_theme, p_data_class, p_vlines):
+    """
+
+    """
 
     # default value for lables to use in main title, and both x and y axisp_fonts
     if p_theme['p_labels'] is not None:
@@ -157,14 +160,14 @@ def g_ohlc_class(p_ohlc, p_theme, p_data_class, p_vlines):
     train_success = []
 
     # error and success in train
-    for row in p_data_class['train_y'].index.to_list():
+    for row in np.arange(0, len(p_data_class['train_y'].index.to_list()), 1):
         if p_data_class['train_y'][row] != p_data_class['train_y_pred'][row]:
             train_error.append(row)
         else:
             train_success.append(row)
 
     # error and success in test
-    for row in p_data_class['test_y'].index.to_list():
+    for row in np.arange(0, len(p_data_class['test_y'].index.to_list()), 1):
         if p_data_class['test_y'][row] != p_data_class['test_y_pred'][row]:
             test_error.append(row)
         else:

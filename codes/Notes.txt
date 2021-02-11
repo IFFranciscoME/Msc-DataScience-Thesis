@@ -205,12 +205,15 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 - added Data profile for feature variables (descriptive statistics)
 - added table Correlation between features and features vs target variable
 
+- Different cost functions to use in all the models: Variations of AUC and LogLoss
+- search for min, max, mode cases according to selected cost function
+
 # ---------------------------------------------------------------------------------------------- BACKLOG -- # 
 # ---------------------------------------------------------------------------------------------- ------- -- #
 
 # -- NECESSARY
 
-- (pending) Resolve wich will be the different cost functions to use in all the models
+
 
 - (pending) extract data for mode cases
 - (pending) metrics and other analytics for mode cases
