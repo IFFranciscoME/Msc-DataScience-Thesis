@@ -1681,7 +1681,7 @@ def global_evaluation(p_memory_palace, p_data, p_cases, p_model, p_case):
 # -------------------------------------------------------------------------- Model AUC Min and Max Cases -- #
 # --------------------------------------------------------------------------------------------------------- #
 
-def best_case(p_models, p_global_cases, p_data_folds, p_cases_type):
+def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
     """
     AUC min and max cases for the models
 
@@ -1689,18 +1689,26 @@ def best_case(p_models, p_global_cases, p_data_folds, p_cases_type):
     ----------
     p_models: list
         with the models name
+        
+        p_models = ['logistic-elasticnet', 'ann-mlp', 'l1-svm']
 
     p_global_cases: dict
         With all the info for the global cases
 
+        p_global_cases = memory_palace
+
     p_data_folds: dict
         with all the historical data info in folds
+
+        p_data_folds = folds
 
     p_cases_type: str
         'train': the train AUC is used
         'simple': a simple average is calculated between train and test AUC
         'weighted': a weighted average is calculated between train (80%) and test (20%) AUC
         'inv-weighted': an inverse weighted average is calculated between train (20%) and test (80%) AUC
+
+        p_cases_type = 'logloss-mean'
 
     Returns
     -------
@@ -1710,39 +1718,51 @@ def best_case(p_models, p_global_cases, p_data_folds, p_cases_type):
     """
 
     # diccionario para almacenar resultados de busqueda
-    auc_cases = {j: {i: {'data': {}, 'period':''}
-                     for i in ['auc_min', 'auc_max', 'hof_metrics']} for j in p_models}
+    met_cases = {j: {i: {'data': {}, 'period':''}
+                     for i in ['met_min', 'met_max', 'met_mode', 'hof_metrics']} for j in p_models}
 
     # catch mode on model params
-    auc_mode = {}
+    met_mode = {}
 
     # search for every model
     for model in p_models:
+
+        # debugging
+        # model = p_models[0]
+
         # dummy initializations
-        auc_min = 1
-        auc_max = 0
-        auc_max_params = {}
-        auc_min_params = {}
-        auc_mode[model] = {}
+        met_min = 1
+        met_max = 0
+        met_max_params = {}
+        met_min_params = {}
+        met_mode[model] = {}
         
         # search for every fold
         for period in p_data_folds:
-            auc_cases[model]['hof_metrics']['data'][period] = {}
-            # Dummy initialization
-            auc_s = []
-            
-            # -- For debugging -- #
-            # p_global_cases = memory_palace
-            # model = 'logistic-elasticnet'
-            # period = 'b_y_0'
 
+            # debugging
+            # period = list(p_data_folds.keys())[0]
+
+            met_cases[model]['hof_metrics']['data'][period] = {}
+            # Dummy initialization
+            met_s = []
+            
             # -- Case 0 (MODE INDIVIDUAL)
             # get the number of repeated individuals in the whole HoF
             for p in p_global_cases[period][model]['p_hof']['hof']:
-                if tuple(p) in list(auc_mode[model].keys()):
-                    auc_mode[model][tuple(p)] += 1
+                # p = p_global_cases[period][model]['p_hof']['hof'][0]
+
+                # in case of finding a repeated parameter set
+                if str(tuple(p)) in list(met_mode[model].keys()):
+                    met_mode[model][str(tuple(p))]['repetitions'] += 1
+                    met_mode[model][str(tuple(p))]['periods'].append(period)
+                
+                # no repeated parameter set is found
                 else:
-                    auc_mode[model][tuple(p)] = 0
+                    # base dict to store findings
+                    met_mode[model].update({str(tuple(p)): {'params': tuple(p),
+                                                            'repetitions': 0,
+                                                            'periods': [period]}})
 
             # search for every individual in hall of fame
             for i in range(0, len(p_global_cases[period][model]['e_hof'])):
@@ -1752,90 +1772,109 @@ def best_case(p_models, p_global_cases, p_data_folds, p_cases_type):
                 
                 # ------------------------------------------------------------- Calculate fitness metric -- #
 
-                # a simple average with train and test data
-                if p_cases_type == 'auc-mean':
-                    c_met = round((p_global_cases[period][model]['e_hof'][i]['metrics']['train']['auc'] + 
-                                   p_global_cases[period][model]['e_hof'][i]['metrics']['test']['auc'])/2, 4)
+                # values for train and test set
+                auc_train = p_global_cases[period][model]['e_hof'][i]['metrics']['train']['auc'] 
+                auc_test = p_global_cases[period][model]['e_hof'][i]['metrics']['test']['auc'] 
 
-                # a weighted average with train and test data
+                logloss_train = p_global_cases[period][model]['e_hof'][i]['metrics']['train']['logloss'] 
+                logloss_test = p_global_cases[period][model]['e_hof'][i]['metrics']['test']['logloss'] 
+
+                acc_train = p_global_cases[period][model]['e_hof'][i]['metrics']['train']['acc'] 
+                acc_test = p_global_cases[period][model]['e_hof'][i]['metrics']['test']['acc'] 
+
+                if p_cases_type == 'auc-mean':
+                    c_met = round((auc_train + auc_test)/2, 4)
+
                 elif p_cases_type == 'auc-weighted':
-                    c_met = round((p_global_cases[period][model]['e_hof'][i]['metrics']['train']['auc']*.8 + 
-                                   p_global_cases[period][model]['e_hof'][i]['metrics']['test']['auc']*.2)/2, 4)
+                    c_met = round((auc_train*.8 + auc_test*.2)/2, 4)
                 
-                # an inversely weighted average with train and test data
                 elif p_cases_type == 'auc-inv-weighted':
-                    c_met = round((p_global_cases[period][model]['e_hof'][i]['metrics']['train']['auc']*.2 + 
-                                   p_global_cases[period][model]['e_hof'][i]['metrics']['test']['auc']*.8)/2, 4)
+                    c_met = round((auc_train*.2 + auc_test*.8)/2, 4)
             
                 elif p_cases_type == 'logloss-mean':
-                    logloss_train = p_global_cases[period][model]['e_hof'][i]['metrics']['train']['logloss'] 
-                    logloss_test = p_global_cases[period][model]['e_hof'][i]['metrics']['test']['logloss'] 
                     c_met = round((logloss_train*.2 + logloss_test*.8)/2, 4)
 
                 elif p_cases_type == 'logloss-weighted':
-                    logloss_train = p_global_cases[period][model]['e_hof'][i]['metrics']['train']['logloss'] 
-                    logloss_test = p_global_cases[period][model]['e_hof'][i]['metrics']['test']['logloss'] 
                     c_met = round((logloss_train*.2 + logloss_test*.8)/2, 4)
 
                 elif p_cases_type == 'logloss-inv-weighted':
-                    logloss_train = p_global_cases[period][model]['e_hof'][i]['metrics']['train']['logloss'] 
-                    logloss_test = p_global_cases[period][model]['e_hof'][i]['metrics']['test']['logloss'] 
                     c_met = round((logloss_train*.2 + logloss_test*.8)/2, 4)
                 
                 elif p_cases_type == 'acc-train':
-                    c_met = p_global_cases[period][model]['e_hof'][i]['metrics']['train']['acc'] 
+                    c_met = acc_train
 
                 elif p_cases_type == 'acc-test':
-                    c_met = p_global_cases[period][model]['e_hof'][i]['metrics']['test']['acc']
+                    c_met = acc_test
                 
                 elif p_cases_type == 'acc-mean':
-                    logloss_train = p_global_cases[period][model]['e_hof'][i]['metrics']['train']['acc'] 
-                    logloss_test = p_global_cases[period][model]['e_hof'][i]['metrics']['test']['acc'] 
-                    c_met = round((logloss_train + logloss_test)/2, 4)
+                    c_met = round((acc_train + acc_test)/2, 4)
 
                 elif p_cases_type == 'acc-weighted':
-                    logloss_train = p_global_cases[period][model]['e_hof'][i]['metrics']['train']['acc'] 
-                    logloss_test = p_global_cases[period][model]['e_hof'][i]['metrics']['test']['acc'] 
-                    c_met = round((logloss_train*0.20 + logloss_test*0.80)/2, 4)
+                    c_met = round((acc_train*0.20 + acc_test*0.80)/2, 4)
                 
                 elif p_cases_type == 'acc-inv-weighted':
-                    logloss_train = p_global_cases[period][model]['e_hof'][i]['metrics']['train']['acc'] 
-                    logloss_test = p_global_cases[period][model]['e_hof'][i]['metrics']['test']['acc'] 
-                    c_met = round((logloss_train*0.80 + logloss_test*0.20)/2, 4)
+                    c_met = round((acc_train*0.80 + acc_test*0.20)/2, 4)
                 
                 # error in parameter input
                 else:
                     print('type of auc case is wrong')
                 
                 # save current auc data for later use
-                auc_s.append(c_met)
+                met_s.append(c_met)
 
                 # -- Case 1 (MIN INDIVIDUAL)
                 # get the individual of all of the HoF that produced the minimum AUC
-                if c_met < auc_min:
-                    auc_min = c_met
-                    auc_cases[model]['auc_min']['data'] = p_global_cases[period][model]['e_hof'][i]
-                    auc_cases[model]['auc_min']['period'] = period
-                    auc_min_params = p_global_cases[period][model]['p_hof']['hof'][i]
+                if c_met < met_min:
+                    met_min = c_met
+                    met_cases[model]['met_min']['data'] = p_global_cases[period][model]['e_hof'][i]
+                    met_cases[model]['met_min']['period'] = period
+                    met_min_params = p_global_cases[period][model]['p_hof']['hof'][i]
 
                 # -- Case 2 (MAX INDIVIDUAL)
                 # get the individual of all of the HoF that produced the maximum AUC
-                elif c_met > auc_max:
-                    auc_max = c_met
-                    auc_cases[model]['auc_max']['data'] = p_global_cases[period][model]['e_hof'][i]
-                    auc_cases[model]['auc_max']['period'] = period
-                    auc_max_params = p_global_cases[period][model]['p_hof']['hof'][i]
+                elif c_met > met_max:
+                    met_max = c_met
+                    met_cases[model]['met_max']['data'] = p_global_cases[period][model]['e_hof'][i]
+                    met_cases[model]['met_max']['period'] = period
+                    met_max_params = p_global_cases[period][model]['p_hof']['hof'][i]
 
             # Get features used for every case, therefore, for min and max AUC cases
-            features = p_global_cases[period][model]['features']['train_x']
+            features = {'features': p_global_cases[period]['features'],
+                        'sym_features': p_global_cases[period]['sym_features']}
 
             # Guardar info por periodo
-            auc_cases[model]['hof_metrics']['data'][period]['auc_s'] = auc_s
-            auc_cases[model]['hof_metrics']['data'][period]['auc_max'] = auc_max
-            auc_cases[model]['hof_metrics']['data'][period]['auc_max_params'] = auc_max_params
-            auc_cases[model]['hof_metrics']['data'][period]['auc_min'] = auc_min
-            auc_cases[model]['hof_metrics']['data'][period]['auc_min_params'] = auc_min_params
-            auc_cases[model]['hof_metrics']['data'][period]['features'] = features
-            auc_cases[model]['hof_metrics']['data'][period]['mode'] = auc_mode[model]
+            met_cases[model]['hof_metrics']['data'][period]['met_s'] = met_s
+            met_cases[model]['hof_metrics']['data'][period]['met_max'] = met_max
+            met_cases[model]['hof_metrics']['data'][period]['met_max_params'] = met_max_params
+            met_cases[model]['hof_metrics']['data'][period]['met_min'] = met_min
+            met_cases[model]['hof_metrics']['data'][period]['met_min_params'] = met_min_params
+            met_cases[model]['hof_metrics']['data'][period]['features'] = features
+        
+        met_cases[model]['met_mode']['data'] = met_mode[model]
+        met_cases[model]['met_mode']['modes'] = []
+        met_cases[model]['met_mode']['repetitions'] = []
+        met_cases[model]['met_mode']['period'] = {}
 
-    return auc_cases
+        # find mode or modes of parameters
+        all_tuples = list(met_mode[model].keys())
+        mode_value = max([met_mode[model][i]['repetitions'] for i in all_tuples])
+        
+        # at least 1 repetition existed
+        if mode_value > 0:
+            
+            for i in all_tuples:
+                # i = all_tupples[0]
+                # all repeated tupples 
+
+                if met_mode[model][i]['repetitions'] == mode_value:
+                    # transfer key values (tupple with parameters)
+                    met_cases[model]['met_mode']['modes'].append(str(tuple(met_mode[model][i]['params'])))
+                    # number of repetitions of the mode or modes
+                    met_cases[model]['met_mode']['repetitions'].append(mode_value)
+                    # periods of ocurrence
+                    key_period = str(tuple(met_mode[model][i]['params']))
+                    met_cases[model]['met_mode']['period'].update({key_period: met_mode[model][i]['periods']})
+
+    return met_cases
+
+# auc_cases['ann-mlp']['met_mode']['period']

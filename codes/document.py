@@ -52,7 +52,7 @@ folds = fn.t_folds(p_data=data, p_period=fold_size)
 ml_models = list(dt.models.keys())
 
 # File name to save the data
-file_name = 'files/pickle_rick/s_weighted_post-features_scale.dat'
+file_name = 'files/pickle_rick/s_logloss-mean_post-features_scale.dat'
 
 # Load previously generated data
 memory_palace = dt.data_save_load(p_data_objects=None, p_data_action='load', p_data_file=file_name)
@@ -86,29 +86,38 @@ period = 's_01_2011'
 # models to explore results
 model = list(dt.models.keys())[0]
 
-# input data profile
+# ------------------------------------------------------------------------------------------- input data -- # 
+
+# all the input data
 in_profile = memory_palace[period]['metrics']['data_metrics']
 
-# target variable
+# -------------------------------------------------------------------------------------- target variable -- #
+
+# train and test data sets with only target variable
 tv_profile_train = memory_palace[period]['metrics']['feature_metrics']['train_y']
 tv_profile_test = memory_palace[period]['metrics']['feature_metrics']['test_y']
 
+# ------------------------------------------------------------------------------------- linear variables -- #
 # amount of symbolic features
 n_sf = dt.symbolic_params['n_features']
 
-# linear features profile
+# train and test data sets with only autoregressive variables
 lf_profile_train = memory_palace[period]['metrics']['feature_metrics']['train_x'].iloc[:, :-n_sf]
 lf_profile_test = memory_palace[period]['metrics']['feature_metrics']['test_x'].iloc[:, :-n_sf]
 
-# symbolic features profile
+# ------------------------------------------------------------------------------------ symbolic variables -- #
+
+# train and test data sets with only symbolic variables
 sm_profile_train = memory_palace[period]['metrics']['feature_metrics']['train_x'].iloc[:, -n_sf:]
 sm_profile_test = memory_palace[period]['metrics']['feature_metrics']['test_x'].iloc[:, -n_sf:]
 
-# all variables correlation table
+# ---------------------------------------------------------------------------------------- All variables -- #
+
+# correlation among all variables
 all_corr_train = memory_palace[period]['features']['train_x'].corr()
 all_corr_test = memory_palace[period]['features']['test_x'].corr()
 
-# All variables with target variable
+# correlation of all variables with target variable
 tgv_corr_train = pd.concat([memory_palace[period]['features']['train_y'],
                             memory_palace[period]['features']['train_x']], axis=1).corr().iloc[:, 0]
 tgv_corr_test = pd.concat([memory_palace[period]['features']['test_y'],
@@ -121,17 +130,8 @@ tgv_corr_test = pd.concat([memory_palace[period]['features']['test_y'],
 # -- ------------------------------------------------------------------------------- ------------------- -- #
 
 # -- Min, max and mode AUC cases
-auc_cases = fn.best_case(p_models=ml_models, p_global_cases=memory_palace, p_data_folds=folds,
-                         p_cases_type='logloss-mean')
-
-# -- -------------------------------------------------------------------------------------- DATA PROFILE -- #
-# -- -------------------------------------------------------------------------------------- ------------ -- #
-
-# Input data
-# Features
-# Target
- 
- # memory_palace[period]['metrics']
+auc_cases = fn.model_cases(p_models=ml_models, p_global_cases=memory_palace, p_data_folds=folds,
+                           p_cases_type='logloss-mean')
  
 # -- ------------------------------------------------------------------------ SYMBOLIC FEATURES ANALYSIS -- #
 # -- ------------------------------------------------------------------------ -------------------------- -- #
