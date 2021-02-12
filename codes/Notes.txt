@@ -207,14 +207,16 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 - added asyncronous parallelization capabilities for the project
 - added logging method that support parallelization
 - added pickle_rick data saving method that support parallelization
-- added data_profile function for OHLC and timeseries data profiling
 
-- added Data profile for target variable (balance of classes)
-- added Data profile for feature variables (descriptive statistics)
+- added data_profile function for OHLC and timeseries data profiling
+- added data profile for target variable (balance of classes)
+- added data profile for feature variables (descriptive statistics)
 - added table Correlation between features and features vs target variable
 
-- added Process: Different cost functions to use in all the models: Variations of AUC and LogLoss
-- added Process: search for min, max, mode cases according to selected cost function
+- added parameter configuration mode search and dataframe
+
+- added Different cost functions to use in all the models: Variations of AUC and LogLoss
+- added search for min, max, mode cases according to selected cost function
 - added Visualization: Multiroc plot
 
 # ---------------------------------------------------------------------------------------------- BACKLOG -- # 

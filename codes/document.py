@@ -146,11 +146,11 @@ mode_repetitions = pd.DataFrame(met_cases[model]['met_mode']['data']).T
 sym_data = met_cases[model]['hof_metrics']['data']['s_01_2011']['features']['sym_features']
 
 # parsimony metrics
-# sym_data['best_programs']['depth']
-# sym_data['best_programs']['length']
+sym_depth = sym_data['best_programs']['depth']
+sym_length = sym_data['best_programs']['length']
 
 # fitness metric
-# sym_data['best_programs']['fitness']
+sym_depth = sym_data['best_programs']['fitness']
 
 # -- --------------------------------------------------------------- PLOT 3: CLASSIFICATION FOLD RESULTS -- #
 # -- ----------------------------------------------------------------------------- --------------------- -- #
