@@ -187,47 +187,46 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 - create a new document.py file with all the codes necessary to produce the elements that will be
   added to the thesis document.
 
-- T-Fold complete features
-- Parallelization capabilities of the project
-- Log registration with every worker in the paralelization
+- T-Fold process completed
+
+- Enhacement: refactor project structure to support parallelization
+- Addition: Log registration with every worker in the paralelization
 
 - mapped all variations of factors to run the general experiment 
 - - different types of data pre-processing (Normalize, Standarize, Robust Standarization)
 - - data pre-processing order (pre/post features)
-- - fitness metric in optimization process
+
+- - fitness metric as cost function (optimization process)
 	ACC: (train, test, simple, weighted, inv-weighted)
 	AUC: (simple, weighted, inv-weighted)
 	LOGLOSS: (simple, weighted, inv-weighted)
 
-- - fitness metric for selection of cases (max, min)
+- - fitness metric as ranking function (selection of cases max, min)
 	ACC: (train, test, simple, weighted, inv-weighted)
 	AUC: (simple, weighted, inv-weighted)
 	LOGLOSS: (simple, weighted, inv-weighted)
 
-- added asyncronous parallelization capabilities for the project
-- added logging method that support parallelization
-- added pickle_rick data saving method that support parallelization
+- Addition: Asyncronous parallelization capabilities for several functions
+- Enhacement: Aesthetic Logs and invidiual files for worker-log during parallelization
+- Addition: pickle_rick data saving method for individual file during parallelization
 
-- added data_profile function for OHLC and timeseries data profiling
-- added data profile for target variable (balance of classes)
-- added data profile for feature variables (descriptive statistics)
-- added table Correlation between features and features vs target variable
+- Addition: data_profile function for OHLC and timeseries data profiling
+- Addition: data profile for target variable (balance of classes)
+- Addition: data profile for feature variables (descriptive statistics)
+- Addition: table Correlation between features and features vs target variable
 
-- added parameter configuration mode search and dataframe
-
-- added Different cost functions to use in all the models: Variations of AUC and LogLoss
-- added search for min, max, mode cases according to selected cost function
-- added Visualization: Multiroc plot
+- Enhacement: Variations of AUC, LogLoss, ACC to use as cost functions and ranking function
+- Enhacement: search for min, max, mode cases according to selected cost function
+- Enhacement: ROC plot to support Multiple ROC values of the evaluated HoF
+- Addition: table for multi modal cases
 
 # ---------------------------------------------------------------------------------------------- BACKLOG -- # 
 # ---------------------------------------------------------------------------------------------- ------- -- #
 
 # -- NECESSARY
 
-- (pending) check and test ohlc-class plot function (overlaps results)
 - (pending) fix global evaluation function
-- (pending) fix global evaluation results ohlc-class plot
-- (pending) table for multi modal cases
+- (pending) check and test ohlc-class plot function (overlaps results)
 - (pending) function for average or AIC/BIC for parsimony analysis of symbolic features in fold
 
 - (pending) visual profile: boxplot matrix with outliers for feature variables
@@ -238,15 +237,21 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 - (pending) add RandomForest classification model with scikit learn
 - (pending) migrate ann-mlp model from scikit learn to keras
 
-# -- GOOD TO HAVE
-- (pending) plot for multi modal cases
 - (pending) translate every comment to english
 - (pending) translate every variable name to english
+
+- (pending) (paper) design hypothesis based experiments 
+- (pending) (code) register the modifications in the code necessary for each experiment
+
+# -- GOOD TO HAVE
+
 - (pending) Criteria 3: Profit and Loss taking (scalar, formula, model)
 - (pending) Criteria 4: Positions dimensioning (scalar, formula, model)
 - (pending) Financial performance of trading strategy (Criteria 3 and 4 of trading system)
 - (pending) calibration  model
 - (pending) calibration  results analysis
+
+- (pending) plot for multi modal cases
 
 ***************************************************************************************** UNORGANIZED NOTES 
 ***********************************************************************************************************
