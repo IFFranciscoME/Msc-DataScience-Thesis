@@ -1472,8 +1472,11 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
     # Construct the file name for the logfile
     name_log = iteration + '_' + p_fit_type + '_' + p_transform + '_' + p_scaling
 
+    # Base route to save file
+    route = 'files/logs/'
+
     # Create logfile
-    logger = setup_logger('log%s' %name_log, 'files/logs/%s.txt' %name_log)
+    logger = setup_logger('log%s' %name_log, route + '%s.txt' %name_log)
 
     logger.debug('                                                            ')
     logger.debug(' ********************************************************************************')
@@ -1614,9 +1617,11 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
     # -- ------------------------------------------------------------------------------- DATA BACKUP -- #
     # -- ------------------------------------------------------------------------------- ----------- -- #
 
-    # File name to save the data
+    # Base route to save file
     route = 'files/pickle_rick/'
-    file_name = route + period[0] + '_' + p_fit_type + '_' + p_scaling + '_' + p_transform + '.dat'
+
+    # File name to save the data
+    file_name = route + period[0] + '_' + p_fit_type + '_' + p_transform + '_' + p_scaling + '.dat'
 
     # objects to be saved
     pickle_rick = {'data': dt.ohlc_data, 't_folds': period, 'memory_palace': memory_palace}
