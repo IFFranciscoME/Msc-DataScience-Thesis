@@ -205,21 +205,20 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 - added Data profile for feature variables (descriptive statistics)
 - added table Correlation between features and features vs target variable
 
-- Different cost functions to use in all the models: Variations of AUC and LogLoss
-- search for min, max, mode cases according to selected cost function
+- added Process: Different cost functions to use in all the models: Variations of AUC and LogLoss
+- added Process: search for min, max, mode cases according to selected cost function
+- added Visualization: Multiroc plot
 
 # ---------------------------------------------------------------------------------------------- BACKLOG -- # 
 # ---------------------------------------------------------------------------------------------- ------- -- #
 
 # -- NECESSARY
 
-
-
-- (pending) extract data for mode cases
-- (pending) metrics and other analytics for mode cases
+- (pending) check and test ohlc-class plot function 
+- (pending) refactor global evaluation function
+- (pending) refactor global evaluation results ohlc-class plot
 - (pending) table for multi modal cases
-
-- (pending) Statistical description of Genetic Programms
+- (pending) function for average or AIC/BIC for parsimony analysis of symbolic features in fold
 
 - (pending) visual profile: boxplot matrix with outliers for feature variables
 - (pending) visual profile: histograms for feature variables
@@ -228,8 +227,6 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 
 - (pending) add RandomForest classification model with scikit learn
 - (pending) migrate ann-mlp model from scikit learn to keras
-
-- (pending) Computational performance of Machine Learning System (Criteria 1 and 2 of trading system)
 
 # -- GOOD TO HAVE
 - (pending) plot for multi modal cases

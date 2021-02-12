@@ -1017,30 +1017,54 @@ def genetic_algo_evaluate(p_individual, p_data, p_model, p_fit_type):
     # get the logloss of the selected model
     model_train_logloss = model['metrics']['train']['logloss'].copy()
     model_test_logloss = model['metrics']['test']['logloss'].copy()
+
+    # get the accuracy of the selected model
+    model_train_acc = model['metrics']['train']['acc'].copy()
+    model_test_acc = model['metrics']['test']['acc'].copy()
        
     # -- type of fitness metric for the evaluation of the genetic individual -- #
         
+    # ACC in sample
+    if p_fit_type == 'acc-train':
+        return round(model_train_acc, 4)
+
+    # ACC out of sample
+    elif p_fit_type == 'acc-test':
+        return round(model_test_acc, 4)
+
+    # simple average of ACC in sample and out of sample
+    elif p_fit_type == 'acc-mean':
+        return round((model_train_acc + model_test_acc)/2, 4)
+
+    # weighted average of ACC in sample and out of sample
+    elif p_fit_type == 'acc-weighted':
+        return round((model_train_acc*0.80 + model_test_acc*0.20)/2, 4)
+
+    # inverse weighted average of ACC in sample and out of sample
+    elif p_fit_type == 'acc-inv-weighted':
+        return round((model_train_acc*0.20 + model_test_acc*0.80)/2, 4)
+
     # simple average of AUC in sample and out of sample
-    if p_fit_type == 'auc-mean':
+    elif p_fit_type == 'auc-mean':
         return round((model_train_auc + model_test_auc)/2, 4)
 
     # weighted average of AUC in sample and out of sample
     elif p_fit_type == 'auc-weighted':
         return round((model_train_auc*0.80 + model_test_auc*0.20)/2, 4)
 
-    # inversely weighted average of AUC in sample and out of sample
+    # inverse weighted average of AUC in sample and out of sample
     elif p_fit_type == 'auc-inv-weighted':
         return round((model_train_auc*0.20 + model_test_auc*0.80)/2, 4)
     
-    # simple average of AUC in sample and out of sample
+    # simple average of logloss in sample and out of sample
     if p_fit_type == 'logloss-mean':
         return round((model_train_logloss + model_test_logloss)/2, 4)
 
-    # weighted average of AUC in sample and out of sample
+    # weighted average of logloss in sample and out of sample
     elif p_fit_type == 'logloss-weighted':
         return round((model_train_logloss*0.80 + model_test_logloss*0.20)/2, 4)
 
-    # inversely weighted average of AUC in sample and out of sample
+    # inverse weighted average of logloss in sample and out of sample
     elif p_fit_type == 'logloss-inv-weighted':
         return round((model_train_logloss*0.20 + model_test_logloss*0.80)/2, 4)
 
@@ -1842,7 +1866,6 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
             features = {'features': p_global_cases[period]['features'],
                         'sym_features': p_global_cases[period]['sym_features']}
 
-            # Guardar info por periodo
             met_cases[model]['hof_metrics']['data'][period]['met_s'] = met_s
             met_cases[model]['hof_metrics']['data'][period]['met_max'] = met_max
             met_cases[model]['hof_metrics']['data'][period]['met_max_params'] = met_max_params
@@ -1864,8 +1887,8 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
             
             for i in all_tuples:
                 # i = all_tupples[0]
-                # all repeated tupples 
 
+                # all repeated tupples 
                 if met_mode[model][i]['repetitions'] == mode_value:
                     # transfer key values (tupple with parameters)
                     met_cases[model]['met_mode']['modes'].append(str(tuple(met_mode[model][i]['params'])))
@@ -1876,5 +1899,3 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
                     met_cases[model]['met_mode']['period'].update({key_period: met_mode[model][i]['periods']})
 
     return met_cases
-
-# auc_cases['ann-mlp']['met_mode']['period']

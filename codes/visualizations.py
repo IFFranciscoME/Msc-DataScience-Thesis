@@ -179,6 +179,8 @@ def g_ohlc_class(p_ohlc, p_theme, p_data_class, p_vlines):
     # train and test success in a list
     train_test_success = train_success + test_success
 
+    train_test_acc = len(train_test_success) / len(train_test_success) + len(train_test_error)
+
     # Instantiate a figure object
     fig_g_ohlc = go.Figure()
 
@@ -240,7 +242,8 @@ def g_ohlc_class(p_ohlc, p_theme, p_data_class, p_vlines):
 
     # Update layout for the background
     fig_g_ohlc.update_layout(title_font_size=p_theme['p_fonts']['font_title'],
-                             title=dict(x=0.5, text='<b> ' + p_labels['title'] + ' </b>'),
+                             title=dict(x=0.5, text=p_labels['title'] + ' | ' + 
+                                                    str(train_test_acc)),
                              yaxis=dict(title=p_labels['y_title'],
                                         titlefont=dict(size=p_theme['p_fonts']['font_axis'] + 4)),
                              xaxis=dict(title=p_labels['x_title'], rangeslider=dict(visible=False),

@@ -20,15 +20,17 @@ import itertools
 # ---------------------------------------------------------------------------------- ------------------- -- #
 
 # Short Version for Testing
-iter_fold = ['semester']
-iter_opt = {'fitness': ['logloss-mean'], 'scaling': ['post-features'], 'transform': ['scale']}
+iter_fold = ['quarter', 'semester']
+iter_opt = {'fitness': ['acc-inv-weighted', 'auc-inv-weighted', 'logloss-inv-weighted'],
+            'scaling': ['post-features'], 'transform': ['robust']}
 
 # Values for T-Fold size
 # iter_fold = ['quarter', 'semester', 'year', 'bi-year', '80-20']
 
 # Values for three parameters inside the optimization process
 # iter_opt = {'fitness': ['auc-mean', 'auc-weighted', 'auc-inv-weighted',
-#                         'logloss-mean', 'logloss-weighted', 'logloss-inv-weighted'],
+#                         'logloss-mean', 'logloss-weighted', 'logloss-inv-weighted',
+#                         'acc-train', 'acc-test', 'acc-mean', 'acc-weighted', 'acc-inv-weighted'],
 #             'transform': ['scale', 'normalize', 'robust'],
 #             'scaling': ['post-features', 'pre-features']}
 
@@ -51,8 +53,6 @@ def group_daily():
         # file = files[1]
         data = pd.read_csv(main_path_g + file,
                            names=column_names, parse_dates=["timestamp"], index_col=["timestamp"])
-
-        # data.columns = ["timestamp", "open", "low", "high", "close", "volume"]
 
         # resample by the minute "T", and by the day will be "D"
         data = data.resample("D").agg({'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last',

@@ -17,7 +17,6 @@ import pandas as pd
 import numpy as np
 
 from data import ohlc_data as data
-from datetime import datetime
 
 import functions as fn
 import visualizations as vs
@@ -52,7 +51,7 @@ folds = fn.t_folds(p_data=data, p_period=fold_size)
 ml_models = list(dt.models.keys())
 
 # File name to save the data
-file_name = 'files/pickle_rick/s_logloss-mean_post-features_scale.dat'
+file_name = 'files/pickle_rick/respaldo/s_auc-inv-weighted_post-features_robust.dat'
 
 # Load previously generated data
 memory_palace = dt.data_save_load(p_data_objects=None, p_data_action='load', p_data_file=file_name)
@@ -81,7 +80,6 @@ plot_2 = vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_2, p_vlines=dates_folds)
 
 # period to explore results
 period = list(folds.keys())[0]
-period = 's_01_2011'
 
 # models to explore results
 model = list(dt.models.keys())[0]
@@ -133,14 +131,20 @@ tgv_corr_test = pd.concat([memory_palace[period]['features']['test_y'],
 
 # -- Min, max and mode AUC cases
 met_cases = fn.model_cases(p_models=ml_models, p_global_cases=memory_palace, p_data_folds=folds,
-                           p_cases_type='logloss-mean')
+                           p_cases_type='logloss-inv-weighted')
  
 # -- ------------------------------------------------------------------------ SYMBOLIC FEATURES ANALYSIS -- #
 # -- ------------------------------------------------------------------------ -------------------------- -- #
 
-# (pending) parsimony metric
-# (pending) fitness metric
-# (pending) equations description
+# data
+sym_data = met_cases[model]['hof_metrics']['data']['s_01_2011']['features']['sym_features']
+
+# parsimony metrics
+# sym_data['best_programs']['depth']
+# sym_data['best_programs']['length']
+
+# fitness metric
+# sym_data['best_programs']['fitness']
 
 # -- --------------------------------------------------------------- PLOT 3: CLASSIFICATION FOLD RESULTS -- #
 # -- ----------------------------------------------------------------------------- --------------------- -- #
@@ -152,13 +156,12 @@ case = 'met_max'
 case_model = 'logistic-elasticnet'
 
 # Generate title
-plot_title = 'in Fold max ' + case + ' for: ' + case_model + ' found in period: ' + \
-             met_cases[case_model]['met_max']['period']
+plot_title = 'inFold ' + case + ' for: ' + case_model + met_cases[case_model]['met_max']['period']
 
 # Plot title
 dt.theme_plot_3['p_labels']['title'] = plot_title
 
-# Get data from auc_cases
+# Get data from met_cases
 train_y = met_cases[case_model][case]['data']['results']['data']['train']
 test_y = met_cases[case_model][case]['data']['results']['data']['test']
 
@@ -186,13 +189,13 @@ metric = 'auc'
 case = 'met_max'
 
 # Model to evaluate
-model = 'ann-mlp'
+model = 'l1-svm'
 
 # data subset to use
-subset = 'train'
+subset = 'test'
 
 # period 
-period = 's_01_2011'
+period = 's_02_2011'
 
 # parameters of the evaluated models
 d_params = memory_palace[period][model]['p_hof']['hof']
@@ -212,21 +215,32 @@ dt.theme_plot_4['p_labels']['title'] = 'in Fold max & min ' + metric + ' ' + sub
 plot_4 = vs.g_multiroc(p_data=d_plot_4, p_metric=metric, p_theme=dt.theme_plot_4)
 
 # Show plot in script
-plot_4.show()
+# plot_4.show()
 
 # Generate plot online with chartstudio
 # py.plot(plot_4)
 
-# -- ------------------------------------------------------------------- GLOBAL EVALUATION FOR AUC CASES -- #
-# -- ------------------------------------------------------------------- ------------------------------- -- #
+# -- --------------------------------------------------------------------------------- GLOBAL EVALUATION -- #
+# -- --------------------------------------------------------------------------------- ----------------- -- #
 
-# Case to evaluate
-case = 'logloss-mean'
+# metric to plot
+metric = 'auc'
+
+# metric to plot
+case = 'met_max'
+
 # Model to evaluate
-fold_model = 'logistic-elasticnet'
+model = 'ann-mlp'
+
+# data subset to use
+subset = 'train'
+
+# period 
+period = 's_02_2011'
+
 # Function
 global_model = fn.global_evaluation(p_memory_palace=memory_palace, p_data=data, p_cases=met_cases, 
-                                    p_model=fold_model, p_case=case)
+                                    p_model=model, p_case=case, p_metric=metric)
 
 # Model parameters
 global_model['global_parameters']
