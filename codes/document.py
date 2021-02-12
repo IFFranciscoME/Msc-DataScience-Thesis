@@ -42,16 +42,17 @@ plot_1 =vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_1, p_vlines=None)
 # ------------------------------------------------------------------------------------ ----------------- -- #
 
 # Fold size
-fold_size = 'semester'
+fold_case = 'quarter'
 
 # Timeseries data division in t-folds
-folds = fn.t_folds(p_data=data, p_period=fold_size)
+folds = fn.t_folds(p_data=data, p_period=fold_case)
 
 # List with the names of the models
 ml_models = list(dt.models.keys())
 
 # File name to save the data
-file_name = 'files/pickle_rick/respaldo/s_auc-inv-weighted_post-features_robust.dat'
+file_name = 'files/pickle_rick/respaldo/q_logloss-inv-weighted_post-features_robust.dat'
+# file_name = 'files/pickle_rick/respaldo/s_auc-inv-weighted_post-features_robust.dat'
 
 # Load previously generated data
 memory_palace = dt.data_save_load(p_data_objects=None, p_data_action='load', p_data_file=file_name)
@@ -127,30 +128,39 @@ tgv_corr_test = pd.concat([memory_palace[period]['features']['test_y'],
 # -- ------------------------------------------------------------------------------- ------------------- -- #
 
 # models to explore results
-model = list(dt.models.keys())[2]
+model_case = 'l1-svm'
+
+# metric type (all the available in iter_opt['fitness'])
+metric_type = 'logloss-inv-weighted'
 
 # -- Min, max and mode cases
 met_cases = fn.model_cases(p_models=ml_models, p_global_cases=memory_palace, p_data_folds=folds,
-                           p_cases_type='logloss-inv-weighted')
+                           p_cases_type=metric_type)
  
 # periods of the mode(s)
-mode_periods = met_cases[model]['met_mode']['period']
+mode_periods = met_cases[model_case]['met_mode']['period']
 
 # whole data of repetitions
-mode_repetitions = pd.DataFrame(met_cases[model]['met_mode']['data']).T
+mode_repetitions = pd.DataFrame(met_cases[model_case]['met_mode']['data']).T
 
 # -- ------------------------------------------------------------------------ SYMBOLIC FEATURES ANALYSIS -- #
 # -- ------------------------------------------------------------------------ -------------------------- -- #
 
+# period to explore results
+period_case = 'q_01_2011'
+
+# models to explore results
+model_case = 'l1-svm'
+
 # data
-sym_data = met_cases[model]['hof_metrics']['data']['s_01_2011']['features']['sym_features']
+sym_data = met_cases[model_case]['hof_metrics']['data'][period_case]['features']['sym_features']
 
 # parsimony metrics
 sym_depth = sym_data['best_programs']['depth']
 sym_length = sym_data['best_programs']['length']
 
 # fitness metric
-sym_depth = sym_data['best_programs']['fitness']
+sym_fitness = sym_data['best_programs']['fitness']
 
 # -- --------------------------------------------------------------- PLOT 3: CLASSIFICATION FOLD RESULTS -- #
 # -- ----------------------------------------------------------------------------- --------------------- -- #
@@ -159,20 +169,20 @@ sym_depth = sym_data['best_programs']['fitness']
 case = 'met_max'
 
 # Pick model to generate the plot
-case_model = 'logistic-elasticnet'
+model_case = 'l1-svm'
 
 # Generate title
-plot_title = 'inFold ' + case + ' for: ' + case_model + met_cases[case_model]['met_max']['period']
+plot_title = 'inFold ' + case + ' for: ' + model_case + ' ' + met_cases[model_case][case]['period']
 
 # Plot title
 dt.theme_plot_3['p_labels']['title'] = plot_title
 
 # Get data from met_cases
-train_y = met_cases[case_model][case]['data']['results']['data']['train']
-test_y = met_cases[case_model][case]['data']['results']['data']['test']
+train_y = met_cases[model_case][case]['data']['results']['data']['train']
+test_y = met_cases[model_case][case]['data']['results']['data']['test']
 
 # Get data for prices and predictions
-ohlc_prices = folds[met_cases[case_model][case]['period']]
+ohlc_prices = folds[met_cases[model_case][case]['period']]
 ohlc_class = {'train_y': train_y['y_train'], 'train_y_pred': train_y['y_train_pred'],
               'test_y': test_y['y_test'], 'test_y_pred': test_y['y_test_pred']}
 
@@ -188,37 +198,37 @@ plot_3 = vs.g_ohlc_class(p_ohlc=ohlc_prices, p_theme=dt.theme_plot_3, p_data_cla
 # -- -------------------------------------------------------------------------- PLOT 4: All ROCs in FOLD -- #
 # -- -------------------------------------------------------------------------- ------------------------ -- #
 
-# metric to plot
-metric = 'auc'
+# metric to use
+metric_model = 'auc'
 
-# metric to plot
+# case to plot
 case = 'met_max'
 
 # Model to evaluate
-model = 'l1-svm'
+model_case = 'l1-svm'
 
 # data subset to use
 subset = 'test'
 
 # period 
-period = 's_02_2011'
+period_case = 'q_01_2011'
 
 # parameters of the evaluated models
-d_params = memory_palace[period][model]['p_hof']['hof']
+d_params = memory_palace[period][model_case]['p_hof']['hof']
 
 # get all fps and tps for a particular model in a particular fold
-d_plot_4 = {i: {'tpr': memory_palace[period][model]['e_hof'][i]['metrics'][subset]['tpr'],
-                'fpr': memory_palace[period][model]['e_hof'][i]['metrics'][subset]['fpr'],
-                'auc': memory_palace[period][model]['e_hof'][i]['metrics'][subset]['auc'],
-                'acc': memory_palace[period][model]['e_hof'][i]['metrics'][subset]['acc'],
-                'logloss': memory_palace[period][model]['e_hof'][i]['metrics'][subset]['logloss']}
+d_plot_4 = {i: {'tpr': memory_palace[period][model_case]['e_hof'][i]['metrics'][subset]['tpr'],
+                'fpr': memory_palace[period][model_case]['e_hof'][i]['metrics'][subset]['fpr'],
+                'auc': memory_palace[period][model_case]['e_hof'][i]['metrics'][subset]['auc'],
+                'acc': memory_palace[period][model_case]['e_hof'][i]['metrics'][subset]['acc'],
+                'logloss': memory_palace[period][model_case]['e_hof'][i]['metrics'][subset]['logloss']}
             for i in range(0, len(d_params))}
 
 # Plot title
-dt.theme_plot_4['p_labels']['title'] = 'in Fold max & min ' + metric + ' ' + subset + ' data'
+dt.theme_plot_4['p_labels']['title'] = 'in Fold max & min ' + metric_model + ' ' + subset + ' data'
 
 # Timeseries of the AUCs
-plot_4 = vs.g_multiroc(p_data=d_plot_4, p_metric=metric, p_theme=dt.theme_plot_4)
+plot_4 = vs.g_multiroc(p_data=d_plot_4, p_metric=metric_model, p_theme=dt.theme_plot_4)
 
 # Show plot in script
 # plot_4.show()
@@ -230,23 +240,24 @@ plot_4 = vs.g_multiroc(p_data=d_plot_4, p_metric=metric, p_theme=dt.theme_plot_4
 # -- --------------------------------------------------------------------------------- ----------------- -- #
 
 # metric to plot
-metric = 'auc'
+metric_model = 'auc'
 
 # metric to plot
 case = 'met_max'
 
 # Model to evaluate
-model = 'ann-mlp'
+model_case = 'l1-svm'
 
 # data subset to use
 subset = 'train'
 
 # period 
-period = 's_02_2011'
+period_case = 'q_01_2011'
 
 # Function
-global_model = fn.global_evaluation(p_memory_palace=memory_palace, p_data=data, p_cases=met_cases, 
-                                    p_model=model, p_case=case, p_metric=metric)
+global_model = fn.global_evaluation(p_hof=memory_palace[period][model_case],
+                                    p_data=data, p_cases=met_cases, 
+                                    p_model=model_case, p_case=case, p_metric=metric_model)
 
 # Model parameters
 global_model['global_parameters']

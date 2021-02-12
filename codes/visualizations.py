@@ -392,7 +392,7 @@ def g_multiroc(p_data, p_theme, p_metric):
         yaxis=dict(title_text=p_theme['p_labels']['y_title'],
                    tickfont=dict(color='grey', size=p_theme['p_fonts']['font_axis'])))
 
-    fig_rocs.add_shape(type='line', line=dict(width=3, dash='dash', color='grey'), x0=0, x1=1, y0=0, y1=1)
+    fig_rocs.add_shape(type='line', line=dict(width=1, dash='dash', color='grey'), x0=0, x1=1, y0=0, y1=1)
 
     # n line colors (max, min, other)
     line_colors = ['#047CFB', '#FB5D41', '#ABABAB']

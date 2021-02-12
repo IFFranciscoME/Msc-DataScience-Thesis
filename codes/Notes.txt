@@ -224,7 +224,7 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 
 # -- NECESSARY
 
-- (pending) check and test ohlc-class plot function 
+- (pending) check and test ohlc-class plot function (overlaps results)
 - (pending) fix global evaluation function
 - (pending) fix global evaluation results ohlc-class plot
 - (pending) table for multi modal cases
