@@ -215,19 +215,23 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 - Addition: data profile for feature variables (descriptive statistics)
 - Addition: table Correlation between features and features vs target variable
 
+# -- 12.02.2021 
+
 - Enhacement: Variations of AUC, LogLoss, ACC to use as cost functions and ranking function
 - Enhacement: search for min, max, mode cases according to selected cost function
 - Enhacement: ROC plot to support Multiple ROC values of the evaluated HoF
 - Addition: table for multi modal cases
 
 - Enhacement: Global evaluation function for the whole HoF 
+- Fix: gray candles (windows without prediction) and vertical line traintest ohlc class
 
 # ---------------------------------------------------------------------------------------------- BACKLOG -- # 
 # ---------------------------------------------------------------------------------------------- ------- -- #
 
 # -- NECESSARY
 
-- (pending) check and test ohlc-class plot function (overlaps results)
+
+
 - (pending) function for average or AIC/BIC for parsimony analysis of symbolic features in fold
 
 - (pending) visual profile: boxplot matrix with outliers for feature variables
@@ -256,6 +260,8 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 
 ***************************************************************************************** UNORGANIZED NOTES 
 ***********************************************************************************************************
+
+# -- Para que sirve todo esto para mejorar el desempeño de modelos respecto a un procedimiento clasico?
 
 # -- For each model show
 # -- -- Objective function

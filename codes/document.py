@@ -169,7 +169,7 @@ sym_fitness = sym_data['best_programs']['fitness']
 case = 'met_max'
 
 # Pick model to generate the plot
-model_case = 'ann-mlp'
+model_case = 'l1-svm'
 
 # Generate title
 plot_title = 'inFold ' + case + ' for: ' + model_case + ' ' + met_cases[model_case][case]['period']
@@ -186,8 +186,12 @@ ohlc_prices = folds[met_cases[model_case][case]['period']]
 ohlc_class = {'train_y': train_y['y_train'], 'train_y_pred': train_y['y_train_pred'],
               'test_y': test_y['y_test'], 'test_y_pred': test_y['y_test_pred']}
 
+# Dates for vertical lines in the T-Folds plot
+date_vlines = [ohlc_class['train_y'].index[-1]]
+
 # Make plot
-plot_3 = vs.g_ohlc_class(p_ohlc=ohlc_prices, p_theme=dt.theme_plot_3, p_data_class=ohlc_class, p_vlines=None)
+plot_3 = vs.g_ohlc_class(p_ohlc=ohlc_prices, p_theme=dt.theme_plot_3, p_data_class=ohlc_class, 
+                         p_vlines=date_vlines)
 
 # Show plot in script
 # plot_3.show()
@@ -273,6 +277,9 @@ global_model['model']['metrics'][subset]['auc']
 # Model accuracy
 global_model['model']['metrics'][subset]['acc']
 
+# Model logloss
+global_model['model']['metrics'][subset]['logloss']
+
 # -- ------------------------------------------------------------- PLOT 5: GLOBAL CLASSIFICATION RESULTS -- #
 # -- ------------------------------------------------------------- ------------------------------------- -- #
 
@@ -287,8 +294,12 @@ ohlc_class = {'train_y': global_model['model']['results']['data']['train']['y_tr
 # Plot title
 dt.theme_plot_3['p_labels']['title'] = 'Global results with t-fold optimized parameters'
 
+# Dates for vertical lines in the T-Folds plot
+date_vlines = [ohlc_class['train_y'].index[-1]]
+
 # Make plot
-plot_5 = vs.g_ohlc_class(p_ohlc=ohlc_prices, p_theme=dt.theme_plot_3, p_data_class=ohlc_class, p_vlines=None)
+plot_5 = vs.g_ohlc_class(p_ohlc=ohlc_prices, p_theme=dt.theme_plot_3, p_data_class=ohlc_class,
+                         p_vlines=date_vlines)
 
 # Show plot in script
 # plot_5.show()
