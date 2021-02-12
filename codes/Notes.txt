@@ -194,7 +194,15 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 - mapped all variations of factors to run the general experiment 
 - - different types of data pre-processing (Normalize, Standarize, Robust Standarization)
 - - data pre-processing order (pre/post features)
-- - fitness metric in optimization process (train, test, simple, weighted, inv-weighted)
+- - fitness metric in optimization process
+	ACC: (train, test, simple, weighted, inv-weighted)
+	AUC: (simple, weighted, inv-weighted)
+	LOGLOSS: (simple, weighted, inv-weighted)
+
+- - fitness metric for selection of cases (max, min)
+	ACC: (train, test, simple, weighted, inv-weighted)
+	AUC: (simple, weighted, inv-weighted)
+	LOGLOSS: (simple, weighted, inv-weighted)
 
 - added asyncronous parallelization capabilities for the project
 - added logging method that support parallelization
@@ -215,8 +223,8 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 # -- NECESSARY
 
 - (pending) check and test ohlc-class plot function 
-- (pending) refactor global evaluation function
-- (pending) refactor global evaluation results ohlc-class plot
+- (pending) fix global evaluation function
+- (pending) fix global evaluation results ohlc-class plot
 - (pending) table for multi modal cases
 - (pending) function for average or AIC/BIC for parsimony analysis of symbolic features in fold
 

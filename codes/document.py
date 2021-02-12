@@ -81,9 +81,6 @@ plot_2 = vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_2, p_vlines=dates_folds)
 # period to explore results
 period = list(folds.keys())[0]
 
-# models to explore results
-model = list(dt.models.keys())[0]
-
 # ------------------------------------------------------------------------------------------- input data -- # 
 
 # all the input data
@@ -129,10 +126,19 @@ tgv_corr_test = pd.concat([memory_palace[period]['features']['test_y'],
 # -- ------------------------------------------------------------------------------- PARAMETER SET CASES -- #
 # -- ------------------------------------------------------------------------------- ------------------- -- #
 
-# -- Min, max and mode AUC cases
+# models to explore results
+model = list(dt.models.keys())[2]
+
+# -- Min, max and mode cases
 met_cases = fn.model_cases(p_models=ml_models, p_global_cases=memory_palace, p_data_folds=folds,
                            p_cases_type='logloss-inv-weighted')
  
+# periods of the mode(s)
+mode_periods = met_cases[model]['met_mode']['period']
+
+# whole data of repetitions
+mode_repetitions = pd.DataFrame(met_cases[model]['met_mode']['data']).T
+
 # -- ------------------------------------------------------------------------ SYMBOLIC FEATURES ANALYSIS -- #
 # -- ------------------------------------------------------------------------ -------------------------- -- #
 
