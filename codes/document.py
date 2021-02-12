@@ -127,15 +127,15 @@ tgv_corr_test = pd.concat([memory_palace[period]['features']['test_y'],
 # -- ------------------------------------------------------------------------------- PARAMETER SET CASES -- #
 # -- ------------------------------------------------------------------------------- ------------------- -- #
 
+# metric type (all the available in iter_opt['fitness'])
+metric_case = 'logloss-inv-weighted'
+
 # models to explore results
 model_case = 'l1-svm'
 
-# metric type (all the available in iter_opt['fitness'])
-metric_type = 'logloss-inv-weighted'
-
 # -- Min, max and mode cases
 met_cases = fn.model_cases(p_models=ml_models, p_global_cases=memory_palace, p_data_folds=folds,
-                           p_cases_type=metric_type)
+                           p_cases_type=metric_case)
  
 # periods of the mode(s)
 mode_periods = met_cases[model_case]['met_mode']['period']
@@ -198,20 +198,20 @@ plot_3 = vs.g_ohlc_class(p_ohlc=ohlc_prices, p_theme=dt.theme_plot_3, p_data_cla
 # -- -------------------------------------------------------------------------- PLOT 4: All ROCs in FOLD -- #
 # -- -------------------------------------------------------------------------- ------------------------ -- #
 
-# metric to use
-metric_model = 'auc'
-
 # case to plot
 case = 'met_max'
+
+# metric to use
+metric_case = 'auc'
 
 # Model to evaluate
 model_case = 'l1-svm'
 
-# data subset to use
-subset = 'test'
-
 # period 
 period_case = 'q_01_2011'
+
+# data subset to use
+subset = 'test'
 
 # parameters of the evaluated models
 d_params = memory_palace[period][model_case]['p_hof']['hof']
@@ -225,10 +225,10 @@ d_plot_4 = {i: {'tpr': memory_palace[period][model_case]['e_hof'][i]['metrics'][
             for i in range(0, len(d_params))}
 
 # Plot title
-dt.theme_plot_4['p_labels']['title'] = 'in Fold max & min ' + metric_model + ' ' + subset + ' data'
+dt.theme_plot_4['p_labels']['title'] = 'in Fold max & min ' + metric_case + ' ' + subset + ' data'
 
 # Timeseries of the AUCs
-plot_4 = vs.g_multiroc(p_data=d_plot_4, p_metric=metric_model, p_theme=dt.theme_plot_4)
+plot_4 = vs.g_multiroc(p_data=d_plot_4, p_metric=metric_case, p_theme=dt.theme_plot_4)
 
 # Show plot in script
 # plot_4.show()
@@ -240,24 +240,28 @@ plot_4 = vs.g_multiroc(p_data=d_plot_4, p_metric=metric_model, p_theme=dt.theme_
 # -- --------------------------------------------------------------------------------- ----------------- -- #
 
 # metric to plot
-metric_model = 'auc'
-
-# metric to plot
 case = 'met_max'
+
+# metric type (all the available in iter_opt['fitness'])
+metric_case = 'logloss-inv-weighted'
 
 # Model to evaluate
 model_case = 'l1-svm'
 
-# data subset to use
-subset = 'train'
-
 # period 
 period_case = 'q_01_2011'
 
-# Function
+# data subset to use
+subset = 'train'
+
+# Min, max and mode cases
+met_cases = fn.model_cases(p_models=ml_models, p_global_cases=memory_palace, p_data_folds=folds,
+                           p_cases_type=metric_case)
+
+# Global Evaluation for a particular type of case
 global_model = fn.global_evaluation(p_hof=memory_palace[period][model_case],
-                                    p_data=data, p_cases=met_cases, 
-                                    p_model=model_case, p_case=case, p_metric=metric_model)
+                                    p_data=data, p_cases=met_cases[model_case], 
+                                    p_model=model_case, p_case=case, p_metric=metric_case)
 
 # Model parameters
 global_model['global_parameters']
