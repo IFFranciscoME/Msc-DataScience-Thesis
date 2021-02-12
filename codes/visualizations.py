@@ -159,27 +159,37 @@ def g_ohlc_class(p_ohlc, p_theme, p_data_class, p_vlines):
     test_success = []
     train_success = []
 
+    # index of train data in OHLC
+    te = len(p_data_class['train_y'])
+
     # error and success in train
-    for row in np.arange(0, len(p_data_class['train_y'].index.to_list()), 1):
-        if p_data_class['train_y'][row] != p_data_class['train_y_pred'][row]:
-            train_error.append(row)
+    for row_e in np.arange(0, len(p_data_class['train_y'].index.to_list()), 1):
+        if p_data_class['train_y'][row_e] != p_data_class['train_y_pred'][row_e]:
+            train_error.append(row_e)
         else:
-            train_success.append(row)
+            train_success.append(row_e)
+
+    # accuracy in train data set
+    train_acc = round(len(train_success) / (len(train_error) + len(train_success)), 2)
 
     # error and success in test
-    for row in np.arange(0, len(p_data_class['test_y'].index.to_list()), 1):
-        if p_data_class['test_y'][row] != p_data_class['test_y_pred'][row]:
-            test_error.append(row)
+    for row_s in np.arange(0, len(p_data_class['test_y'].index.to_list()), 1):
+        if p_data_class['test_y'][row_s] != p_data_class['test_y_pred'][row_s]:
+            test_error.append(row_s)
         else:
-            test_success.append(row)
+            test_success.append(row_s)
+
+    # accuracy in train data set
+    test_acc = round(len(test_success) / (len(test_error) + len(test_success)), 2)
+
+    # overall accuracy
+    train_test_acc = round((len(train_success) + len(test_success)) / (len(p_data_class['train_y']) + 
+                                                                       len(p_data_class['test_y'])), 2)
 
     # train and test errors in a list
-    train_test_error = train_error + test_error
-
+    train_test_error = train_error + [i + te for i in test_error]
     # train and test success in a list
-    train_test_success = train_success + test_success
-
-    train_test_acc = len(train_test_success) / len(train_test_success) + len(train_test_error)
+    train_test_success = train_success + [i + te for i in test_success]
 
     # Instantiate a figure object
     fig_g_ohlc = go.Figure()
@@ -188,17 +198,6 @@ def g_ohlc_class(p_ohlc, p_theme, p_data_class, p_vlines):
     fig_g_ohlc.update_layout(margin=go.layout.Margin(l=50, r=50, b=20, t=60, pad=20),
                              xaxis=dict(title_text=p_labels['x_title']),
                              yaxis=dict(title_text=p_labels['y_title']))
-
-    # Add layer for the error based color of candles in OHLC candlestick chart
-    fig_g_ohlc.add_trace(go.Candlestick(
-        x=[p_ohlc['timestamp'].iloc[i] for i in train_test_error],
-        open=[p_ohlc['open'].iloc[i] for i in train_test_error],
-        high=[p_ohlc['high'].iloc[i] for i in train_test_error],
-        low=[p_ohlc['low'].iloc[i] for i in train_test_error],
-        close=[p_ohlc['close'].iloc[i] for i in train_test_error],
-        increasing={'line': {'color': 'red'}},
-        decreasing={'line': {'color': 'red'}},
-        name='Prediction Error'))
 
     # Add layer for the success based color of candles in OHLC candlestick chart
     fig_g_ohlc.add_trace(go.Candlestick(
@@ -210,6 +209,17 @@ def g_ohlc_class(p_ohlc, p_theme, p_data_class, p_vlines):
         increasing={'line': {'color': 'skyblue'}},
         decreasing={'line': {'color': 'skyblue'}},
         name='Prediction Success'))
+
+    # Add layer for the error based color of candles in OHLC candlestick chart
+    fig_g_ohlc.add_trace(go.Candlestick(
+        x=[p_ohlc['timestamp'].iloc[i] for i in train_test_error],
+        open=[p_ohlc['open'].iloc[i] for i in train_test_error],
+        high=[p_ohlc['high'].iloc[i] for i in train_test_error],
+        low=[p_ohlc['low'].iloc[i] for i in train_test_error],
+        close=[p_ohlc['close'].iloc[i] for i in train_test_error],
+        increasing={'line': {'color': 'red'}},
+        decreasing={'line': {'color': 'red'}},
+        name='Prediction Error'))
 
     # Update layout for the background
     fig_g_ohlc.update_layout(yaxis=dict(tickfont=dict(color='grey',
@@ -242,7 +252,7 @@ def g_ohlc_class(p_ohlc, p_theme, p_data_class, p_vlines):
 
     # Update layout for the background
     fig_g_ohlc.update_layout(title_font_size=p_theme['p_fonts']['font_title'],
-                             title=dict(x=0.5, text=p_labels['title'] + ' | ' + 
+                             title=dict(x=0.5, text=p_labels['title'] + ' | acc: ' + 
                                                     str(train_test_acc)),
                              yaxis=dict(title=p_labels['y_title'],
                                         titlefont=dict(size=p_theme['p_fonts']['font_axis'] + 4)),

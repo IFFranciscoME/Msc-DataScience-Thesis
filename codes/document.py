@@ -169,7 +169,7 @@ sym_fitness = sym_data['best_programs']['fitness']
 case = 'met_max'
 
 # Pick model to generate the plot
-model_case = 'l1-svm'
+model_case = 'ann-mlp'
 
 # Generate title
 plot_title = 'inFold ' + case + ' for: ' + model_case + ' ' + met_cases[model_case][case]['period']
@@ -239,9 +239,6 @@ plot_4 = vs.g_multiroc(p_data=d_plot_4, p_metric=metric_case, p_theme=dt.theme_p
 # -- --------------------------------------------------------------------------------- GLOBAL EVALUATION -- #
 # -- --------------------------------------------------------------------------------- ----------------- -- #
 
-# metric to plot
-case = 'met_max'
-
 # metric type (all the available in iter_opt['fitness'])
 metric_case = 'logloss-inv-weighted'
 
@@ -259,19 +256,22 @@ met_cases = fn.model_cases(p_models=ml_models, p_global_cases=memory_palace, p_d
                            p_cases_type=metric_case)
 
 # Global Evaluation for a particular type of case
-global_model = fn.global_evaluation(p_hof=memory_palace[period_case][model_case]['p_hof']['hof'],
+global_models = fn.global_evaluation(p_hof=memory_palace[period_case][model_case]['p_hof']['hof'],
                                     p_data=data,
                                     p_features=memory_palace[period_case],
                                     p_model=model_case)
 
+# the evaluation of the best model
+global_model = global_models[0]
+
 # Model parameters
-global_model[0]['global_parameters']
+global_model['global_parameters']
 
 # Model auc
-global_model[0]['model']['metrics']['train']['auc']
+global_model['model']['metrics'][subset]['auc']
 
 # Model accuracy
-global_model[0]['model']['metrics']['train']['acc']
+global_model['model']['metrics'][subset]['acc']
 
 # -- ------------------------------------------------------------- PLOT 5: GLOBAL CLASSIFICATION RESULTS -- #
 # -- ------------------------------------------------------------- ------------------------------------- -- #
@@ -279,10 +279,10 @@ global_model[0]['model']['metrics']['train']['acc']
 # Get data for prices and predictions
 ohlc_prices = data
 
-ohlc_class = {'train_y': global_model[0]['model']['results']['data']['train']['y_train'],
-              'train_y_pred': global_model[0]['model']['results']['data']['train']['y_train_pred'],
-              'test_y': global_model[0]['model']['results']['data']['test']['y_test'],
-              'test_y_pred': global_model[0]['model']['results']['data']['test']['y_test_pred']}
+ohlc_class = {'train_y': global_model['model']['results']['data']['train']['y_train'],
+              'train_y_pred': global_model['model']['results']['data']['train']['y_train_pred'],
+              'test_y': global_model['model']['results']['data']['test']['y_test'],
+              'test_y_pred': global_model['model']['results']['data']['test']['y_test_pred']}
 
 # Plot title
 dt.theme_plot_3['p_labels']['title'] = 'Global results with t-fold optimized parameters'
