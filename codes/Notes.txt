@@ -220,12 +220,13 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 - Enhacement: ROC plot to support Multiple ROC values of the evaluated HoF
 - Addition: table for multi modal cases
 
+- Enhacement: Global evaluation function for the whole HoF 
+
 # ---------------------------------------------------------------------------------------------- BACKLOG -- # 
 # ---------------------------------------------------------------------------------------------- ------- -- #
 
 # -- NECESSARY
 
-- (pending) fix global evaluation function
 - (pending) check and test ohlc-class plot function (overlaps results)
 - (pending) function for average or AIC/BIC for parsimony analysis of symbolic features in fold
 

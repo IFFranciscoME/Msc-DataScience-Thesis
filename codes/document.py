@@ -259,18 +259,19 @@ met_cases = fn.model_cases(p_models=ml_models, p_global_cases=memory_palace, p_d
                            p_cases_type=metric_case)
 
 # Global Evaluation for a particular type of case
-global_model = fn.global_evaluation(p_hof=memory_palace[period][model_case],
-                                    p_data=data, p_cases=met_cases[model_case], 
-                                    p_model=model_case, p_case=case, p_metric=metric_case)
+global_model = fn.global_evaluation(p_hof=memory_palace[period_case][model_case]['p_hof']['hof'],
+                                    p_data=data,
+                                    p_features=memory_palace[period_case],
+                                    p_model=model_case)
 
 # Model parameters
-global_model['global_parameters']
+global_model[0]['global_parameters']
 
 # Model auc
-global_model['model']['metrics']['train']['auc']
+global_model[0]['model']['metrics']['train']['auc']
 
 # Model accuracy
-global_model['model']['metrics']['train']['acc']
+global_model[0]['model']['metrics']['train']['acc']
 
 # -- ------------------------------------------------------------- PLOT 5: GLOBAL CLASSIFICATION RESULTS -- #
 # -- ------------------------------------------------------------- ------------------------------------- -- #
@@ -278,10 +279,10 @@ global_model['model']['metrics']['train']['acc']
 # Get data for prices and predictions
 ohlc_prices = data
 
-ohlc_class = {'train_y': global_model['model']['results']['data']['train']['y_train'],
-              'train_y_pred': global_model['model']['results']['data']['train']['y_train_pred'],
-              'test_y': global_model['model']['results']['data']['test']['y_test'],
-              'test_y_pred': global_model['model']['results']['data']['test']['y_test_pred']}
+ohlc_class = {'train_y': global_model[0]['model']['results']['data']['train']['y_train'],
+              'train_y_pred': global_model[0]['model']['results']['data']['train']['y_train_pred'],
+              'test_y': global_model[0]['model']['results']['data']['test']['y_test'],
+              'test_y_pred': global_model[0]['model']['results']['data']['test']['y_test_pred']}
 
 # Plot title
 dt.theme_plot_3['p_labels']['title'] = 'Global results with t-fold optimized parameters'

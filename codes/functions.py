@@ -1635,20 +1635,13 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
 # ------------------------------------------------------------------------------ Model Global Evaluation -- #
 # --------------------------------------------------------------------------------------------------------- #
 
-def global_evaluation(p_memory_palace, p_data, p_cases, p_model, p_case):
+def global_evaluation(p_hof, p_data, p_features, p_model):
     """
     Evaluation of models with global data and features for particular selected cases of parameters
 
     Parameters
     ----------
-    p_data: dict
-        The data to use in the model evaluation
 
-    p_model: dict
-        With information of the model that is going to be tested
-
-    p_features: dict
-        With information of the features to build to use in the model that is going to be tested
 
     Returns
     -------
@@ -1657,54 +1650,59 @@ def global_evaluation(p_memory_palace, p_data, p_cases, p_model, p_case):
 
     """
 
-    # p_memory_palace = memory_palance
-    # p_data = data
-    # p_cases = auc_cases
-    # p_case = fold_case
-    # p_model = fold_model
+    # entire hof parameters (orderer in descent order by value obtained of the optimization metric)
+    hof_params = p_hof.copy()
 
-    # get period of ocurring case
-    fold_period = p_cases[p_model][p_case]['period']
-
-    # model parameters
-    fold_mod_params = p_cases[p_model]['hof_metrics']['data'][fold_period][p_case + '_params']
-
-    # Get all the linear features 
-    linear_data = linear_features(p_data=p_data, p_memory=7)
-    y_target = linear_data['co_d'].copy()
-    linear_data = linear_data.drop(['co_d'], axis=1, inplace=False)
+    # -------------------------------------------------------------------------------------- GLOBAL DATA -- #
+    
+    # get all the linear features 
+    g_linear_data = linear_features(p_data=p_data, p_memory=7)
+    g_y_target = g_linear_data['co_d'].copy()
+    g_linear_data = g_linear_data.drop(['co_d'], axis=1, inplace=False)
 
     # use equations to generate symbolic features
-    global_features = p_memory_palace[p_model][fold_period]['sym_features']['model'].transform(linear_data)
-    global_features = pd.DataFrame(np.hstack((linear_data, global_features)))
+    g_sym_data = p_features['sym_features']['model'].transform(g_linear_data)
+    g_global_data = pd.DataFrame(np.hstack((g_linear_data, g_sym_data)))
 
     # data division    
-    xtrain, xtest, ytrain, ytest = train_test_split(global_features, y_target, test_size=0.01, shuffle=False)
+    global_data = {}
+    xtrain, xtest, ytrain, ytest = train_test_split(g_global_data, g_y_target, test_size=0.01, shuffle=False)
+    global_data['train_x'] = xtrain
+    global_data['train_y'] = ytrain
+    global_data['test_x'] = xtest
+    global_data['test_y'] = ytest
 
-    global_features = {}
-    global_features['train_x'] = xtrain
-    global_features['train_y'] = ytrain
-    global_features['test_x'] = xtest
-    global_features['test_y'] = ytest
+    # --------------------------------------------------------------- ITERATIVE GLOBAL EVALUATION OF HOF -- #
+    
+    # store global results in a list (to keep same order as hof)
+    global_results = []
+    
+    # iterative evaluation
+    for individual_params in hof_params:
+    
+        if p_model == 'logistic-elasticnet':
+            parameters = {'ratio': individual_params[0], 'c': individual_params[1]}
 
-    if p_model == 'logistic-elasticnet':
-        parameters = {'ratio': fold_mod_params[0], 'c': fold_mod_params[1]}
+            global_results.append({'global_data': global_data, 'global_parameters': parameters,
+                                'model': logistic_net(p_data=global_data, p_params=parameters)})
 
-        return {'global_data': global_features, 'global_parameters': parameters,
-                'model': logistic_net(p_data=global_features, p_params=parameters)}
+        elif p_model == 'l1-svm':
+            parameters = {'c': individual_params[0], 'kernel': individual_params[1],
+                        'gamma': individual_params[2]}
 
-    elif p_model == 'l1-svm':
-        parameters = {'c': fold_mod_params[0], 'kernel': fold_mod_params[1], 'gamma': fold_mod_params[2]}
+            global_results.append({'global_data': global_data, 'global_parameters': parameters,
+                                'model': l1_svm(p_data=global_data, p_params=parameters)})
 
-        return {'global_data': global_features, 'global_parameters': parameters,
-                'model': l1_svm(p_data=global_features, p_params=parameters)}
+        elif p_model == 'ann-mlp':
+            parameters = {'hidden_layers': individual_params[0], 'activation': individual_params[1],
+                        'alpha': individual_params[2], 'learning_rate_init': individual_params[3]}
 
-    elif p_model == 'ann-mlp':
-        parameters = {'hidden_layers': fold_mod_params[0], 'activation': fold_mod_params[1],
-                      'alpha': fold_mod_params[2], 'learning_rate_init': fold_mod_params[3]}
+            global_results.append({'global_data': global_data, 'global_parameters': parameters,
+                                'model': ann_mlp(p_data=global_data, p_params=parameters)})
+        else: 
+            print('error in model selection during (global_evaluation)')
 
-        return {'global_data': global_features, 'global_parameters': parameters,
-                'model': ann_mlp(p_data=global_features, p_params=parameters)}
+    return global_results
 
 
 # -------------------------------------------------------------------------- Model AUC Min and Max Cases -- #
