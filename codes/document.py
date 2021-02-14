@@ -42,7 +42,7 @@ plot_1 =vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_1, p_vlines=None)
 # ------------------------------------------------------------------------------------ ----------------- -- #
 
 # Fold size
-fold_case = 'quarter'
+fold_case = 'semester'
 
 # Timeseries data division in t-folds
 folds = fn.t_folds(p_data=data, p_period=fold_case)
@@ -51,7 +51,7 @@ folds = fn.t_folds(p_data=data, p_period=fold_case)
 ml_models = list(dt.models.keys())
 
 # File name to save the data
-file_name = 'files/pickle_rick/respaldo/q_logloss-inv-weighted_post-features_robust.dat'
+file_name = 'files/pickle_rick/s_logloss-inv-weighted_robust_post-features.dat'
 # file_name = 'files/pickle_rick/respaldo/s_auc-inv-weighted_post-features_robust.dat'
 
 # Load previously generated data
@@ -128,7 +128,7 @@ tgv_corr_test = pd.concat([memory_palace[period]['features']['test_y'],
 # -- ------------------------------------------------------------------------------- ------------------- -- #
 
 # metric type (all the available in iter_opt['fitness'])
-metric_case = 'logloss-inv-weighted'
+metric_case = 'auc-inv-weighted'
 
 # models to explore results
 model_case = 'l1-svm'
@@ -147,7 +147,7 @@ mode_repetitions = pd.DataFrame(met_cases[model_case]['met_mode']['data']).T
 # -- ------------------------------------------------------------------------ -------------------------- -- #
 
 # period to explore results
-period_case = 'q_01_2011'
+period_case = 's_02_2011'
 
 # models to explore results
 model_case = 'l1-svm'
@@ -205,27 +205,25 @@ plot_3 = vs.g_ohlc_class(p_ohlc=ohlc_prices, p_theme=dt.theme_plot_3, p_data_cla
 # case to plot
 case = 'met_max'
 
+# data subset to use
+subset = 'test'
+
 # metric to use
-metric_case = 'auc'
+metric_case = 'acc-test'
 
 # Model to evaluate
 model_case = 'l1-svm'
 
 # period 
-period_case = 'q_01_2011'
-
-# data subset to use
-subset = 'test'
+period_case = 's_02_2011'
 
 # parameters of the evaluated models
-d_params = memory_palace[period][model_case]['p_hof']['hof']
+d_params = memory_palace[period_case][model_case]['p_hof']['hof']
 
 # get all fps and tps for a particular model in a particular fold
-d_plot_4 = {i: {'tpr': memory_palace[period][model_case]['e_hof'][i]['metrics'][subset]['tpr'],
-                'fpr': memory_palace[period][model_case]['e_hof'][i]['metrics'][subset]['fpr'],
-                'auc': memory_palace[period][model_case]['e_hof'][i]['metrics'][subset]['auc'],
-                'acc': memory_palace[period][model_case]['e_hof'][i]['metrics'][subset]['acc'],
-                'logloss': memory_palace[period][model_case]['e_hof'][i]['metrics'][subset]['logloss']}
+d_plot_4 = {i: {'tpr': memory_palace[period_case][model_case]['e_hof'][i]['metrics'][subset]['tpr'],
+                'fpr': memory_palace[period_case][model_case]['e_hof'][i]['metrics'][subset]['fpr'],
+                metric_case: memory_palace[period_case][model_case]['e_hof'][i]['pro-metrics'][metric_case]}
             for i in range(0, len(d_params))}
 
 # Plot title
@@ -244,13 +242,13 @@ plot_4 = vs.g_multiroc(p_data=d_plot_4, p_metric=metric_case, p_theme=dt.theme_p
 # -- --------------------------------------------------------------------------------- ----------------- -- #
 
 # metric type (all the available in iter_opt['fitness'])
-metric_case = 'logloss-inv-weighted'
+metric_case = 'auc-inv-weighted'
 
 # Model to evaluate
 model_case = 'l1-svm'
 
 # period 
-period_case = 'q_01_2011'
+period_case = 's_02_2011'
 
 # data subset to use
 subset = 'train'
@@ -272,13 +270,13 @@ global_model = global_models[0]
 global_model['global_parameters']
 
 # Model auc
-global_model['model']['metrics'][subset]['auc']
+global_model['model']['pro-metrics']['auc' + subset]
 
 # Model accuracy
-global_model['model']['metrics'][subset]['acc']
+global_model['model']['pro-metrics']['acc' + subset]
 
 # Model logloss
-global_model['model']['metrics'][subset]['logloss']
+global_model['model']['pro-metrics']['logloss' + subset]
 
 # -- ------------------------------------------------------------- PLOT 5: GLOBAL CLASSIFICATION RESULTS -- #
 # -- ------------------------------------------------------------- ------------------------------------- -- #

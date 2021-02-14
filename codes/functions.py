@@ -494,7 +494,7 @@ def symbolic_features(p_x, p_y, p_params):
 # ------------------------------------------------- FUNCTION: Genetic Programming for Feature Engieering -- #
 # ------------------------------------------------- ------------------------------------------------------- #
 
-def genetic_programed_features(p_data):
+def genetic_programed_features(p_data, p_split):
     """
     El uso de programacion genetica para generar variables independientes simbolicas
 
@@ -503,6 +503,9 @@ def genetic_programed_features(p_data):
     p_data: pd.DataFrame
         con datos completos para ajustar modelos
         p_data = m_folds['periodo_1']
+
+    p_split: int
+        split in test
 
     Returns
     -------
@@ -537,8 +540,11 @@ def genetic_programed_features(p_data):
     datos_modelo = pd.concat([datos_had.copy(), datos_sym.copy()], axis=1)
     model_data = {}
 
+    # if size != 0 then an inner fold division is performed with size*100 % as test and the rest for train
+    size = int(p_split)/100
+
     # -- -- Dividir datos 80-20
-    xtrain, xtest, ytrain, ytest = train_test_split(datos_modelo, datos_y, test_size=.2, shuffle=False)
+    xtrain, xtest, ytrain, ytest = train_test_split(datos_modelo, datos_y, test_size=size, shuffle=False)
 
     # division de datos
     model_data['train_x'] = xtrain.copy()
@@ -714,17 +720,30 @@ def model_metrics(p_model, p_data):
     # Logloss (Binary cross-entropy function)
     logloss_test = log_loss(p_data['y_test'], p_y_test_d)
 
-     # Return the result of the model
-    r_model_metrics = {'results': {'data': {'train': p_y_result_train, 'test': p_y_result_test},
-                                   'matrix': {'train': cm_train, 'test': cm_test}},
-                       'model': p_model, 
-                       'metrics': {'train': {'acc': acc_train, 'tpr': tpr_train, 'fpr': fpr_train,
-                                             'probs': probs_train, 'auc': auc_train,
-                                             'logloss': logloss_train},
+    # -- ----------------------------------------------------------------------------------------------------
 
-                                   'test': {'acc': acc_test, 'tpr': tpr_test, 'fpr': fpr_test,
-                                            'probs': probs_test, 'auc': auc_test,
-                                            'logloss': logloss_test}}}
+    # calculate relevant metrics
+    pro_metrics = {'acc-train': round(acc_train, 4), 'acc-test': round(acc_test, 4), 
+                   'acc-mean': round((acc_train + acc_test)/2, 4), 
+                   'acc-weighted': round((acc_train*0.80 + acc_test*0.20)/2, 4), 
+                   'acc-inv-weighted': round((acc_train*0.20 + acc_test*0.80)/2, 4),
+
+                   'auc-mean': round((auc_train + auc_test)/2, 4),
+                   'auc-weighted': round((auc_train*0.80 + auc_test*0.20)/2, 4),
+                   'auc-inv-weighted': round((auc_train*0.20 + auc_test*0.80)/2, 4),
+
+                   'logloss-mean': round((logloss_train + logloss_test)/2, 4),
+                   'logloss-weighted': round((logloss_train*0.80 + logloss_test*0.20)/2, 4),
+                   'logloss-inv-weighted': round((logloss_train*0.20 + logloss_test*0.80)/2, 4)}
+
+    # -- ----------------------------------------------------------------------------------------------------
+
+    # Return all the results for the model
+    r_model_metrics = {'model': p_model, 'pro-metrics': pro_metrics, 
+                       'results': {'data': {'train': p_y_result_train, 'test': p_y_result_test},
+                                   'matrix': {'train': cm_train, 'test': cm_test}},
+                       'metrics': {'train': {'tpr': tpr_train, 'fpr': fpr_train, 'probs': probs_train},
+                                   'test': {'tpr': tpr_test, 'fpr': fpr_test, 'probs': probs_test}}}
 
     return r_model_metrics
 
@@ -1010,64 +1029,13 @@ def genetic_algo_evaluate(p_individual, p_data, p_model, p_fit_type):
     else:
         print('error en genetic_algo_evaluate')
 
-    # get the AUC of the selected model
-    model_train_auc = model['metrics']['train']['auc'].copy()
-    model_test_auc = model['metrics']['test']['auc'].copy()
-
-    # get the logloss of the selected model
-    model_train_logloss = model['metrics']['train']['logloss'].copy()
-    model_test_logloss = model['metrics']['test']['logloss'].copy()
-
-    # get the accuracy of the selected model
-    model_train_acc = model['metrics']['train']['acc'].copy()
-    model_test_acc = model['metrics']['test']['acc'].copy()
-       
-    # -- type of fitness metric for the evaluation of the genetic individual -- #
-        
-    # ACC in sample
-    if p_fit_type == 'acc-train':
-        return round(model_train_acc, 4)
-
-    # ACC out of sample
-    elif p_fit_type == 'acc-test':
-        return round(model_test_acc, 4)
-
-    # simple average of ACC in sample and out of sample
-    elif p_fit_type == 'acc-mean':
-        return round((model_train_acc + model_test_acc)/2, 4)
-
-    # weighted average of ACC in sample and out of sample
-    elif p_fit_type == 'acc-weighted':
-        return round((model_train_acc*0.80 + model_test_acc*0.20)/2, 4)
-
-    # inverse weighted average of ACC in sample and out of sample
-    elif p_fit_type == 'acc-inv-weighted':
-        return round((model_train_acc*0.20 + model_test_acc*0.80)/2, 4)
-
-    # simple average of AUC in sample and out of sample
-    elif p_fit_type == 'auc-mean':
-        return round((model_train_auc + model_test_auc)/2, 4)
-
-    # weighted average of AUC in sample and out of sample
-    elif p_fit_type == 'auc-weighted':
-        return round((model_train_auc*0.80 + model_test_auc*0.20)/2, 4)
-
-    # inverse weighted average of AUC in sample and out of sample
-    elif p_fit_type == 'auc-inv-weighted':
-        return round((model_train_auc*0.20 + model_test_auc*0.80)/2, 4)
+    # pro-metrics list of metrics to evaluate
+    if p_fit_type in list(model['pro-metrics'].keys()):
     
-    # simple average of logloss in sample and out of sample
-    if p_fit_type == 'logloss-mean':
-        return round((model_train_logloss + model_test_logloss)/2, 4)
-
-    # weighted average of logloss in sample and out of sample
-    elif p_fit_type == 'logloss-weighted':
-        return round((model_train_logloss*0.80 + model_test_logloss*0.20)/2, 4)
-
-    # inverse weighted average of logloss in sample and out of sample
-    elif p_fit_type == 'logloss-inv-weighted':
-        return round((model_train_logloss*0.20 + model_test_logloss*0.80)/2, 4)
-
+        # return the already calculated metric
+        return model['pro-metrics'][p_fit_type]
+    
+    # fitness metric not recognized
     else:
         print('error in type of model fitness metric')
         return 'error'
@@ -1403,7 +1371,7 @@ def setup_logger(name_logfile, path_logfile):
 # -------------------------------------------------------------------------- Model Evaluations by period -- #
 # --------------------------------------------------------------------------------------------------------- #
 
-def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
+def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_inner_split):
     """
     Global evaluations for specified data folds for specified models
 
@@ -1443,6 +1411,10 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
         'post-features': after the feature engineering (features will be transformed)       
 
         p_scaling = 'post-features'
+    
+    p_inner_split: float
+        Proportion of the test split in the data as a representation of a inner-split in a k-fold process
+        if 0 then no test split is performed and all the data is treated as train.
 
     Returns
     -------
@@ -1470,7 +1442,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
         msg = 'na'
 
     # Construct the file name for the logfile
-    name_log = iteration + '_' + p_fit_type + '_' + p_transform + '_' + p_scaling
+    name_log = iteration + '_' + p_fit_type + '_' + p_transform + '_' + p_scaling + '_' + p_inner_split
 
     # Base route to save file
     route = 'files/logs/'
@@ -1518,7 +1490,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
             linear_data = linear_features(p_data=data_folds, p_memory=7)
             
             # Symbolic features generation with genetic programming
-            m_features = genetic_programed_features(p_data=linear_data)
+            m_features = genetic_programed_features(p_data=linear_data, p_split=p_inner_split)
 
             # print to have it in the log
             df_log = pd.DataFrame(m_features['sym_data']['details'])
@@ -1535,7 +1507,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling):
             linear_data = linear_features(p_data=data_folds, p_memory=7)
             
             # Symbolic features generation with genetic programming
-            m_features = genetic_programed_features(p_data=linear_data)
+            m_features = genetic_programed_features(p_data=linear_data, p_split=p_inner_split)
 
             # print to have it in the log
             df_log_2 = pd.DataFrame(m_features['sym_data']['details'])
@@ -1794,57 +1766,60 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
             # search for every individual in hall of fame
             for i in range(0, len(p_global_cases[period][model]['e_hof'])):
                 
-                # initialize value in 0 (in case of error)
-                c_met = 0
+                if p_cases_type in list(p_global_cases[period][model]['e_hof'][i]['pro-metrics'].keys()):
+                
+                    # initialize value in 0 (in case of error)
+                    c_met = p_global_cases[period][model]['e_hof'][i]['pro-metrics'][p_cases_type]
+                else:
+                    print('error: selected p_cases_type is not in pro-metrics')
+                    return 0
                 
                 # ------------------------------------------------------------- Calculate fitness metric -- #
 
                 # values for train and test set
-                auc_train = p_global_cases[period][model]['e_hof'][i]['metrics']['train']['auc'] 
-                auc_test = p_global_cases[period][model]['e_hof'][i]['metrics']['test']['auc'] 
+                # auc_train = p_global_cases[period][model]['e_hof'][i]['metrics']['train']['auc'] 
+                # auc_test = p_global_cases[period][model]['e_hof'][i]['metrics']['test']['auc'] 
+                # logloss_train = p_global_cases[period][model]['e_hof'][i]['metrics']['train']['logloss'] 
+                # logloss_test = p_global_cases[period][model]['e_hof'][i]['metrics']['test']['logloss'] 
+                # acc_train = p_global_cases[period][model]['e_hof'][i]['metrics']['train']['acc'] 
+                # acc_test = p_global_cases[period][model]['e_hof'][i]['metrics']['test']['acc'] 
 
-                logloss_train = p_global_cases[period][model]['e_hof'][i]['metrics']['train']['logloss'] 
-                logloss_test = p_global_cases[period][model]['e_hof'][i]['metrics']['test']['logloss'] 
+                # if p_cases_type == 'auc-mean':
+                    # c_met = round((auc_train + auc_test)/2, 4)
 
-                acc_train = p_global_cases[period][model]['e_hof'][i]['metrics']['train']['acc'] 
-                acc_test = p_global_cases[period][model]['e_hof'][i]['metrics']['test']['acc'] 
-
-                if p_cases_type == 'auc-mean':
-                    c_met = round((auc_train + auc_test)/2, 4)
-
-                elif p_cases_type == 'auc-weighted':
-                    c_met = round((auc_train*.8 + auc_test*.2)/2, 4)
+                # elif p_cases_type == 'auc-weighted':
+                    # c_met = round((auc_train*.8 + auc_test*.2)/2, 4)
                 
-                elif p_cases_type == 'auc-inv-weighted':
-                    c_met = round((auc_train*.2 + auc_test*.8)/2, 4)
+                # elif p_cases_type == 'auc-inv-weighted':
+                  #  c_met = round((auc_train*.2 + auc_test*.8)/2, 4)
             
-                elif p_cases_type == 'logloss-mean':
-                    c_met = round((logloss_train*.2 + logloss_test*.8)/2, 4)
+                # elif p_cases_type == 'logloss-mean':
+                  #  c_met = round((logloss_train*.2 + logloss_test*.8)/2, 4)
 
-                elif p_cases_type == 'logloss-weighted':
-                    c_met = round((logloss_train*.2 + logloss_test*.8)/2, 4)
+                #elif p_cases_type == 'logloss-weighted':
+                 #   c_met = round((logloss_train*.2 + logloss_test*.8)/2, 4)
 
-                elif p_cases_type == 'logloss-inv-weighted':
-                    c_met = round((logloss_train*.2 + logloss_test*.8)/2, 4)
+                #elif p_cases_type == 'logloss-inv-weighted':
+                 #   c_met = round((logloss_train*.2 + logloss_test*.8)/2, 4)
                 
-                elif p_cases_type == 'acc-train':
-                    c_met = acc_train
+                #elif p_cases_type == 'acc-train':
+                 #   c_met = acc_train
 
-                elif p_cases_type == 'acc-test':
-                    c_met = acc_test
+                #elif p_cases_type == 'acc-test':
+                 #   c_met = acc_test
                 
-                elif p_cases_type == 'acc-mean':
-                    c_met = round((acc_train + acc_test)/2, 4)
+                #elif p_cases_type == 'acc-mean':
+                 #   c_met = round((acc_train + acc_test)/2, 4)
 
-                elif p_cases_type == 'acc-weighted':
-                    c_met = round((acc_train*0.20 + acc_test*0.80)/2, 4)
+                #elif p_cases_type == 'acc-weighted':
+                 #   c_met = round((acc_train*0.20 + acc_test*0.80)/2, 4)
                 
-                elif p_cases_type == 'acc-inv-weighted':
-                    c_met = round((acc_train*0.80 + acc_test*0.20)/2, 4)
+                #elif p_cases_type == 'acc-inv-weighted':
+                #    c_met = round((acc_train*0.80 + acc_test*0.20)/2, 4)
                 
                 # error in parameter input
-                else:
-                    print('type of auc case is wrong')
+                #else:
+                 #   print('type of auc case is wrong')
                 
                 # save current auc data for later use
                 met_s.append(c_met)

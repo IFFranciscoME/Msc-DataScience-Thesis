@@ -64,7 +64,8 @@ if __name__ == "__main__":
         
         # Parallel Asyncronous Process 
         fold_process = {'fold_' + str(iteration): pool.starmap(fn.fold_process,
-                                                               [(folds, ml_models, exp[0], exp[1], exp[2])
+                                                               [(folds, ml_models,
+                                                                 exp[0], exp[1], exp[2], exp[3])
                                                                for exp in iter_exp])}
         # close pool
         pool.close()

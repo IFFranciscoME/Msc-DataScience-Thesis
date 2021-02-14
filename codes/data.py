@@ -20,9 +20,10 @@ import itertools
 # ---------------------------------------------------------------------------------- ------------------- -- #
 
 # Short Version for Testing
-iter_fold = ['quarter', 'semester']
-iter_opt = {'fitness': ['acc-inv-weighted', 'auc-inv-weighted', 'logloss-inv-weighted'],
-            'scaling': ['post-features'], 'transform': ['robust']}
+iter_fold = ['semester']
+iter_opt = {'inner-split': ['30'],
+            'fitness': ['acc-inv-weighted', 'auc-inv-weighted', 'logloss-inv-weighted'],
+            'scaling': ['pre-features', 'post-features'], 'transform': ['standard', 'robust']}
 
 # Values for T-Fold size
 # iter_fold = ['quarter', 'semester', 'year', 'bi-year', '80-20']
@@ -35,7 +36,8 @@ iter_opt = {'fitness': ['acc-inv-weighted', 'auc-inv-weighted', 'logloss-inv-wei
 #             'scaling': ['post-features', 'pre-features']}
 
 # Iterative/Parallel Experiment Data
-iter_exp = list(itertools.product(*[iter_opt['fitness'], iter_opt['transform'], iter_opt['scaling']]))
+iter_exp = list(itertools.product(*[iter_opt['fitness'], iter_opt['transform'],
+                                    iter_opt['scaling'], iter_opt['inner-split']]))
 
 # -------------------------------------------------------------------- Historical Minute Prices Grouping -- #
 # -------------------------------------------------------------------- --------------------------------- -- #
@@ -109,6 +111,9 @@ for file_f in files_f:
 
 # One period data concatenation (Fast run of main.py)
 ohlc_data = pd.concat([price_data[list(price_data.keys())[0]]])
+
+# ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
+#                       price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]]])
 
 # All periods data concatenation (Slow run of main.py)
 # ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],

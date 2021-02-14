@@ -1,0 +1,70 @@
+
+# -- ------------------------------------------------------CROSS-VALIDATION IN FINANCIAL MACHINE LEARNING-- # 
+# -- ------------------------------------------------------------------------------------------------------ #
+
+The purpose of cross-validation (CV) is to: 
+
+- To determine the generalization error of an ML algorithm
+- To prevent overfitting
+
+The difference resides in having a model that can describe the known data
+with extreme fidelity, yet has a extremely poor forecasting power for new data.
+
+The diffult part of applying CV to financial timeseries data is that CV splits
+chunks of observations drawn from an iid process, there are many ways to define
+how the splits will be performed:
+
+The hold out method: The data set is splitted into two sets: Training set and testing set, 
+normally, the training set is comprehended with a range of 70%-80% of the data, and the
+testing set the complementary left data, in this case around 30%-20%. The result of this scheme is 
+a 2x1 vector of performance metrics, each of the 2 is the measurement of how well the model
+performed in the particular sub-set.
+
+The hold out method + validation set: This is very much the same as the hold out method with
+the additional split of a validation set, which is placed at the end of the data. Typically, 
+the proportions are set in the ranges of: train set (70%-80%), test set (15%-20%),
+validation set (5%-15%). The result of this scheme is also similar to the previous scheme, with
+the addition that a third performance metric is generated, the one corresponding to the
+validation sub-set.
+
+k-fold: This is perhaps the most common scheme for the CV, it consists in defining a priori
+a K number as the number of equally sized sub-datasets (folds) in which the data set will be partitioned.
+The elements that contains each of the folds could be randomly choosen from the whole set,
+or, sequentially choosen when suffling the data is prohibited, like the case of time series data.
+Then, k-1 folds are used as training set and 1 as test set, this is done k times, each of which
+is a permutation of the folds keeping the proportion of k-1 for training and 1 for testing. The
+result of this scheme will be a kx1 array of performance metrics.
+
+The hold out method with or without validation set is a particular case of k-fold scheme, the main
+difference beign that k = 2 or 3 respectively, and, that the fold size is not equal among sub-datasets. 
+
+In Financial Machine Learning, the implementation of cross-validation schemes can be found in two types
+of processes: model development, and backtesting of a model or bag of models.
+
+[1] presents several reasons for why CV as stated above fails when used in financial machine learning, 
+one of those is because the assumption that the data across the folds is assumed to be observations
+drawn from a iid process. ALTERNATIVE OF IID ASSUMPTION
+
+Other reason present in this work is that in the k-fold CV scheme fails in FML is that the each
+k-testing set, after 1 use as a testing set, is later used k-1 times as part of the k-1 train sets,
+which in the context of FML leads to something known as leakage of information. 
+
+
+# -- ----------------------------------------------------------------------------INTERESTING TO TRY-------- #
+# -- --------------------------------------------------------------------------------------------------- -- #
+
+# -- ALTERNATIVE OF IID ASUMPTION
+
+idea: Could it be that the data among data-sets is statistically similar enough to justify the validity
+of performing CV of some type and have useful results ?, for example a comparisson with the 
+Kullback–Leibler divergence.
+
+hypothesis: CV in FML is not useful because among splits, the data does present a divergence in
+probability distribution, hence data-sets of different folds are not considered observations 
+drawn from a idd process nor statistically similar enough to relax that assumption.
+
+Experiment: Compare statistical momments among data sets (folds) 
+		    (mean, variance, skew, kurtosis) + Kullback–Leibler divergence
+
+# -- BIBLIOGRAPHY
+[1] Advances in Financial Machine Learning, lopez de prado

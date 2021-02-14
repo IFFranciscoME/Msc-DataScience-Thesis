@@ -3,7 +3,6 @@
 # -- --------------------------------------------------------------------------------------------------- -- #
 
 # -- AUC vs Logloss as cost functions, which is better for binary classification
-
 Whereas the AUC is computed with regards to binary classification with a varying decision threshold,
 logloss actually takes "certainty" of classification into account.
 
@@ -14,6 +13,10 @@ with imbalanced data or in case of unequally distributed error cost
 https://stats.stackexchange.com/questions/322408/logloss-vs-gini-auc
 https://stats.stackexchange.com/questions/235089/optimizing-auc-vs-logloss-in-binary-classification-
 problems
+
+# -- Usefull Difference between AUC & ACC
+https://datascience.stackexchange.com/questions/806/advantages-of-auc-vs-standard-accuracy
+http://notmatthancock.github.io/2015/11/11/auc-and-accuracy.html
 
 # -- Akaike Criteria
 In order to compare between models and between different parameter configurations of the same model
@@ -28,10 +31,6 @@ Here is a multivariable procedure that explicitly maximizes classification accur
 paradoxical confounding. [5, 6]
 https://www.researchgate.net/post/How_do_you_explain_higher_discrimination_using_a_SVM_score_
 index_unsupervised_from_a_supervised_SVM_model_using_same_dataset
-
-# -- Usefull Difference between AUC & ACC
-https://datascience.stackexchange.com/questions/806/advantages-of-auc-vs-standard-accuracy
-http://notmatthancock.github.io/2015/11/11/auc-and-accuracy.html
 
 # -- How does batch size affect convergence of SGD and why
 https://stats.stackexchange.com/questions/316464/how-does-batch-size-affect-convergence-of-sgd-and-why
@@ -49,7 +48,6 @@ in-a-feedforward-neural-netw
 
 # -- RandomForest
 https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html
-
 
 # -- ------------------------------------------------------------------------------------ T-FOLD PROCESS -- # 
 # -- --------------------------------------------------------------------------------------------------- -- #
@@ -224,13 +222,22 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 
 - Enhacement: Global evaluation function for the whole HoF 
 - Fix: gray candles (windows without prediction) and vertical line traintest ohlc class
+- Results: Execute code with several features to have wider results to analize.
+
+# -- 13.02.2021
+- Optimization: add to model_metrics the other sofisticated metrics already calculated
+- Enhacement: add inner-split option of iterations (choose inner test split of data)
 
 # ---------------------------------------------------------------------------------------------- BACKLOG -- # 
 # ---------------------------------------------------------------------------------------------- ------- -- #
 
 # -- NECESSARY
 
+- (pending) Refactor project in order to work with no train-test split in inner data sets of the t-folds
 
+- (pending) reduce time elapsed by global evaluation function
+
+- (pending) look for repeated or not used data that is beign saved, pickle files are getting heavier
 
 - (pending) function for average or AIC/BIC for parsimony analysis of symbolic features in fold
 
