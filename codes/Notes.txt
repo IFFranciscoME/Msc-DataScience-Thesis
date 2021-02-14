@@ -207,13 +207,14 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 - Optimization: refactor and simplify code in genetic_algo_evaluate 
 - Enhacement: add inner-split option of iterations (choose inner test split of data)
 - Addition: met_cases params and metric data of the min and max cases
+- Enhacement: Refactor project in order to work with no train-test split in inner data sets of the t-folds
 
 # ---------------------------------------------------------------------------------------------- BACKLOG -- # 
 # ---------------------------------------------------------------------------------------------- ------- -- #
 
 # -- NECESSARY
 
-- (pending) Refactor project in order to work with no train-test split in inner data sets of the t-folds
+- (pending) check results of global_evaluation and the use of model.fit instead of model.predict
 
 - (pending) Refactor code for timeseries data of metric evolution g_timeseries_auc
 

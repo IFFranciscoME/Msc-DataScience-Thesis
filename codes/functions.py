@@ -1627,7 +1627,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
 # ------------------------------------------------------------------------------ Model Global Evaluation -- #
 # --------------------------------------------------------------------------------------------------------- #
 
-def global_evaluation(p_hof, p_data, p_features, p_model):
+def global_evaluation(p_hof, p_global_data, p_features, p_model):
     """
     Evaluation of models with global data and features for particular selected cases of parameters
 
@@ -1654,7 +1654,7 @@ def global_evaluation(p_hof, p_data, p_features, p_model):
     # -------------------------------------------------------------------------------------- GLOBAL DATA -- #
     
     # get all the linear features 
-    g_linear_data = linear_features(p_data=p_data, p_memory=7)
+    g_linear_data = linear_features(p_data=p_global_data, p_memory=7)
     g_y_target = g_linear_data['co_d'].copy()
     g_linear_data = g_linear_data.drop(['co_d'], axis=1, inplace=False)
 
@@ -1680,21 +1680,21 @@ def global_evaluation(p_hof, p_data, p_features, p_model):
             parameters = {'ratio': individual_params[0], 'c': individual_params[1]}
 
             global_results.append({'global_data': global_data, 'global_parameters': parameters,
-                                'model': logistic_net(p_data=global_data, p_params=parameters)})
+                                   'model': logistic_net(p_data=global_data, p_params=parameters)})
 
         elif p_model == 'l1-svm':
             parameters = {'c': individual_params[0], 'kernel': individual_params[1],
                           'gamma': individual_params[2]}
 
             global_results.append({'global_data': global_data, 'global_parameters': parameters,
-                                'model': l1_svm(p_data=global_data, p_params=parameters)})
+                                   'model': l1_svm(p_data=global_data, p_params=parameters)})
 
         elif p_model == 'ann-mlp':
             parameters = {'hidden_layers': individual_params[0], 'activation': individual_params[1],
                           'alpha': individual_params[2], 'learning_rate_init': individual_params[3]}
 
             global_results.append({'global_data': global_data, 'global_parameters': parameters,
-                                'model': ann_mlp(p_data=global_data, p_params=parameters)})
+                                   'model': ann_mlp(p_data=global_data, p_params=parameters)})
         else: 
             print('error in model selection during (global_evaluation)')
 
