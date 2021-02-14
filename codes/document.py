@@ -52,7 +52,6 @@ ml_models = list(dt.models.keys())
 
 # File name to save the data
 file_name = 'files/pickle_rick/s_logloss-inv-weighted_robust_post-features_30.dat'
-# file_name = 'files/pickle_rick/respaldo/s_auc-inv-weighted_post-features_robust.dat'
 
 # Load previously generated data
 memory_palace = dt.data_save_load(p_data_objects=None, p_data_action='load', p_data_file=file_name)
@@ -263,9 +262,9 @@ met_cases = fn.model_cases(p_models=ml_models, p_global_cases=memory_palace, p_d
 
 # Global Evaluation for a particular type of case
 global_models = fn.global_evaluation(p_hof=memory_palace[period_case][model_case]['p_hof']['hof'],
-                                    p_data=data,
-                                    p_features=memory_palace[period_case],
-                                    p_model=model_case)
+                                     p_data=data,
+                                     p_features=memory_palace[period_case],
+                                     p_model=model_case)
 
 # the evaluation of the best model
 global_model = global_models[0]
@@ -274,7 +273,7 @@ global_model = global_models[0]
 global_model['global_parameters']
 
 # Model auc
-global_model['model']['pro-metrics']['auc-mean']
+global_model['model']['pro-metrics'][metric_case]
 
 # Model accuracy
 global_model['model']['pro-metrics']['acc-' + subset]

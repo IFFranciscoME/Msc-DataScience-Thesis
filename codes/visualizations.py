@@ -294,9 +294,10 @@ def g_ohlc_class(p_ohlc, p_theme, p_data_class, p_vlines):
 # -- ----------------------------------------------------------------------------------- PLOT: ROC + ACU -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 
-def g_timeseries_auc(p_data_auc, p_theme):
+def g_timeseries(p_data, p_theme):
     """
-    Plot para series de tiempo de las AUC de los modelos
+    Visualize evolution of a metric for a particular model, with a particular parameter set, 
+    and do that for N different cases. 
 
     Parameters
     ----------
@@ -330,52 +331,20 @@ def g_timeseries_auc(p_data_auc, p_theme):
         yaxis=dict(title_text=p_theme['p_labels']['y_title'],
                    tickfont=dict(color='grey', size=p_theme['p_fonts']['font_axis'])))
 
-    fig_ts_auc.add_trace(go.Scatter(x=p_data_auc['model_1']['x_period'],
-                                    y=p_data_auc['model_1']['y_mins'],
+    fig_ts_auc.add_trace(go.Scatter(x=p_data['model_1']['x_period'],
+                                    y=p_data['model_1']['y_mins'],
 
                                     line=dict(color='#004A94', width=3),
                                     marker=dict(color='#004A94', size=9),
                                     name='logistic-elasticnet (min)',
                                     mode='markers+lines'))
 
-    fig_ts_auc.add_trace(go.Scatter(x=p_data_auc['model_1']['x_period'], fillcolor='blue',
-                                    y=p_data_auc['model_1']['y_maxs'],
+    fig_ts_auc.add_trace(go.Scatter(x=p_data['model_1']['x_period'], fillcolor='blue',
+                                    y=p_data['model_1']['y_maxs'],
 
                                     line=dict(color='#004A94', width=3),
                                     marker=dict(color='#004A94', size=9),
                                     name='logistic-elasticnet (max)',
-                                    mode='markers+lines'))
-
-    fig_ts_auc.add_trace(go.Scatter(x=p_data_auc['model_2']['x_period'],
-                                    y=p_data_auc['model_2']['y_mins'],
-
-                                    line=dict(color='#FB5D41', width=3),
-                                    marker=dict(color='#FB5D41', size=9),
-                                    name='l1-svm (min)',
-                                    mode='markers+lines'))
-
-    fig_ts_auc.add_trace(go.Scatter(x=p_data_auc['model_2']['x_period'],
-                                    y=p_data_auc['model_2']['y_maxs'],
-
-                                    line=dict(color='#FB5D41', width=3),
-                                    marker=dict(color='#FB5D41', size=9),
-                                    name='l1-svm (max)',
-                                    mode='markers+lines'))
-
-    fig_ts_auc.add_trace(go.Scatter(x=p_data_auc['model_3']['x_period'],
-                                    y=p_data_auc['model_3']['y_mins'],
-
-                                    line=dict(color='#339e62', width=3),
-                                    marker=dict(color='#339e62', size=9),
-                                    name='ann-mlp (min)',
-                                    mode='markers+lines'))
-
-    fig_ts_auc.add_trace(go.Scatter(x=p_data_auc['model_3']['x_period'],
-                                    y=p_data_auc['model_3']['y_maxs'],
-
-                                    line=dict(color='#339e62', width=3),
-                                    marker=dict(color='#339e62', size=9),
-                                    name='ann-mlp (min)',
                                     mode='markers+lines'))
 
     # Legend format

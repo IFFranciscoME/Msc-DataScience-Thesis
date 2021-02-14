@@ -44,4 +44,7 @@
 
 |   Writing        | cross-validation in finance        | 19:00 12.Feb.2021  | 3.0          |                  |
 
-|   Coding         | inner-split as iterations option   | 17:00 13.Feb.2021  | 2.0          |                  |
+|   Coding         | inner-split as iterations option   | 17:00 13.Feb.2021  | 3.0          |                  |
+
+|   Learning       | cross-validation in finance        | 20:00 12.Feb.2021  | 1.0          |                  |
+

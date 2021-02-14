@@ -106,11 +106,6 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 		   symbolic continuous variables & target binary variable
 # -- -- -- Feature parsimony
 
-# -- ----------------------------------------------------------------------------- CALIBRATION TECHNIQUE -- # 
-# -- --------------------------------------------------------------------------------------------------- -- #
-
-# -- Optimization Function
-
 # -- ----------------------------------------------------------------------------------- MODEL DIVERSITY -- # 
 # -- --------------------------------------------------------------------------------------------------- -- #
 
@@ -118,28 +113,6 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 # -- Statistical Learning - Support Vector Machines with L1 regularization
 # -- Machine Learning - Aritificial Neural Network - Multi Layer Pereceptron
 # -- Tree-based-ensemble method - RandomForest
-
-# -- ------------------------------------------------------------------------- TRADING SYSTEM DEFINITION -- # 
-# ------------------------------------------------------------------------------------------- ---------- -- #
-
-# -- Criteria 1: Data
-https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-i-tick-bars-a8b93728b4c5
-https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-volume-and-dollar-bars-6cda27e3201d
-
-# -- Criteria 2: Signal Generation
-
-- Reference 1
-- Reference 2
-
-# -- Criteria 3: Profit and Loss taking 
-
-- Reference 1
-- Reference 2
-
-# -- Criteria 4: Position sizing
-
-- Reference 1
-- Reference 2
 
 # ------------------------------------------------------------------------------------ SUBJECTS BY CLASS -- #
 # ------------------------------------------------------------------------------------------- ---------- -- #
@@ -182,6 +155,8 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 # ------------------------------------------------------------------------------------------- CHANGE LOG -- #
 # ------------------------------------------------------------------------------------------- ---------- -- #
 
+# -- 10.02.2021
+
 - create a new document.py file with all the codes necessary to produce the elements that will be
   added to the thesis document.
 
@@ -208,6 +183,8 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 - Enhacement: Aesthetic Logs and invidiual files for worker-log during parallelization
 - Addition: pickle_rick data saving method for individual file during parallelization
 
+# -- 11.02.2021
+
 - Addition: data_profile function for OHLC and timeseries data profiling
 - Addition: data profile for target variable (balance of classes)
 - Addition: data profile for feature variables (descriptive statistics)
@@ -225,13 +202,18 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 - Results: Execute code with several features to have wider results to analize.
 
 # -- 13.02.2021
+
 - Optimization: add to model_metrics the other sofisticated metrics already calculated
+- Optimization: refactor and simplify code in genetic_algo_evaluate 
 - Enhacement: add inner-split option of iterations (choose inner test split of data)
+- Addition: met_cases params and metric data of the min and max cases
 
 # ---------------------------------------------------------------------------------------------- BACKLOG -- # 
 # ---------------------------------------------------------------------------------------------- ------- -- #
 
 # -- NECESSARY
+
+- (pending) Refactor code for timeseries data of metric evolution g_timeseries_auc
 
 - (pending) Refactor project in order to work with no train-test split in inner data sets of the t-folds
 
@@ -255,15 +237,6 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 - (pending) (paper) design hypothesis based experiments 
 - (pending) (code) register the modifications in the code necessary for each experiment
 
-# -- GOOD TO HAVE
-
-- (pending) Criteria 3: Profit and Loss taking (scalar, formula, model)
-- (pending) Criteria 4: Positions dimensioning (scalar, formula, model)
-- (pending) Financial performance of trading strategy (Criteria 3 and 4 of trading system)
-- (pending) calibration  model
-- (pending) calibration  results analysis
-
-- (pending) plot for multi modal cases
 
 ***************************************************************************************** UNORGANIZED NOTES 
 ***********************************************************************************************************
@@ -274,14 +247,6 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 # -- -- Objective function
 # -- -- Cost function 
 # -- -- Learning/Optimizing algorithm (Genetic algorithms because categorical data)
-
-# -- (Pending) search for the max, min, mode cases among all the folds
-# -- -- display metrics of de lowest min and the highest max 
-# -- -- display plots
-
-# -- (Pending) with min, max, mode cases found, evaluate with the rest of T-Folds data
-# -- -- display metrics
-# -- -- display plots
 
 # -- -- DATA ANALYSIS
 # -- -- -- Amount/dates of data
@@ -327,6 +292,3 @@ https://towardsdatascience.com/advanced-candlesticks-for-machine-learning-ii-vol
 # -- Regularization effects in logistic regression
 # -- kernel in SVM
 # -- training time in ANN-MLP
-
-- Genetic algorithms vs other learning algorithm for the hyperparameter optimization:
-  in my case Genetic Algorithms is OK because the hyperparameters are both numerical and categorical
