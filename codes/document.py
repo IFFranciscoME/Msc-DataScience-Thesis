@@ -51,7 +51,7 @@ folds = fn.t_folds(p_data=data, p_period=fold_case)
 ml_models = list(dt.models.keys())
 
 # File name to save the data
-file_name = 'files/pickle_rick/s_logloss-inv-weighted_robust_post-features.dat'
+file_name = 'files/pickle_rick/s_logloss-inv-weighted_robust_post-features_30.dat'
 # file_name = 'files/pickle_rick/respaldo/s_auc-inv-weighted_post-features_robust.dat'
 
 # Load previously generated data
@@ -137,10 +137,14 @@ model_case = 'l1-svm'
 met_cases = fn.model_cases(p_models=ml_models, p_global_cases=memory_palace, p_data_folds=folds,
                            p_cases_type=metric_case)
  
-# periods of the mode(s)
-mode_periods = met_cases[model_case]['met_mode']['period']
+# period of the best of HoF: according to model_case and metric_case 
+best_period = met_cases[model_case]['met_max']['period']
+best_params = met_cases[model_case]['met_max']['params']
 
-# whole data of repetitions
+# period of the worst of HoF: according to model_case and metric_case 
+worst_period = met_cases[model_case]['met_min']['period']
+
+# Modes and their params, no. of repetitions and periods.
 mode_repetitions = pd.DataFrame(met_cases[model_case]['met_mode']['data']).T
 
 # -- ------------------------------------------------------------------------ SYMBOLIC FEATURES ANALYSIS -- #
@@ -270,13 +274,13 @@ global_model = global_models[0]
 global_model['global_parameters']
 
 # Model auc
-global_model['model']['pro-metrics']['auc' + subset]
+global_model['model']['pro-metrics']['auc-mean']
 
 # Model accuracy
-global_model['model']['pro-metrics']['acc' + subset]
+global_model['model']['pro-metrics']['acc-' + subset]
 
 # Model logloss
-global_model['model']['pro-metrics']['logloss' + subset]
+global_model['model']['pro-metrics']['logloss-mean']
 
 # -- ------------------------------------------------------------- PLOT 5: GLOBAL CLASSIFICATION RESULTS -- #
 # -- ------------------------------------------------------------- ------------------------------------- -- #

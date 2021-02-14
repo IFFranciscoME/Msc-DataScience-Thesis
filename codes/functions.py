@@ -1593,7 +1593,8 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
     route = 'files/pickle_rick/'
 
     # File name to save the data
-    file_name = route + period[0] + '_' + p_fit_type + '_' + p_transform + '_' + p_scaling + '.dat'
+    file_name = route + period[0] + \
+                 '_' + p_fit_type + '_' + p_transform + '_' + p_scaling + '_' + p_inner_split + '.dat'
 
     # objects to be saved
     pickle_rick = {'data': dt.ohlc_data, 't_folds': period, 'memory_palace': memory_palace}
@@ -1770,57 +1771,11 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
                 
                     # initialize value in 0 (in case of error)
                     c_met = p_global_cases[period][model]['e_hof'][i]['pro-metrics'][p_cases_type]
+
                 else:
                     print('error: selected p_cases_type is not in pro-metrics')
                     return 0
-                
-                # ------------------------------------------------------------- Calculate fitness metric -- #
 
-                # values for train and test set
-                # auc_train = p_global_cases[period][model]['e_hof'][i]['metrics']['train']['auc'] 
-                # auc_test = p_global_cases[period][model]['e_hof'][i]['metrics']['test']['auc'] 
-                # logloss_train = p_global_cases[period][model]['e_hof'][i]['metrics']['train']['logloss'] 
-                # logloss_test = p_global_cases[period][model]['e_hof'][i]['metrics']['test']['logloss'] 
-                # acc_train = p_global_cases[period][model]['e_hof'][i]['metrics']['train']['acc'] 
-                # acc_test = p_global_cases[period][model]['e_hof'][i]['metrics']['test']['acc'] 
-
-                # if p_cases_type == 'auc-mean':
-                    # c_met = round((auc_train + auc_test)/2, 4)
-
-                # elif p_cases_type == 'auc-weighted':
-                    # c_met = round((auc_train*.8 + auc_test*.2)/2, 4)
-                
-                # elif p_cases_type == 'auc-inv-weighted':
-                  #  c_met = round((auc_train*.2 + auc_test*.8)/2, 4)
-            
-                # elif p_cases_type == 'logloss-mean':
-                  #  c_met = round((logloss_train*.2 + logloss_test*.8)/2, 4)
-
-                #elif p_cases_type == 'logloss-weighted':
-                 #   c_met = round((logloss_train*.2 + logloss_test*.8)/2, 4)
-
-                #elif p_cases_type == 'logloss-inv-weighted':
-                 #   c_met = round((logloss_train*.2 + logloss_test*.8)/2, 4)
-                
-                #elif p_cases_type == 'acc-train':
-                 #   c_met = acc_train
-
-                #elif p_cases_type == 'acc-test':
-                 #   c_met = acc_test
-                
-                #elif p_cases_type == 'acc-mean':
-                 #   c_met = round((acc_train + acc_test)/2, 4)
-
-                #elif p_cases_type == 'acc-weighted':
-                 #   c_met = round((acc_train*0.20 + acc_test*0.80)/2, 4)
-                
-                #elif p_cases_type == 'acc-inv-weighted':
-                #    c_met = round((acc_train*0.80 + acc_test*0.20)/2, 4)
-                
-                # error in parameter input
-                #else:
-                 #   print('type of auc case is wrong')
-                
                 # save current auc data for later use
                 met_s.append(c_met)
 
@@ -1831,6 +1786,8 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
                     met_cases[model]['met_min']['data'] = p_global_cases[period][model]['e_hof'][i]
                     met_cases[model]['met_min']['period'] = period
                     met_min_params = p_global_cases[period][model]['p_hof']['hof'][i]
+                    met_cases[model]['met_min']['params'] = met_min_params
+                    met_cases[model]['met_min'][p_cases_type] = met_min
 
                 # -- Case 2 (MAX INDIVIDUAL)
                 # get the individual of all of the HoF that produced the maximum metrics
@@ -1839,18 +1796,15 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
                     met_cases[model]['met_max']['data'] = p_global_cases[period][model]['e_hof'][i]
                     met_cases[model]['met_max']['period'] = period
                     met_max_params = p_global_cases[period][model]['p_hof']['hof'][i]
+                    met_cases[model]['met_max']['params'] = met_max_params
+                    met_cases[model]['met_max'][p_cases_type] = met_max
 
             # Get features used for every case, therefore, for min and max metric cases
             features = {'features': p_global_cases[period]['features'],
                         'sym_features': p_global_cases[period]['sym_features']}
-
-            met_cases[model]['hof_metrics']['data'][period]['met_s'] = met_s
-            met_cases[model]['hof_metrics']['data'][period]['met_max'] = met_max
-            met_cases[model]['hof_metrics']['data'][period]['met_max_params'] = met_max_params
-            met_cases[model]['hof_metrics']['data'][period]['met_min'] = met_min
-            met_cases[model]['hof_metrics']['data'][period]['met_min_params'] = met_min_params
             met_cases[model]['hof_metrics']['data'][period]['features'] = features
         
+        # mode(s) data and metrics
         met_cases[model]['met_mode']['data'] = met_mode[model]
         met_cases[model]['met_mode']['modes'] = []
         met_cases[model]['met_mode']['repetitions'] = []

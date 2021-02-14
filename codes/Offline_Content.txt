@@ -43,12 +43,19 @@ of processes: model development, and backtesting of a model or bag of models.
 
 [1] presents several reasons for why CV as stated above fails when used in financial machine learning, 
 one of those is because the assumption that the data across the folds is assumed to be observations
-drawn from a iid process. ALTERNATIVE OF IID ASSUMPTION
+drawn from a iid process. -- ALTERNATIVE OF IID ASSUMPTION -- 
 
 Other reason present in this work is that in the k-fold CV scheme fails in FML is that the each
 k-testing set, after 1 use as a testing set, is later used k-1 times as part of the k-1 train sets,
-which in the context of FML leads to something known as leakage of information. 
+which in the context of FML leads to something known as leakage of information.
 
+Proposed schemes of K-Fold for financial time series: 
+
+- 80-20 (Hold out method - type 1)
+- 70-20-10 (Hold out method - type 2)
+- K-Fold 
+- Purged K-Fold
+- Embargo K-Fold
 
 # -- ----------------------------------------------------------------------------INTERESTING TO TRY-------- #
 # -- --------------------------------------------------------------------------------------------------- -- #
@@ -67,4 +74,6 @@ Experiment: Compare statistical momments among data sets (folds)
 		    (mean, variance, skew, kurtosis) + Kullback–Leibler divergence
 
 # -- BIBLIOGRAPHY
-[1] Advances in Financial Machine Learning, lopez de prado
+[1] Advances in Financial Machine Learning, lopez de prado, wiley 2018
+
+[2] 
