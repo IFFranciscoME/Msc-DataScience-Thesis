@@ -699,29 +699,42 @@ def model_metrics(p_model, p_model_data):
     # Data keys, could be ['x_train', 'y_train'] or ['x_train', 'y_train', 'x_test', 'y_test']
     data_keys = list(p_model_data.keys())
 
-    # Fitted train values
-    p_y_train_d = p_model.predict(p_model_data['train_x'])
-    p_y_result_train = pd.DataFrame({'train_y': p_model_data['train_y'], 'train_pred_y': p_y_train_d})
-    # Confussion matrix
-    cm_train = confusion_matrix(p_y_result_train['train_y'], p_y_result_train['train_pred_y'])
-    # Probabilities of class in train data
-    probs_train = p_model.predict_proba(p_model_data['train_x'])
-    # In case of a nan, replace it with zero (to prevent errors)
-    probs_train = np.nan_to_num(probs_train)
+    # In the case of the presence of a train set, with both x and y, do calculations accordingly
+    if 'train_x' in data_keys and 'train_y' in data_keys:
 
-    # Accuracy rate
-    acc_train = round(accuracy_score(list(p_model_data['train_y']), p_y_train_d), 4)
-    # False Positive Rate, True Positive Rate, Thresholds
-    fpr_train, tpr_train, thresholds = roc_curve(list(p_model_data['train_y']),
-                                                      probs_train[:, 1], pos_label=1)
-    # Area Under the Curve (ROC) for train data
-    auc_train = round(roc_auc_score(list(p_model_data['train_y']), probs_train[:, 1]), 4)
+        # Fitted train values
+        p_y_train_d = p_model.predict(p_model_data['train_x'])
+        p_y_result_train = pd.DataFrame({'train_y': p_model_data['train_y'], 'train_pred_y': p_y_train_d})
+        # Confussion matrix
+        cm_train = confusion_matrix(p_y_result_train['train_y'], p_y_result_train['train_pred_y'])
+        # Probabilities of class in train data
+        probs_train = p_model.predict_proba(p_model_data['train_x'])
+        # In case of a nan, replace it with zero (to prevent errors)
+        probs_train = np.nan_to_num(probs_train)
 
-    # Logloss (Binary cross-entropy function)
-    logloss_train = log_loss(p_model_data['train_y'], p_y_train_d)
+        # Accuracy rate
+        acc_train = round(accuracy_score(list(p_model_data['train_y']), p_y_train_d), 4)
+        # False Positive Rate, True Positive Rate, Thresholds
+        fpr_train, tpr_train, thresholds = roc_curve(list(p_model_data['train_y']),
+                                                        probs_train[:, 1], pos_label=1)
+        # Area Under the Curve (ROC) for train data
+        auc_train = round(roc_auc_score(list(p_model_data['train_y']), probs_train[:, 1]), 4)
+
+        # Logloss (Binary cross-entropy function)
+        logloss_train = log_loss(p_model_data['train_y'], p_y_train_d)
+
+        # Data duplication to not alter other calculatiosn below
+        cm_test = cm_train
+        probs_test = probs_train
+        acc_test = acc_train
+        fpr_test = fpr_train
+        tpr_test = tpr_train
+        auc_test = auc_train
+        logloss_test = logloss_train
+        p_y_result_test = p_y_result_train
 
     # In the case of the presence of a test set, with both x and y, do calculations accordingly
-    if 'test_x' in data_keys and 'test_y' in data_keys:
+    elif 'test_x' in data_keys and 'test_y' in data_keys:
 
         # Fitted test values
         p_y_test_d = p_model.predict(p_model_data['test_x'])
@@ -743,16 +756,16 @@ def model_metrics(p_model, p_model_data):
         # Logloss (Binary cross-entropy function)
         logloss_test = log_loss(p_model_data['test_y'], p_y_test_d)
 
-    # Data duplication to not alter other calculatiosn below
-    cm_test = cm_train
-    probs_test = probs_train
-    acc_test = acc_train
-    fpr_test = fpr_train
-    tpr_test = tpr_train
-    auc_test = auc_train
-    logloss_test = logloss_train
-    p_y_result_test = p_y_result_train
-
+        # Data duplication to not alter other calculatiosn below
+        cm_train = cm_test
+        probs_train = probs_test
+        acc_train = acc_test
+        fpr_train = fpr_test
+        tpr_train = tpr_test
+        auc_train = auc_test
+        logloss_train = logloss_test
+        p_y_result_train = p_y_result_test
+    
     # -- ----------------------------------------------------------------------------------------------------
 
     # calculate relevant metrics
@@ -1627,7 +1640,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
 # ------------------------------------------------------------------------------ Model Global Evaluation -- #
 # --------------------------------------------------------------------------------------------------------- #
 
-def global_evaluation(p_hof, p_global_data, p_features, p_model):
+def global_evaluation(p_case, p_global_data, p_features, p_model):
     """
     Evaluation of models with global data and features for particular selected cases of parameters
 
@@ -1649,7 +1662,8 @@ def global_evaluation(p_hof, p_global_data, p_features, p_model):
     """
 
     # entire hof parameters (orderer in descent order by value obtained of the optimization metric)
-    hof_params = p_hof.copy()
+    hof_params = p_case['p_hof']['hof'].copy()
+    hof_models = p_case['e_hof'].copy()
 
     # -------------------------------------------------------------------------------------- GLOBAL DATA -- #
     
@@ -1664,8 +1678,8 @@ def global_evaluation(p_hof, p_global_data, p_features, p_model):
 
     # data format
     global_data = {}
-    global_data['train_x'] = g_global_data
-    global_data['train_y'] = g_y_target
+    global_data['test_x'] = g_global_data
+    global_data['test_y'] = g_y_target
 
     # --------------------------------------------------------------- ITERATIVE GLOBAL EVALUATION OF HOF -- #
     
@@ -1673,30 +1687,26 @@ def global_evaluation(p_hof, p_global_data, p_features, p_model):
     global_results = []
     
     # iterative evaluation
-    for individual_params in hof_params:
-        # individual_params = hof_params[0]
+    for i in range(0, len(hof_params)):
+        individual_params = hof_params[i]
+        individual_model = hof_models[i]['model']
     
         if p_model == 'logistic-elasticnet':
             parameters = {'ratio': individual_params[0], 'c': individual_params[1]}
-
-            global_results.append({'global_data': global_data, 'global_parameters': parameters,
-                                   'model': logistic_net(p_data=global_data, p_params=parameters)})
 
         elif p_model == 'l1-svm':
             parameters = {'c': individual_params[0], 'kernel': individual_params[1],
                           'gamma': individual_params[2]}
 
-            global_results.append({'global_data': global_data, 'global_parameters': parameters,
-                                   'model': l1_svm(p_data=global_data, p_params=parameters)})
-
         elif p_model == 'ann-mlp':
             parameters = {'hidden_layers': individual_params[0], 'activation': individual_params[1],
                           'alpha': individual_params[2], 'learning_rate_init': individual_params[3]}
 
-            global_results.append({'global_data': global_data, 'global_parameters': parameters,
-                                   'model': ann_mlp(p_data=global_data, p_params=parameters)})
         else: 
             print('error in model selection during (global_evaluation)')
+        
+        global_results.append({'global_data': global_data, 'global_parameters': parameters,
+                               'model': model_metrics(p_model=individual_model, p_model_data=global_data)})
 
     return global_results
 

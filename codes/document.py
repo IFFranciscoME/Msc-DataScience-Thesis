@@ -42,7 +42,7 @@ plot_1 =vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_1, p_vlines=None)
 # ------------------------------------------------------------------------------------ ----------------- -- #
 
 # Fold size
-fold_case = 'semester'
+fold_case = 'quarter'
 
 # Timeseries data division in t-folds
 folds = fn.t_folds(p_data=data, p_period=fold_case)
@@ -51,7 +51,7 @@ folds = fn.t_folds(p_data=data, p_period=fold_case)
 ml_models = list(dt.models.keys())
 
 # File name to save the data
-file_name = 'files/pickle_rick/s_acc-inv-weighted_robust_post-features_0.dat'
+file_name = 'files/pickle_rick/q_logloss-inv-weighted_robust_post-features_0.dat'
 
 # Load previously generated data
 memory_palace = dt.data_save_load(p_data_objects=None, p_data_action='load', p_data_file=file_name)
@@ -127,7 +127,7 @@ tgv_corr_train = pd.concat([memory_palace[period]['features']['train_y'],
 # -- ------------------------------------------------------------------------------- ------------------- -- #
 
 # metric type (all the available in iter_opt['fitness'])
-metric_case = 'auc-inv-weighted'
+metric_case = 'acc-train'
 
 # models to explore results
 model_case = 'l1-svm'
@@ -153,10 +153,10 @@ mode_repetitions = pd.DataFrame(met_cases[model_case]['met_mode']['data']).T
 # -- ------------------------------------------------------------------------ -------------------------- -- #
 
 # period to explore results
-period_case = 's_02_2011'
+period_case = 'q_02_2011'
 
 # models to explore results
-model_case = 'l1-svm'
+model_case = 'logistic-elasticnet'
 
 # data
 sym_data = met_cases[model_case]['hof_metrics']['data'][period_case]['features']['sym_features']
@@ -178,7 +178,7 @@ sym_fitness = sym_data['best_programs']['fitness']
 case = 'met_max'
 
 # Pick model to generate the plot
-model_case = 'ann-mlp'
+model_case = 'logistic-elasticnet'
 
 # Generate title
 plot_title = 'inFold ' + case + ' for: ' + model_case + ' ' + met_cases[model_case][case]['period']
@@ -188,12 +188,9 @@ dt.theme_plot_3['p_labels']['title'] = plot_title
 
 # Get data from met_cases
 train_y = met_cases[model_case][case]['data']['results']['data']['train']
-# test_y = met_cases[model_case][case]['data']['results']['data']['test']
 
 # Get data for prices and predictions
 ohlc_prices = folds[met_cases[model_case][case]['period']]
-# ohlc_class = {'train_y': train_y['train_y'], 'train_y_pred': train_y['train_pred_y'],
-#               'test_y': test_y['test_y'], 'test_y_pred': test_y['test_pred_y']}
 
 ohlc_class = {'train_y': train_y['train_y'], 'train_y_pred': train_y['train_pred_y']}
 
@@ -220,13 +217,13 @@ case = 'met_max'
 subset = 'train'
 
 # metric to use
-metric_case = 'acc-test'
+metric_case = 'acc-train'
 
 # Model to evaluate
-model_case = 'l1-svm'
+model_case = 'logistic-elasticnet'
 
 # period 
-period_case = 's_02_2011'
+period_case = 'q_02_2011'
 
 # parameters of the evaluated models
 d_params = memory_palace[period_case][model_case]['p_hof']['hof']
@@ -253,13 +250,13 @@ plot_4 = vs.g_multiroc(p_data=d_plot_4, p_metric=metric_case, p_theme=dt.theme_p
 # -- --------------------------------------------------------------------------------- ----------------- -- #
 
 # metric type (all the available in iter_opt['fitness'])
-metric_case = 'acc-inv-weighted'
+metric_case = 'acc-train'
 
 # Model to evaluate
-model_case = 'l1-svm'
+model_case = 'logistic-elasticnet'
 
 # period 
-period_case = 's_02_2011'
+period_case = 'q_02_2011'
 
 # data subset to use
 subset = 'train'
@@ -269,7 +266,7 @@ met_cases = fn.model_cases(p_models=ml_models, p_global_cases=memory_palace, p_d
                            p_cases_type=metric_case)
 
 # Global Evaluation for a particular type of case
-global_models = fn.global_evaluation(p_hof=memory_palace[period_case][model_case]['p_hof']['hof'],
+global_models = fn.global_evaluation(p_case=memory_palace[period_case][model_case],
                                      p_global_data=data,
                                      p_features=memory_palace[period_case],
                                      p_model=model_case)
@@ -295,19 +292,15 @@ global_model['model']['pro-metrics']['logloss-mean']
 # Get data for prices and predictions
 ohlc_prices = data
 
-# ohlc_class = {'train_y': global_model['model']['results']['data']['train']['train_y'],
-#               'train_y_pred': global_model['model']['results']['data']['train']['train_pred_y'],
-#               'test_y': global_model['model']['results']['data']['test']['test_y'],
-#               'test_y_pred': global_model['model']['results']['data']['test']['test_pred_y']}
-
-ohlc_class = {'train_y': global_model['model']['results']['data']['train']['train_y'],
-              'train_y_pred': global_model['model']['results']['data']['train']['train_pred_y']}
+# data for plot
+ohlc_class = {'test_y': global_model['model']['results']['data']['test']['test_y'],
+              'test_y_pred': global_model['model']['results']['data']['test']['test_pred_y']}
 
 # Plot title
 dt.theme_plot_3['p_labels']['title'] = 'Global results with t-fold optimized parameters'
 
 # Dates for vertical lines in the T-Folds plot
-date_vlines = [ohlc_class['train_y'].index[-1]]
+date_vlines = [ohlc_class['test_y'].index[-1]]
 
 # Make plot
 plot_5 = vs.g_ohlc_class(p_ohlc=ohlc_prices, p_theme=dt.theme_plot_3, p_data_class=ohlc_class,

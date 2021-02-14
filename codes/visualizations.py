@@ -152,66 +152,55 @@ def g_ohlc_class(p_ohlc, p_theme, p_data_class, p_vlines):
 
     # reset the index of the input data
     p_ohlc.reset_index(inplace=True, drop=True)
-
-    # p_ohlc has all the prices and p_data_class has the prediction classes
-    # since p_data_class is smaller than p_ohlc, a lagged shift is needed
-    feature_lag = int(np.where(p_ohlc['timestamp'] == p_data_class['train_y'].index[0])[0]) 
-    ohlc_lag = list(np.arange(0, feature_lag, 1))
     
-    # add vertical line to indicate where ends the ohlc lag for feature engineering
-    p_vlines.append(p_ohlc['timestamp'][feature_lag])
-    p_vlines = sorted(p_vlines)
-
     # auxiliar lists
-    train_error = []
-    test_error = []
-    test_success = []
-    train_success = []
+    train_test_error = []
+    train_test_success = []
 
-    # with reference of p_ohlc
-    # index of train data in p_ohlc (taking to account lagged shift needed)
-    train_ind = [feature_lag + 1, feature_lag + len(p_data_class['train_y'])]
+    if 'train_y' in list(p_data_class.keys())[0]:
 
-    # error and success in train
-    for row_e in np.arange(0, len(p_data_class['train_y'].index.to_list()), 1):
-        if p_data_class['train_y'][row_e] != p_data_class['train_y_pred'][row_e]:
-            train_error.append(feature_lag + row_e)
-        else:
-            train_success.append(feature_lag + row_e)
+        # p_ohlc has all the prices and p_data_class has the prediction classes
+        # since p_data_class is smaller than p_ohlc, a lagged shift is needed
+        feature_lag = int(np.where(p_ohlc['timestamp'] == p_data_class['train_y'].index[0])[0]) 
+        ohlc_lag = list(np.arange(0, feature_lag, 1))
+        
+        # add vertical line to indicate where ends the ohlc lag for feature engineering
+        p_vlines.append(p_ohlc['timestamp'][feature_lag])
+        p_vlines = sorted(p_vlines)
 
-    # accuracy in train data set
-    train_test_acc = round(len(train_success) / (len(train_error) + len(train_success)), 2)
+        # error and success in train
+        for row_e in np.arange(0, len(p_data_class['train_y'].index.to_list()), 1):
+            if p_data_class['train_y'][row_e] != p_data_class['train_y_pred'][row_e]:
+                train_test_error.append(feature_lag + row_e)
+            else:
+                train_test_success.append(feature_lag + row_e)
 
-    long_data = len(p_ohlc) + feature_lag
-
-    train_test_success = train_success
-    train_test_error = train_error
+        # accuracy in train data set
+        train_test_acc = round(len(train_test_success) / (len(train_test_error) + len(train_test_success)), 2)
 
     # ------------------------------------------------------------------------------ In case of test set -- #
     
     if 'test_y' in list(p_data_class.keys())[0]:
-        # index of test in p_ohlc
-        test_ind = [train_ind[1] + 1, train_ind[1] + len(p_data_class['test_y'])]
+        
+        # p_ohlc has all the prices and p_data_class has the prediction classes
+        # since p_data_class is smaller than p_ohlc, a lagged shift is needed
+        feature_lag = int(np.where(p_ohlc['timestamp'] == p_data_class['test_y'].index[0])[0]) 
+        ohlc_lag = list(np.arange(0, feature_lag, 1))
+        
+        # add vertical line to indicate where ends the ohlc lag for feature engineering
+        p_vlines.append(p_ohlc['timestamp'][feature_lag])
+        p_vlines = sorted(p_vlines)
 
         # error and success in test
         for row_s in np.arange(0, len(p_data_class['test_y'].index.to_list()), 1):
             if p_data_class['test_y'][row_s] != p_data_class['test_y_pred'][row_s]:
-                test_error.append(train_ind[1] + row_s)
+                train_test_error.append(feature_lag + row_s)
             else:
-                test_success.append(train_ind[1] + row_s)
-
-        # accuracy in train data set
-        test_acc = round(len(test_success) / (len(test_error) + len(test_success)), 2)
-
-        long_data =  len(p_ohlc['train_y']) + len(p_ohlc['test_y'])
+                train_test_success.append(feature_lag + row_s)
 
         # overall accuracy
-        train_test_acc = round((len(train_success) + len(test_success)) / long_data, 2)
+        train_test_acc = round(len(train_test_success) / (len(train_test_error) + len(train_test_success)), 2)
 
-        # train and test errors index in p_ohlc 
-        train_test_error = train_error + test_error
-        # train and test success in a list
-        train_test_success = train_success + test_success
 
     # Instantiate a figure object
     fig_g_ohlc = go.Figure()    

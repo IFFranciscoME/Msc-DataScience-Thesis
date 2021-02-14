@@ -20,10 +20,10 @@ import itertools
 # ---------------------------------------------------------------------------------- ------------------- -- #
 
 # Short Version for Testing
-iter_fold = ['semester']
+iter_fold = ['semester', 'year']
 iter_opt = {'inner-split': ['30', '0'],
-            'fitness': ['acc-inv-weighted'],
-            'scaling': ['pre-features', 'post-features'], 'transform': ['robust']}
+            'fitness': ['auc-inv-weighted', 'logloss-inv-weighted'],
+            'scaling': ['pre-features', 'post-features'], 'transform': ['scale', 'robust']}
 
 # Values for T-Fold size
 # iter_fold = ['quarter', 'semester', 'year', 'bi-year', '80-20']
@@ -110,10 +110,11 @@ for file_f in files_f:
         price_data['MP_D_' + year_f] = data_f
 
 # One period data concatenation (Fast run of main.py)
-ohlc_data = pd.concat([price_data[list(price_data.keys())[0]]])
+# ohlc_data = pd.concat([price_data[list(price_data.keys())[0]]])
 
-# ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
-#                       price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]]])
+ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
+                       price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
+                       price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]]])
 
 # All periods data concatenation (Slow run of main.py)
 # ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],

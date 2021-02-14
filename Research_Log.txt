@@ -41,9 +41,6 @@
 |   Meeting        | With thesis director               | 12:00 12.Feb.2021  | 1.0          |                  |
 |   Coding         | ohlc_class plot fix                | 14:00 12.Feb.2021  | 1.0          |                  |
 |   Writing        | cross-validation in finance        | 19:00 12.Feb.2021  | 3.0          |                  |
-
 |   Coding         | inner-split as iterations option   | 17:00 13.Feb.2021  | 3.0          |                  |
-
 |   Learning       | cross-validation in finance        | 20:00 13.Feb.2021  | 1.0          |                  |
-
-|   Coding         | K-Fold without inner-split feature | 21:00 13.Feb.2021  | 3.0          |                  |
+|   Coding         | K-Fold without inner-split feature | 21:00 13.Feb.2021  | 4.0          |                  |
