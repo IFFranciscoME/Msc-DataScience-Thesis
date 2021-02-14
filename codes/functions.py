@@ -502,10 +502,13 @@ def genetic_programed_features(p_data, p_split):
     ----------
     p_data: pd.DataFrame
         con datos completos para ajustar modelos
+        
         p_data = m_folds['periodo_1']
 
     p_split: int
         split in test
+
+        p_split = '0'
 
     Returns
     -------
@@ -541,18 +544,30 @@ def genetic_programed_features(p_data, p_split):
     model_data = {}
 
     # if size != 0 then an inner fold division is performed with size*100 % as test and the rest for train
-    size = int(p_split)/100
+    size = float(p_split)/100
+    
+    # there is a inner-split in order to have train-test inside fold
+    if size != 0:
+        
+        # automatic data sub-sets division according to inner-split
+        xtrain, xtest, ytrain, ytest = train_test_split(datos_modelo, datos_y, test_size=size, shuffle=False)
 
-    # -- -- Dividir datos 80-20
-    xtrain, xtest, ytrain, ytest = train_test_split(datos_modelo, datos_y, test_size=size, shuffle=False)
+        # data organization
+        model_data['train_x'] = xtrain.copy()
+        model_data['train_y'] = ytrain.copy()
+        model_data['test_x'] = xtest.copy()
+        model_data['test_y'] = ytest.copy()
 
-    # division de datos
-    model_data['train_x'] = xtrain.copy()
-    model_data['train_y'] = ytrain.copy()
-    model_data['test_x'] = xtest.copy()
-    model_data['test_y'] = ytest.copy()
+        return {'model_data': model_data, 'sym_data': sym_data}
+    
+    # No inner-split in the fold, therefore, all data is considered 1 train set and wont have a test set
+    else:
 
-    return {'model_data': model_data, 'sym_data': sym_data}
+        # data organization
+        model_data['train_x'] = datos_modelo.copy()
+        model_data['train_y'] = datos_y.copy()
+
+        return {'model_data': model_data, 'sym_data': sym_data}
 
 
 # --------------------------------------------------------- EXPLORATORY DATA ANALYSIS & FEATURES METRICS -- #
@@ -608,7 +623,7 @@ def data_profile(p_data, p_type, p_mult):
         return [lower_out, upper_out]
 
     # in the case of a binary target variable
-    if p_type == 'target_class':
+    if p_type == 'target':
         # print(type(p_data))
         return p_data.value_counts()
 
@@ -660,7 +675,7 @@ def data_profile(p_data, p_type, p_mult):
 # -- ---------------------------------------------------- DATA PROCESSING: Metrics for Model Performance -- # 
 # -- ---------------------------------------------------- ---------------------------------------------- -- #
 
-def model_metrics(p_model, p_data):
+def model_metrics(p_model, p_model_data):
     """
     
     Parameters
@@ -681,44 +696,62 @@ def model_metrics(p_model, p_data):
 
     """
 
-    # fitted train values
-    p_y_train_d = p_model.predict(p_data['x_train'])
-    p_y_result_train = pd.DataFrame({'y_train': p_data['y_train'], 'y_train_pred': p_y_train_d})
+    # Data keys, could be ['x_train', 'y_train'] or ['x_train', 'y_train', 'x_test', 'y_test']
+    data_keys = list(p_model_data.keys())
+
+    # Fitted train values
+    p_y_train_d = p_model.predict(p_model_data['train_x'])
+    p_y_result_train = pd.DataFrame({'train_y': p_model_data['train_y'], 'train_pred_y': p_y_train_d})
     # Confussion matrix
-    cm_train = confusion_matrix(p_y_result_train['y_train'], p_y_result_train['y_train_pred'])
+    cm_train = confusion_matrix(p_y_result_train['train_y'], p_y_result_train['train_pred_y'])
     # Probabilities of class in train data
-    probs_train = p_model.predict_proba(p_data['x_train'])
-    # in case of a nan, replace it with zero (to prevent errors)
+    probs_train = p_model.predict_proba(p_model_data['train_x'])
+    # In case of a nan, replace it with zero (to prevent errors)
     probs_train = np.nan_to_num(probs_train)
 
     # Accuracy rate
-    acc_train = round(accuracy_score(list(p_data['y_train']), p_y_train_d), 4)
+    acc_train = round(accuracy_score(list(p_model_data['train_y']), p_y_train_d), 4)
     # False Positive Rate, True Positive Rate, Thresholds
-    fpr_train, tpr_train, thresholds = roc_curve(list(p_data['y_train']), probs_train[:, 1], pos_label=1)
+    fpr_train, tpr_train, thresholds = roc_curve(list(p_model_data['train_y']),
+                                                      probs_train[:, 1], pos_label=1)
     # Area Under the Curve (ROC) for train data
-    auc_train = round(roc_auc_score(list(p_data['y_train']), probs_train[:, 1]), 4)
+    auc_train = round(roc_auc_score(list(p_model_data['train_y']), probs_train[:, 1]), 4)
 
     # Logloss (Binary cross-entropy function)
-    logloss_train = log_loss(p_data['y_train'], p_y_train_d)
+    logloss_train = log_loss(p_model_data['train_y'], p_y_train_d)
 
-    # fitted test values
-    p_y_test_d = p_model.predict(p_data['x_test'])
-    p_y_result_test = pd.DataFrame({'y_test': p_data['y_test'], 'y_test_pred': p_y_test_d})
-    cm_test = confusion_matrix(p_y_result_test['y_test'], p_y_result_test['y_test_pred'])
-    # Probabilities of class in test data
-    probs_test = p_model.predict_proba(p_data['x_test'])
-    # in case of a nan, replace it with zero (to prevent errors)
-    probs_test = np.nan_to_num(probs_test)
+    # In the case of the presence of a test set, with both x and y, do calculations accordingly
+    if 'test_x' in data_keys and 'test_y' in data_keys:
 
-    # Accuracy rate
-    acc_test = round(accuracy_score(list(p_data['y_test']), p_y_test_d), 4)
-    # False Positive Rate, True Positive Rate, Thresholds
-    fpr_test, tpr_test, thresholds_test = roc_curve(list(p_data['y_test']), probs_test[:, 1], pos_label=1)
-    # Area Under the Curve (ROC) for train data
-    auc_test = round(roc_auc_score(list(p_data['y_test']), probs_test[:, 1]), 4)
+        # Fitted test values
+        p_y_test_d = p_model.predict(p_model_data['test_x'])
+        p_y_result_test = pd.DataFrame({'test_y': p_model_data['test_y'], 'test_pred_y': p_y_test_d})
+        cm_test = confusion_matrix(p_y_result_test['test_y'], p_y_result_test['test_pred_y'])
+        # Probabilities of class in test data
+        probs_test = p_model.predict_proba(p_model_data['test_x'])
+        # In case of a nan, replace it with zero (to prevent errors)
+        probs_test = np.nan_to_num(probs_test)
 
-    # Logloss (Binary cross-entropy function)
-    logloss_test = log_loss(p_data['y_test'], p_y_test_d)
+        # Accuracy rate
+        acc_test = round(accuracy_score(list(p_model_data['test_y']), p_y_test_d), 4)
+        # False Positive Rate, True Positive Rate, Thresholds
+        fpr_test, tpr_test, thresholds_test = roc_curve(list(p_model_data['test_y']),
+                                                             probs_test[:, 1], pos_label=1)
+        # Area Under the Curve (ROC) for train data
+        auc_test = round(roc_auc_score(list(p_model_data['test_y']), probs_test[:, 1]), 4)
+
+        # Logloss (Binary cross-entropy function)
+        logloss_test = log_loss(p_model_data['test_y'], p_y_test_d)
+
+    # Data duplication to not alter other calculatiosn below
+    cm_test = cm_train
+    probs_test = probs_train
+    acc_test = acc_train
+    fpr_test = fpr_train
+    tpr_test = tpr_train
+    auc_test = auc_train
+    logloss_test = logloss_train
+    p_y_result_test = p_y_result_train
 
     # -- ----------------------------------------------------------------------------------------------------
 
@@ -797,14 +830,6 @@ def logistic_net(p_data, p_params):
 
     """
 
-    # Datos de entrenamiento
-    x_train = p_data['train_x']
-    y_train = p_data['train_y']
-
-    # Datos de prueba
-    x_test = p_data['test_x']
-    y_test = p_data['test_y']
-
     # ------------------------------------------------------------------------------ FUNCTION PARAMETERS -- #
     # model hyperparameters
     # alpha, l1_ratio,
@@ -818,11 +843,10 @@ def logistic_net(p_data, p_params):
                                   max_iter=1e6, fit_intercept=False, random_state=123)
 
     # model fit
-    en_model.fit(x_train, y_train)
+    en_model.fit(p_data['train_x'].copy(), p_data['train_y'].copy())
 
    # performance metrics of the model
-    metrics_en_model = model_metrics(p_model=en_model, p_data={'x_train': x_train, 'y_train': y_train,
-                                                               'x_test': x_test, 'y_test': y_test})
+    metrics_en_model = model_metrics(p_model=en_model, p_model_data=p_data.copy())
 
     return metrics_en_model
 
@@ -873,12 +897,6 @@ def l1_svm(p_data, p_params):
 
     """
 
-    x_train = p_data['train_x']
-    y_train = p_data['train_y']
-
-    x_test = p_data['test_x']
-    y_test = p_data['test_y']
-
     # ------------------------------------------------------------------------------ FUNCTION PARAMETERS -- #
     # model hyperparameters
     # C, kernel, degree (if kernel = poly), gamma (if kernel = {rbf, poly, sigmoid},
@@ -896,11 +914,10 @@ def l1_svm(p_data, p_params):
                     break_ties=False, random_state=123)
 
     # model fit
-    svm_model.fit(x_train, y_train)
+    svm_model.fit(p_data['train_x'].copy(), p_data['train_y'].copy())
 
     # performance metrics of the model
-    metrics_svm_model = model_metrics(p_model=svm_model, p_data={'x_train': x_train, 'y_train': y_train,
-                                                                 'x_test': x_test, 'y_test': y_test})
+    metrics_svm_model = model_metrics(p_model=svm_model, p_model_data=p_data.copy())
 
     return metrics_svm_model
 
@@ -946,12 +963,6 @@ def ann_mlp(p_data, p_params):
 
     """
 
-    x_train = p_data['train_x']
-    y_train = p_data['train_y']
-
-    x_test = p_data['test_x']
-    y_test = p_data['test_y']
-
     # ------------------------------------------------------------------------------ FUNCTION PARAMETERS -- #
     # model hyperparameters
     # hidden_layer_sizes, activation, solver, alpha, 
@@ -960,7 +971,7 @@ def ann_mlp(p_data, p_params):
     # warm_start, momentum, nesterovs_momentum, early_stopping, validation_fraction
 
     # the batch size will be 50% of the training data length or 75
-    batch = max(25, len(x_train)//8)
+    batch = max(25, len(p_data['train_x'])//8)
     # print(batch)
 
     # model function
@@ -975,11 +986,10 @@ def ann_mlp(p_data, p_params):
                               n_iter_no_change=100)
 
     # model fit
-    mlp_model.fit(x_train, y_train)
+    mlp_model.fit(p_data['train_x'].copy(), p_data['train_y'].copy())
 
     # performance metrics of the model
-    metrics_mlp_model = model_metrics(p_model=mlp_model, p_data={'x_train': x_train, 'y_train': y_train,
-                                                                 'x_test': x_test, 'y_test': y_test})
+    metrics_mlp_model = model_metrics(p_model=mlp_model, p_model_data=p_data.copy())
 
     return metrics_mlp_model
 
@@ -987,7 +997,7 @@ def ann_mlp(p_data, p_params):
 # --------------------------------------------------------------- FUNCTION: Genetic Algorithm Evaluation -- #
 # --------------------------------------------------------------- ----------------------------------------- #
 
-def genetic_algo_evaluate(p_individual, p_data, p_model, p_fit_type):
+def genetic_algo_evaluate(p_individual, p_eval_data, p_model, p_fit_type):
     """
     To evaluate an individual used in the genetic optimization process
 
@@ -1018,18 +1028,18 @@ def genetic_algo_evaluate(p_individual, p_data, p_model, p_fit_type):
 
     if p_model == 'logistic-elasticnet':
         # model results
-        model = logistic_net(p_data=p_data, p_params=chromosome)
+        model = logistic_net(p_data=p_eval_data, p_params=chromosome)
         
     elif p_model == 'l1-svm':
         # model results
-        model = l1_svm(p_data=p_data, p_params=chromosome)
+        model = l1_svm(p_data=p_eval_data, p_params=chromosome)
 
     elif p_model == 'ann-mlp':
       # model results  
-        model = ann_mlp(p_data=p_data, p_params=chromosome)
+        model = ann_mlp(p_data=p_eval_data, p_params=chromosome)
    
     else:
-        print('error en genetic_algo_evaluate')
+        print('error: genetic_algo_evaluate presented error')
 
     # pro-metrics list of metrics to evaluate
     if p_fit_type in list(model['pro-metrics'].keys()):
@@ -1134,7 +1144,7 @@ def genetic_algo_optimization(p_data, p_model, p_opt_params, p_fit_type):
             # the return of the function has to be always a tupple, thus the inclusion of the ',' at the end
 
             model_fit = genetic_algo_evaluate(p_individual=eva_individual,
-                                              p_data=p_data, p_model='logistic-elasticnet',
+                                              p_eval_data=p_data, p_model='logistic-elasticnet',
                                               p_fit_type=p_fit_type)
 
             return model_fit,
@@ -1217,7 +1227,7 @@ def genetic_algo_optimization(p_data, p_model, p_opt_params, p_fit_type):
         def evaluate_svm(eva_individual):
 
             model_fit = genetic_algo_evaluate(p_individual=eva_individual,
-                                                p_data=p_data, p_model='l1-svm',
+                                                p_eval_data=p_data, p_model='l1-svm',
                                                 p_fit_type=p_fit_type)
 
             return model_fit,
@@ -1301,7 +1311,7 @@ def genetic_algo_optimization(p_data, p_model, p_opt_params, p_fit_type):
         def evaluate_mlp(eva_individual):
 
             model_fit = genetic_algo_evaluate(p_individual=eva_individual,
-                                                p_data=p_data, p_model='ann-mlp',
+                                                p_eval_data=p_data, p_model='ann-mlp',
                                                 p_fit_type=p_fit_type)
 
             return model_fit,
@@ -1397,7 +1407,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
             'weighted': a weighted average is calculated between train (80%) and test (20%) AUC
             'inv-weighted': an inverse weighted average is calculated between train (20%) and test (80%) AUC
         
-        p_fit_type = 'weighted'
+        p_fit_type = 'acc-train'
     
     p_transform: str
         type of transformation to perform to the data
@@ -1412,11 +1422,13 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
         'pre-features': previous to the feature engineering (features will not be transformed)
         'post-features': after the feature engineering (features will be transformed)       
 
-        p_scaling = 'post-features'
+        p_scaling = 'pre-features'
     
     p_inner_split: float
         Proportion of the test split in the data as a representation of a inner-split in a k-fold process
         if 0 then no test split is performed and all the data is treated as train.
+
+        p_inner_split = '0'
 
     Returns
     -------
@@ -1517,25 +1529,27 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
             logger.debug('\n\n{}\n'.format(df_log_2))
 
             # Data scaling in train
-            m_features['model_data']['train_x'] = data_scaler(p_data=m_features['model_data']['train_x'],
-            p_trans=p_transform)
+            for data in list(m_features['model_data'].keys()):
+                # debugging
+                # data = list(m_features['model_data'].keys())[1]
 
-            # Data scaling in test
-            m_features['model_data']['test_x'] = data_scaler(p_data=m_features['model_data']['test_x'],
-            p_trans=p_transform)
+                # just scale the features inner data-sets, not the target variable
+                if data[-1] == 'x':
+                    m_features['model_data'][data] = data_scaler(p_data=m_features['model_data'][data],
+                                                                 p_trans=p_transform)
         
         else:
-            print('error in p_scaling value')
+            print('error: p_scaling value not valid')
 
-        # Feature metrics for FEATURES and TARGET variable
-        ft_metrics = {'train_x': data_profile(p_data=m_features['model_data']['train_x'],
-                                              p_type='ts', p_mult=10000),
-                      'test_x': data_profile(p_data=m_features['model_data']['test_x'],
-                                             p_type='ts', p_mult=10000),
-                      'train_y': data_profile(p_data=m_features['model_data']['train_y'],
-                                              p_type='target_class', p_mult=10000),
-                      'test_y': data_profile(p_data=m_features['model_data']['test_y'],
-                                             p_type='target_class', p_mult=10000)}
+        # features data profile 
+        ft_metrics = {}
+        for data in list(m_features['model_data'].keys()):
+            if data[-1] == 'y':
+                data_type = 'target' 
+            else:
+                data_type = 'ts'
+            ft_metrics.update({data: data_profile(p_data=m_features['model_data'][data],
+                                                  p_type=data_type, p_mult=10000)})
         
         # save calculated metrics
         memory_palace[period]['metrics'] = {'data_metrics': dt_metrics, 'feature_metrics': ft_metrics}
@@ -1558,6 +1572,8 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
 
         # cycle to iterate all models
         for model in p_models:
+            # debugging
+            # model = p_models[0]
 
             # Optimization
             
@@ -1618,6 +1634,12 @@ def global_evaluation(p_hof, p_data, p_features, p_model):
     Parameters
     ----------
 
+    p_hof
+    p_data
+    p_features
+    p_model
+
+
 
     Returns
     -------
@@ -1640,13 +1662,10 @@ def global_evaluation(p_hof, p_data, p_features, p_model):
     g_sym_data = p_features['sym_features']['model'].transform(g_linear_data)
     g_global_data = pd.DataFrame(np.hstack((g_linear_data, g_sym_data)))
 
-    # data division    
+    # data format
     global_data = {}
-    xtrain, xtest, ytrain, ytest = train_test_split(g_global_data, g_y_target, test_size=0.01, shuffle=False)
-    global_data['train_x'] = xtrain
-    global_data['train_y'] = ytrain
-    global_data['test_x'] = xtest
-    global_data['test_y'] = ytest
+    global_data['train_x'] = g_global_data
+    global_data['train_y'] = g_y_target
 
     # --------------------------------------------------------------- ITERATIVE GLOBAL EVALUATION OF HOF -- #
     
@@ -1655,6 +1674,7 @@ def global_evaluation(p_hof, p_data, p_features, p_model):
     
     # iterative evaluation
     for individual_params in hof_params:
+        # individual_params = hof_params[0]
     
         if p_model == 'logistic-elasticnet':
             parameters = {'ratio': individual_params[0], 'c': individual_params[1]}
@@ -1664,14 +1684,14 @@ def global_evaluation(p_hof, p_data, p_features, p_model):
 
         elif p_model == 'l1-svm':
             parameters = {'c': individual_params[0], 'kernel': individual_params[1],
-                        'gamma': individual_params[2]}
+                          'gamma': individual_params[2]}
 
             global_results.append({'global_data': global_data, 'global_parameters': parameters,
                                 'model': l1_svm(p_data=global_data, p_params=parameters)})
 
         elif p_model == 'ann-mlp':
             parameters = {'hidden_layers': individual_params[0], 'activation': individual_params[1],
-                        'alpha': individual_params[2], 'learning_rate_init': individual_params[3]}
+                          'alpha': individual_params[2], 'learning_rate_init': individual_params[3]}
 
             global_results.append({'global_data': global_data, 'global_parameters': parameters,
                                 'model': ann_mlp(p_data=global_data, p_params=parameters)})

@@ -213,9 +213,9 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 
 # -- NECESSARY
 
-- (pending) Refactor code for timeseries data of metric evolution g_timeseries_auc
-
 - (pending) Refactor project in order to work with no train-test split in inner data sets of the t-folds
+
+- (pending) Refactor code for timeseries data of metric evolution g_timeseries_auc
 
 - (pending) reduce time elapsed by global evaluation function
 

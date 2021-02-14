@@ -21,9 +21,9 @@ import itertools
 
 # Short Version for Testing
 iter_fold = ['semester']
-iter_opt = {'inner-split': ['30'],
-            'fitness': ['acc-inv-weighted', 'auc-inv-weighted', 'logloss-inv-weighted'],
-            'scaling': ['pre-features', 'post-features'], 'transform': ['standard', 'robust']}
+iter_opt = {'inner-split': ['30', '0'],
+            'fitness': ['acc-inv-weighted'],
+            'scaling': ['pre-features', 'post-features'], 'transform': ['robust']}
 
 # Values for T-Fold size
 # iter_fold = ['quarter', 'semester', 'year', 'bi-year', '80-20']

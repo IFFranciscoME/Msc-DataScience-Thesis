@@ -186,8 +186,8 @@ test_y = met_cases[model_case][case]['data']['results']['data']['test']
 
 # Get data for prices and predictions
 ohlc_prices = folds[met_cases[model_case][case]['period']]
-ohlc_class = {'train_y': train_y['y_train'], 'train_y_pred': train_y['y_train_pred'],
-              'test_y': test_y['y_test'], 'test_y_pred': test_y['y_test_pred']}
+ohlc_class = {'train_y': train_y['train_y'], 'train_y_pred': train_y['train_pred_y'],
+              'test_y': test_y['test_y'], 'test_y_pred': test_y['test_pred_y']}
 
 # Dates for vertical lines in the T-Folds plot
 date_vlines = [ohlc_class['train_y'].index[-1]]
@@ -287,10 +287,10 @@ global_model['model']['pro-metrics']['logloss-mean']
 # Get data for prices and predictions
 ohlc_prices = data
 
-ohlc_class = {'train_y': global_model['model']['results']['data']['train']['y_train'],
-              'train_y_pred': global_model['model']['results']['data']['train']['y_train_pred'],
-              'test_y': global_model['model']['results']['data']['test']['y_test'],
-              'test_y_pred': global_model['model']['results']['data']['test']['y_test_pred']}
+ohlc_class = {'train_y': global_model['model']['results']['data']['train']['train_y'],
+              'train_y_pred': global_model['model']['results']['data']['train']['train_pred_y'],
+              'test_y': global_model['model']['results']['data']['test']['test_y'],
+              'test_y_pred': global_model['model']['results']['data']['test']['test_pred_y']}
 
 # Plot title
 dt.theme_plot_3['p_labels']['title'] = 'Global results with t-fold optimized parameters'
