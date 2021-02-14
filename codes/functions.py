@@ -677,7 +677,7 @@ def model_metrics(p_model, p_data):
 
     References
     ----------
-
+    https://scikit-learn.org/stable/modules/model_evaluation.html#model-evaluation
 
     """
 
@@ -728,10 +728,12 @@ def model_metrics(p_model, p_data):
                    'acc-weighted': round((acc_train*0.80 + acc_test*0.20)/2, 4), 
                    'acc-inv-weighted': round((acc_train*0.20 + acc_test*0.80)/2, 4),
 
+                   'auc-train': round(auc_train, 4), 'auc-test': round(auc_test, 4),
                    'auc-mean': round((auc_train + auc_test)/2, 4),
                    'auc-weighted': round((auc_train*0.80 + auc_test*0.20)/2, 4),
                    'auc-inv-weighted': round((auc_train*0.20 + auc_test*0.80)/2, 4),
 
+                   'logloss-train': round(auc_train, 4), 'logloss-test': round(auc_test, 4),
                    'logloss-mean': round((logloss_train + logloss_test)/2, 4),
                    'logloss-weighted': round((logloss_train*0.80 + logloss_test*0.20)/2, 4),
                    'logloss-inv-weighted': round((logloss_train*0.20 + logloss_test*0.80)/2, 4)}
@@ -1543,8 +1545,8 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
 
         logger.debug('---- Optimization Fitness: ' + p_fit_type)
         logger.debug('---- Data Scaling Order: ' + p_scaling)
-        logger.debug('---- Data Transformation: ' + p_transform + '\n')
-        logger.debug('---- Test set inner-split: ' + p_inner_split)
+        logger.debug('---- Data Transformation: ' + p_transform)
+        logger.debug('---- Test set inner-split: ' + p_inner_split + '\n')
 
         logger.info("Feature Engineering in Fold done in = " + str(datetime.now() - init) + '\n')
 
