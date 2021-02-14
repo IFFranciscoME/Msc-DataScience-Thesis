@@ -1544,6 +1544,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
         logger.debug('---- Optimization Fitness: ' + p_fit_type)
         logger.debug('---- Data Scaling Order: ' + p_scaling)
         logger.debug('---- Data Transformation: ' + p_transform + '\n')
+        logger.debug('---- Test set inner-split: ' + p_inner_split)
 
         logger.info("Feature Engineering in Fold done in = " + str(datetime.now() - init) + '\n')
 
