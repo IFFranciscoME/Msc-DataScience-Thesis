@@ -20,20 +20,21 @@ import itertools
 # ---------------------------------------------------------------------------------- ------------------- -- #
 
 # Short Version for Testing
-iter_fold = ['semester', 'year']
-iter_opt = {'inner-split': ['30', '0'],
-            'fitness': ['auc-inv-weighted', 'logloss-inv-weighted'],
-            'scaling': ['pre-features', 'post-features'], 'transform': ['scale', 'robust']}
+iter_fold = ['semester']
+iter_opt = {'inner-split': ['20'], 'transform': ['robust'], 'scaling': ['post-features'],
+            'fitness': ['auc-train']}
 
-# Values for T-Fold size
+# ---------------------------------------------------------------- Complete list of available parameters -- #
+
 # iter_fold = ['quarter', 'semester', 'year', 'bi-year', '80-20']
 
-# Values for three parameters inside the optimization process
-# iter_opt = {'fitness': ['auc-mean', 'auc-weighted', 'auc-inv-weighted',
-#                         'logloss-mean', 'logloss-weighted', 'logloss-inv-weighted',
-#                         'acc-train', 'acc-test', 'acc-mean', 'acc-weighted', 'acc-inv-weighted'],
+# iter_opt = {'inner-split': ['20', 0],
 #             'transform': ['scale', 'normalize', 'robust'],
-#             'scaling': ['post-features', 'pre-features']}
+#             'scaling': ['post-features', 'pre-features'],
+#             'fitness': ['auc-train', 'auc-test', 'auc-mean', 'auc-weighted', 'auc-inv-weighted',
+#                         'acc-train', 'acc-test', 'acc-mean', 'acc-weighted', 'acc-inv-weighted',
+#                         'logloss-train', 'logloss-test', 'logloss-mean', 'logloss-weighted', 
+#                         'logloss-inv-weighted']}
 
 # Iterative/Parallel Experiment Data
 iter_exp = list(itertools.product(*[iter_opt['fitness'], iter_opt['transform'],
@@ -192,7 +193,7 @@ models = {
 # ------------------------------------------------------------------ Parameters for Genetic Optimization -- #
 # ------------------------------------------------------------------ ----------------------------------- -- #
 
-optimization_params = {'halloffame':10, 'tournament': 10, 'population': 10, 'generations': 2,
+optimization_params = {'halloffame': 10, 'tournament': 20, 'population': 40, 'generations': 2,
                        'mutation': 0.2, 'crossover': 0.8}
 
 # ------------------------------------------------------------------------------------- Themes for plots -- #

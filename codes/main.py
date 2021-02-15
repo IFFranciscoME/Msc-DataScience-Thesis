@@ -56,6 +56,7 @@ if __name__ == "__main__":
 
         # List with the names of the models
         ml_models = list(dt.models.keys())
+        # ml_models = ['l1-svm']
 
         # Create a pool of workers with as many cores as the computer has
         workers = cpu_count()-1
@@ -67,12 +68,13 @@ if __name__ == "__main__":
                                                                [(folds, ml_models,
                                                                  exp[0], exp[1], exp[2], exp[3])
                                                                for exp in iter_exp])}
+
         # close pool
         pool.close()
-        # rejoin sepparated
+        # rejoin sepparated resources
         pool.join()
 
         # Measure the end of the code execution process
         end_time = datetime.now()
-        print('elapsed time for: ', iteration, ' iteration was: ', str(end_time - ini_time))
+        print('elapsed time for the wholes process: ', str(end_time - ini_time))
         # ---------------------------------------------------------------------------------------------- -- #

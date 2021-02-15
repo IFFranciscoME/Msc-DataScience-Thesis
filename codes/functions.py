@@ -1069,7 +1069,7 @@ def genetic_algo_evaluate(p_individual, p_eval_data, p_model, p_fit_type):
 # -------------------------------------------------------------------------- FUNCTION: Genetic Algorithm -- #
 # ------------------------------------------------------- ------------------------------------------------- #
 
-def genetic_algo_optimization(p_data, p_model, p_opt_params, p_fit_type):
+def genetic_algo_optimization(p_gen_data, p_model, p_opt_params, p_fit_type):
     """
     El uso de algoritmos geneticos para optimizacion de hiperparametros de varios modelos
 
@@ -1157,7 +1157,7 @@ def genetic_algo_optimization(p_data, p_model, p_opt_params, p_fit_type):
             # the return of the function has to be always a tupple, thus the inclusion of the ',' at the end
 
             model_fit = genetic_algo_evaluate(p_individual=eva_individual,
-                                              p_eval_data=p_data, p_model='logistic-elasticnet',
+                                              p_eval_data=p_gen_data, p_model='logistic-elasticnet',
                                               p_fit_type=p_fit_type)
 
             return model_fit,
@@ -1240,8 +1240,8 @@ def genetic_algo_optimization(p_data, p_model, p_opt_params, p_fit_type):
         def evaluate_svm(eva_individual):
 
             model_fit = genetic_algo_evaluate(p_individual=eva_individual,
-                                                p_eval_data=p_data, p_model='l1-svm',
-                                                p_fit_type=p_fit_type)
+                                              p_eval_data=p_gen_data, p_model='l1-svm',
+                                              p_fit_type=p_fit_type)
 
             return model_fit,
 
@@ -1324,7 +1324,7 @@ def genetic_algo_optimization(p_data, p_model, p_opt_params, p_fit_type):
         def evaluate_mlp(eva_individual):
 
             model_fit = genetic_algo_evaluate(p_individual=eva_individual,
-                                                p_eval_data=p_data, p_model='ann-mlp',
+                                                p_eval_data=p_gen_data, p_model='ann-mlp',
                                                 p_fit_type=p_fit_type)
 
             return model_fit,
@@ -1420,7 +1420,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
             'weighted': a weighted average is calculated between train (80%) and test (20%) AUC
             'inv-weighted': an inverse weighted average is calculated between train (20%) and test (80%) AUC
         
-        p_fit_type = 'acc-train'
+        p_fit_type = 'auc-inv-weighted'
     
     p_transform: str
         type of transformation to perform to the data
@@ -1428,14 +1428,14 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
         'standard': [x - mean(x)] / sd(x)
         'robust': x - median(x) / iqr(x)
 
-        p_transform = 'scale'
+        p_transform = 'robust'
 
     p_scaling: str
         Order to perform the data transformation
         'pre-features': previous to the feature engineering (features will not be transformed)
         'post-features': after the feature engineering (features will be transformed)       
 
-        p_scaling = 'pre-features'
+        p_scaling = 'post-features'
     
     p_inner_split: float
         Proportion of the test split in the data as a representation of a inner-split in a k-fold process
@@ -1546,7 +1546,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
                 # debugging
                 # data = list(m_features['model_data'].keys())[1]
 
-                # just scale the features inner data-sets, not the target variable
+                # just scale the features, not the target, of inner data-sets
                 if data[-1] == 'x':
                     m_features['model_data'][data] = data_scaler(p_data=m_features['model_data'][data],
                                                                  p_trans=p_transform)
@@ -1586,7 +1586,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
         # cycle to iterate all models
         for model in p_models:
             # debugging
-            # model = p_models[0]
+            # model = p_models[1]
 
             # Optimization
             
@@ -1596,8 +1596,9 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
 
             # -- model optimization and evaluation for every element in the Hall of Fame for every period
             # optimization process
-            hof_model = genetic_algo_optimization(p_data=m_features['model_data'], p_model=dt.models[model],
-                                                  p_opt_params=dt.optimization_params, p_fit_type=p_fit_type)
+            hof_model = genetic_algo_optimization(p_gen_data=m_features['model_data'],
+                                                  p_model=dt.models[model], p_fit_type=p_fit_type,
+                                                  p_opt_params=dt.optimization_params)
 
             # log the result of genetic algorithm
             logger.info('\n\n{}\n'.format(hof_model['logs']))
@@ -1761,7 +1762,7 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
     for model in p_models:
 
         # debugging
-        # model = p_models[0]
+        # model = p_models[1]
 
         # dummy initializations
         met_min = 1
@@ -1783,7 +1784,7 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
             # -- Case 0 (MODE INDIVIDUAL)
             # get the number of repeated individuals in the whole HoF
             for p in p_global_cases[period][model]['p_hof']['hof']:
-                # p = p_global_cases[period][model]['p_hof']['hof'][0]
+                # p = p_global_cases[period][model]['p_hof']['hof'][1]
 
                 # in case of finding a repeated parameter set
                 if str(tuple(p)) in list(met_mode[model].keys()):
@@ -1799,6 +1800,7 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
 
             # search for every individual in hall of fame
             for i in range(0, len(p_global_cases[period][model]['e_hof'])):
+                # i = 1
                 
                 if p_cases_type in list(p_global_cases[period][model]['e_hof'][i]['pro-metrics'].keys()):
                 

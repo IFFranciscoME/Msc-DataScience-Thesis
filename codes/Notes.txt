@@ -209,12 +209,20 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 - Addition: met_cases params and metric data of the min and max cases
 - Enhacement: Refactor project in order to work with no train-test split in inner data sets of the t-folds
 
+# -- 14.02.2021
+- Fix: model fit and predict separation in model evaluation
+- Enhacement: Train&Test option for plots
+
+
 # ---------------------------------------------------------------------------------------------- BACKLOG -- # 
 # ---------------------------------------------------------------------------------------------- ------- -- #
 
 # -- NECESSARY
 
-- (pending) check results of global_evaluation and the use of model.fit instead of model.predict
+- (pending) Change from sklearn to keras for ANN-MLP
+- (pending) Expand hyperparameters to search for ANN-MLP
+
+- (pending) add RandomForest classification model with scikit learn
 
 - (pending) Refactor code for timeseries data of metric evolution g_timeseries_auc
 
@@ -229,8 +237,6 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 - (pending) visual profile: Correlation heatmap for feature variables
 - (pending) visual profile: ROC curves of all HoF in the fold
 
-- (pending) add RandomForest classification model with scikit learn
-- (pending) migrate ann-mlp model from scikit learn to keras
 
 - (pending) translate every comment to english
 - (pending) translate every variable name to english
@@ -242,7 +248,16 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 ***************************************************************************************** UNORGANIZED NOTES 
 ***********************************************************************************************************
 
-# -- Para que sirve todo esto para mejorar el desempeño de modelos respecto a un procedimiento clasico?
+# -- NOTES FOR FINAL PRESENTATION
+
+- Para que sirve todo esto para mejorar el desempeño de modelos respecto a un procedimiento clasico?
+
+- como justificar el inv-weighted y proporciones
+
+- Que tan viable es que, al utilizar los parametros del mlp se puede replicar despues. 
+- lo bueno es que guardo el objeto que tiene el modelo (por las condiciones inciiales para el)
+
+- Para el caso de Ensamble, como randomforest, utilizar todos los casos en lugar de hacer los 3 mejores. 
 
 # -- For each model show
 # -- -- Objective function

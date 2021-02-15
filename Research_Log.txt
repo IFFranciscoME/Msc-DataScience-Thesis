@@ -44,3 +44,7 @@
 |   Coding         | inner-split as iterations option   | 17:00 13.Feb.2021  | 3.0          |                  |
 |   Learning       | cross-validation in finance        | 20:00 13.Feb.2021  | 1.0          |                  |
 |   Coding         | K-Fold without inner-split feature | 21:00 13.Feb.2021  | 4.0          |                  |
+|   Coding         | Fix errors train/test option       | 10:00 14.Feb.2021  | 2.0          |                  |
+
+|   Meeting        | With researcher (Riemann)          | 11:00 15.Feb.2021  | 1.0          |                  |
+|   Content        | Read Bibliography for K-Fold       | 15:00 15.Feb.2021  | 1.0          |                  |

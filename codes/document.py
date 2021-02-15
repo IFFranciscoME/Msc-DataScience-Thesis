@@ -42,7 +42,7 @@ plot_1 =vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_1, p_vlines=None)
 # ------------------------------------------------------------------------------------ ----------------- -- #
 
 # Fold size
-fold_case = 'quarter'
+fold_case = 'year'
 
 # Timeseries data division in t-folds
 folds = fn.t_folds(p_data=data, p_period=fold_case)
@@ -51,7 +51,7 @@ folds = fn.t_folds(p_data=data, p_period=fold_case)
 ml_models = list(dt.models.keys())
 
 # File name to save the data
-file_name = 'files/pickle_rick/q_logloss-inv-weighted_robust_post-features_0.dat'
+file_name = 'files/pickle_rick/y_auc-inv-weighted_robust_post-features_0.dat'
 
 # Load previously generated data
 memory_palace = dt.data_save_load(p_data_objects=None, p_data_action='load', p_data_file=file_name)
@@ -178,7 +178,7 @@ sym_fitness = sym_data['best_programs']['fitness']
 case = 'met_max'
 
 # Pick model to generate the plot
-model_case = 'logistic-elasticnet'
+model_case = 'l1-svm'
 
 # Generate title
 plot_title = 'inFold ' + case + ' for: ' + model_case + ' ' + met_cases[model_case][case]['period']
