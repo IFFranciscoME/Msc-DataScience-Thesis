@@ -10,12 +10,20 @@
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 
-from operator import index
-from pickle import TRUE
+# Modify environmental variable to suppress console log messages from TensorFlow
+import os
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+
+# from re import VERBOSE
+# from operator import index
+# from pickle import TRUE
+# from numpy.lib.function_base import percentile
+# from multiprocessing import cpu_count
+
+from rich import inspect
 import random
 import warnings
 import logging
-from numpy.lib.function_base import percentile
 import pandas as pd
 import numpy as np
 import data as dt
@@ -25,7 +33,14 @@ from sklearn.preprocessing import StandardScaler, RobustScaler, MaxAbsScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.metrics import confusion_matrix, accuracy_score, roc_auc_score, roc_curve, log_loss
-from sklearn.neural_network import MLPClassifier
+
+import tensorflow as tf
+from tensorflow.python.keras import backend as K
+
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Activation
+from keras.optimizers import SGD, Adam
+from keras import Input
 
 from datetime import datetime
 from scipy.stats import kurtosis as m_kurtosis
@@ -37,8 +52,49 @@ from deap import base, creator, tools, algorithms
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 warnings.filterwarnings('ignore', 'Solver terminated early.*')
 
-# ------------------------------------------------------------------------------- transformacio de datos -- #
-# --------------------------------------------------------------------------------- -------------------- -- #
+# ------------------------------------------------------------------ PROCESSING RESOURCES FOR TENSORFLOW -- #
+# ------------------------------------------------------------------ ----------------------------------- -- #
+
+def tf_processing(p_option, p_cores):
+    """
+    function to stablish which type of processing will be used with tensorflow
+
+    Parameters
+    ----------
+    
+    p_option: str
+        The option of process engine to use: 'cpu', 'gpu'
+
+    p_cores: int
+        The number of cores to use
+
+    References
+    ----------
+    https://www.tensorflow.org/api_docs/python/tf/compat/v1/ConfigProto
+    https://www.tensorflow.org/tutorials/distribute/parameter_server_training
+
+    """
+
+    if p_option == 'gpu':
+        num_GPU = 1
+        num_CPU = 1
+    elif p_option == 'cpu':
+        num_CPU = p_cores
+        num_GPU = 0
+    else:
+        print('error in process, p_option not valid')
+
+    config = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=p_cores,
+                                      inter_op_parallelism_threads=p_cores,
+                                      allow_soft_placement=True,
+                                      device_count = {'CPU' : num_CPU, 'GPU' : num_GPU})
+
+    session = tf.compat.v1.Session(config=config)
+    K.set_session(session)
+
+
+# ------------------------------------------------------------------------------------ DATA PRE-SCALLING -- #
+# ------------------------------------------------------------------------------------ ----------------- -- #
 
 def data_scaler(p_data, p_trans):
     """
@@ -673,11 +729,163 @@ def data_profile(p_data, p_type, p_mult):
 
 
 # -- ---------------------------------------------------- DATA PROCESSING: Metrics for Model Performance -- # 
-# -- ---------------------------------------------------- ---------------------------------------------- -- #
+# -- ---------------------------------------------------- ---------------------------------- TENSOR FLOW -- #
 
-def model_metrics(p_model, p_model_data):
+def tf_model_metrics(p_model, p_model_data, p_history):
     """
+    Tensorflow ready model metrics
     
+    Parameters
+    ----------
+    p_model: str
+        string with the name of the model
+    
+    p_data: dict
+        With x_train, x_test, y_train, y_test keys of its respective pd.DataFrames
+   
+    Returns
+    -------
+    r_model_metrics
+
+    References
+    ----------
+    https://keras.io/api/metrics/
+
+    """
+
+     # Data keys, could be ['x_train', 'y_train'] or ['x_train', 'y_train', 'x_test', 'y_test']
+    data_keys = list(p_model_data.keys())
+    
+    # -- ALWAYS TRAIN SET: Assume that always is going to be train_x and train_y
+
+    # Fitted train values
+    p_y_train_d = p_model.predict(p_model_data['train_x'])
+
+    # tensorflow output
+    # reshape array as a 1d array (list)
+    p_y_train_d = p_y_train_d.reshape(len(p_y_train_d),)
+    p_y_train_d[p_y_train_d.reshape(len(p_y_train_d),) > 0.5] = 1
+    p_y_train_d[p_y_train_d.reshape(len(p_y_train_d),) <= 0.5] = 0
+    p_y_train_d = p_y_train_d.astype(int)
+
+    p_y_result_train = pd.DataFrame({'train_y': p_model_data['train_y'], 'train_pred_y': p_y_train_d})
+    # Confussion matrix
+    cm_train = confusion_matrix(p_y_result_train['train_y'], p_y_result_train['train_pred_y'])
+
+    # Probabilities of class in train data
+    probs_train = p_model.predict_proba(p_model_data['train_x']).reshape(len(p_model_data['train_x']),)
+    # In case of a nan, replace it with zero (to prevent errors)
+    probs_train = np.nan_to_num(probs_train)
+
+    # Accuracy rate
+    # historical info
+    acc_h_train = p_history.history['accuracy']
+    # last configuration
+    acc_train = np.round(acc_h_train[-1], 4)
+    # False Positive Rate, True Positive Rate, Thresholds
+    fpr_train, tpr_train, thresholds = roc_curve(list(p_model_data['train_y']), probs_train, pos_label=1)
+    # Area Under the Curve (ROC) for train data
+    # historical info
+    auc_h_train = p_history.history['auc']
+    # last configuration
+    auc_train = np.round(auc_h_train[-1], 4)
+    # Logloss (Binary cross-entropy function)
+    # historical info
+    logloss_h_train = p_history.history['loss']
+    # last configuration
+    logloss_train = np.round(logloss_h_train[-1], 4)
+
+    # Data duplication to not alter other calculatiosn below
+    cm_test = cm_train
+    probs_test = probs_train
+    acc_test = acc_train
+    fpr_test = fpr_train
+    tpr_test = tpr_train
+    auc_test = auc_train
+    logloss_test = logloss_train
+    p_y_result_test = p_y_result_train
+
+     # -- TEST SET ALSO: In the case of the presence of a test set, do calculations accordingly
+    if 'train_x' in data_keys and 'train_y' in data_keys and 'test_x' in data_keys and 'test_y' in data_keys:
+
+        # Fitted test values
+        p_y_test_d = p_model.predict(p_model_data['test_x'])
+
+        # tensorflow output
+        # reshape array as a 1d array (list)
+        p_y_test_d = p_y_test_d.reshape(len(p_y_test_d),)
+        # trigger for class is 1 if > 0.5
+        p_y_test_d[p_y_test_d.reshape(len(p_y_test_d),) > 0.5] = 1
+        p_y_test_d[p_y_test_d.reshape(len(p_y_test_d),) <= 0.5] = 0
+        p_y_test_d = p_y_test_d.astype(int)
+        
+        p_y_result_test = pd.DataFrame({'test_y': p_model_data['test_y'], 'test_pred_y': p_y_test_d})
+        cm_test = confusion_matrix(p_y_result_test['test_y'], p_y_result_test['test_pred_y'])
+        # Probabilities of class in test data
+        probs_test = p_model.predict_proba(p_model_data['test_x']).reshape(len(p_model_data['test_x']),)
+        # In case of a nan, replace it with zero (to prevent errors)
+        probs_test = np.nan_to_num(probs_test)
+
+        # Accuracy rate
+        # historical info
+        acc_h_test = p_history.history['accuracy']
+        # last configuration
+        acc_test = np.round(acc_h_test[-1], 4)
+        # False Positive Rate, True Positive Rate, Thresholds
+        fpr_test, tpr_test, thresholds = roc_curve(list(p_model_data['test_y']), probs_test, pos_label=1)
+        # Area Under the Curve (ROC) for train data
+        # historical info
+        auc_h_test = p_history.history['auc']
+        # last configuration
+        auc_test = np.round(auc_h_test[-1], 4)
+        # Logloss (Binary cross-entropy function)
+        # historical info
+        logloss_h_test = p_history.history['loss']
+        # last configuration
+        logloss_test = np.round(logloss_h_test[-1], 4)
+    
+    else:
+        print('error in tf_model_metrics, keys in p_model_data not valid')
+    
+    # -- ----------------------------------------------------------------------------------------------------
+
+    # calculate relevant metrics
+    pro_metrics = {'acc-train': round(acc_train, 4), 'acc-test': round(acc_test, 4), 
+                   'acc-mean': round((acc_train + acc_test)/2, 4), 
+                   'acc-weighted': round((acc_train*0.80 + acc_test*0.20)/2, 4), 
+                   'acc-inv-weighted': round((acc_train*0.20 + acc_test*0.80)/2, 4),
+
+                   'auc-train': round(auc_train, 4), 'auc-test': round(auc_test, 4),
+                   'auc-mean': round((auc_train + auc_test)/2, 4),
+                   'auc-weighted': round((auc_train*0.80 + auc_test*0.20)/2, 4),
+                   'auc-inv-weighted': round((auc_train*0.20 + auc_test*0.80)/2, 4),
+
+                   'logloss-train': round(auc_train, 4), 'logloss-test': round(auc_test, 4),
+                   'logloss-mean': round((logloss_train + logloss_test)/2, 4),
+                   'logloss-weighted': round((logloss_train*0.80 + logloss_test*0.20)/2, 4),
+                   'logloss-inv-weighted': round((logloss_train*0.20 + logloss_test*0.80)/2, 4)}
+
+    # -- ----------------------------------------------------------------------------------------------------
+
+    # Return all the results for the model
+    r_model_metrics = {'model': p_model, 'pro-metrics': pro_metrics, 
+                       'results': {'data': {'train': p_y_result_train, 'test': p_y_result_test},
+                                   'matrix': {'train': cm_train, 'test': cm_test}},
+                       'metrics': {'train': {'tpr': tpr_train, 'fpr': fpr_train, 'probs': probs_train},
+                                   'test': {'tpr': tpr_test, 'fpr': fpr_test, 'probs': probs_test},
+                                   'historic': {i: p_history.history[i] 
+                                                   for i in list(p_history.history.keys())}}}
+
+    return r_model_metrics
+
+
+# -- ---------------------------------------------------- DATA PROCESSING: Metrics for Model Performance -- # 
+# -- -------------------------------------------------------- ---------------------------------- SKLEARN -- #
+
+def sk_model_metrics(p_model, p_model_data):
+    """
+    Scikit learn ready model metrics
+
     Parameters
     ----------
     p_model: str
@@ -699,42 +907,41 @@ def model_metrics(p_model, p_model_data):
     # Data keys, could be ['x_train', 'y_train'] or ['x_train', 'y_train', 'x_test', 'y_test']
     data_keys = list(p_model_data.keys())
 
-    # In the case of the presence of a train set, with both x and y, do calculations accordingly
-    if 'train_x' in data_keys and 'train_y' in data_keys:
+    # -- ALWAYS TRAIN SET: Assume that always is going to be train_x and train_y
 
-        # Fitted train values
-        p_y_train_d = p_model.predict(p_model_data['train_x'])
-        p_y_result_train = pd.DataFrame({'train_y': p_model_data['train_y'], 'train_pred_y': p_y_train_d})
-        # Confussion matrix
-        cm_train = confusion_matrix(p_y_result_train['train_y'], p_y_result_train['train_pred_y'])
-        # Probabilities of class in train data
-        probs_train = p_model.predict_proba(p_model_data['train_x'])
-        # In case of a nan, replace it with zero (to prevent errors)
-        probs_train = np.nan_to_num(probs_train)
+    # Fitted train values
+    p_y_train_d = p_model.predict(p_model_data['train_x'])
+    p_y_result_train = pd.DataFrame({'train_y': p_model_data['train_y'], 'train_pred_y': p_y_train_d})
+    # Confussion matrix
+    cm_train = confusion_matrix(p_y_result_train['train_y'], p_y_result_train['train_pred_y'])
+    # Probabilities of class in test data
+    probs_train = p_model.predict_proba(p_model_data['train_x'])
+    # In case of a nan, replace it with zero (to prevent errors)
+    probs_train = np.nan_to_num(probs_train)
 
-        # Accuracy rate
-        acc_train = round(accuracy_score(list(p_model_data['train_y']), p_y_train_d), 4)
-        # False Positive Rate, True Positive Rate, Thresholds
-        fpr_train, tpr_train, thresholds = roc_curve(list(p_model_data['train_y']),
+    # Accuracy rate
+    acc_train = round(accuracy_score(list(p_model_data['train_y']), p_y_train_d), 4)
+    # False Positive Rate, True Positive Rate, Thresholds
+    fpr_train, tpr_train, thresholds = roc_curve(list(p_model_data['train_y']),
                                                         probs_train[:, 1], pos_label=1)
-        # Area Under the Curve (ROC) for train data
-        auc_train = round(roc_auc_score(list(p_model_data['train_y']), probs_train[:, 1]), 4)
+    # Area Under the Curve (ROC) for train data
+    auc_train = round(roc_auc_score(list(p_model_data['train_y']), probs_train[:, 1]), 4)
 
-        # Logloss (Binary cross-entropy function)
-        logloss_train = log_loss(p_model_data['train_y'], p_y_train_d)
+    # Logloss (Binary cross-entropy function)
+    logloss_train = log_loss(p_model_data['train_y'], p_y_train_d)
 
-        # Data duplication to not alter other calculatiosn below
-        cm_test = cm_train
-        probs_test = probs_train
-        acc_test = acc_train
-        fpr_test = fpr_train
-        tpr_test = tpr_train
-        auc_test = auc_train
-        logloss_test = logloss_train
-        p_y_result_test = p_y_result_train
+    # Data duplication to not alter other calculatiosn below
+    cm_test = cm_train
+    probs_test = probs_train
+    acc_test = acc_train
+    fpr_test = fpr_train
+    tpr_test = tpr_train
+    auc_test = auc_train
+    logloss_test = logloss_train
+    p_y_result_test = p_y_result_train
 
-    # In the case of the presence of a test set, with both x and y, do calculations accordingly
-    elif 'test_x' in data_keys and 'test_y' in data_keys:
+    # -- TEST SET ALSO: In the case of the presence of a test set, do calculations accordingly
+    if 'train_x' in data_keys and 'train_y' in data_keys and 'test_x' in data_keys and 'test_y' in data_keys:
 
         # Fitted test values
         p_y_test_d = p_model.predict(p_model_data['test_x'])
@@ -755,17 +962,10 @@ def model_metrics(p_model, p_model_data):
 
         # Logloss (Binary cross-entropy function)
         logloss_test = log_loss(p_model_data['test_y'], p_y_test_d)
-
-        # Data duplication to not alter other calculatiosn below
-        cm_train = cm_test
-        probs_train = probs_test
-        acc_train = acc_test
-        fpr_train = fpr_test
-        tpr_train = tpr_test
-        auc_train = auc_test
-        logloss_train = logloss_test
-        p_y_result_train = p_y_result_test
     
+    else:
+        print('error in sk_model_metrics, keys in p_model_data not valid')
+
     # -- ----------------------------------------------------------------------------------------------------
 
     # calculate relevant metrics
@@ -859,7 +1059,7 @@ def logistic_net(p_data, p_params):
     en_model.fit(p_data['train_x'].copy(), p_data['train_y'].copy())
 
    # performance metrics of the model
-    metrics_en_model = model_metrics(p_model=en_model, p_model_data=p_data.copy())
+    metrics_en_model = sk_model_metrics(p_model=en_model, p_model_data=p_data.copy())
 
     return metrics_en_model
 
@@ -930,7 +1130,7 @@ def l1_svm(p_data, p_params):
     svm_model.fit(p_data['train_x'].copy(), p_data['train_y'].copy())
 
     # performance metrics of the model
-    metrics_svm_model = model_metrics(p_model=svm_model, p_model_data=p_data.copy())
+    metrics_svm_model = sk_model_metrics(p_model=svm_model, p_model_data=p_data.copy())
 
     return metrics_svm_model
 
@@ -980,29 +1180,53 @@ def ann_mlp(p_data, p_params):
     # model hyperparameters
     # hidden_layer_sizes, activation, solver, alpha, 
 
-    # learning_rate, batch_size, learning_rate_init, power_t, max_iter, shuffle, random_state, tol, verbose,
-    # warm_start, momentum, nesterovs_momentum, early_stopping, validation_fraction
+    # mlp_model = MLPClassifier(hidden_layer_sizes=p_params['hidden_layers'],
+    #                           activation=p_params['activation'], alpha=p_params['alpha'],
+    #                           learning_rate_init=p_params['learning_rate_init'],
+
+    #                           learning_rate='adaptive',
+    #                           batch_size=batch, solver='sgd', power_t=0.5, max_iter=10000, shuffle=False,
+    #                           random_state=123, tol=1e-7, verbose=False, warm_start=True, momentum=0.9,
+    #                           nesterovs_momentum=True, early_stopping=True, validation_fraction=0.2,
+    #                           n_iter_no_change=100)
+    
 
     # the batch size will be 50% of the training data length or 75
     batch = max(25, len(p_data['train_x'])//8)
     # print(batch)
 
-    # model function
-    mlp_model = MLPClassifier(hidden_layer_sizes=p_params['hidden_layers'],
-                              activation=p_params['activation'], alpha=p_params['alpha'],
-                              learning_rate_init=p_params['learning_rate_init'],
+    # model for a Multilayer perceptron
+    mlp_model = Sequential(name='ann-mlp')
+    
+    # number of inputs
+    n_inputs = len(list(p_data['train_x'].columns))
 
-                              learning_rate='adaptive',
-                              batch_size=batch, solver='sgd', power_t=0.5, max_iter=10000, shuffle=False,
-                              random_state=123, tol=1e-7, verbose=False, warm_start=True, momentum=0.9,
-                              nesterovs_momentum=True, early_stopping=True, validation_fraction=0.2,
-                              n_iter_no_change=100)
+    # input layer
+    # mlp_model.add(Dense(n_inputs, activation=p_params['activation'], input_dim=n_inputs, name='input_layer'))
+
+    for i in range(0, p_params['hidden_layers']):
+    
+        # hidden layer (1)
+        mlp_model.add(Dense(p_params['hidden_neurons'],
+                            activation=p_params['activation'],
+                            name='hidden_layer_' + str(i)))
+    
+    # output layer
+    mlp_model.add(Dense(1, activation='sigmoid', name='output_layer'))
+    
+    # -- Optimizer : https://keras.io/api/optimizers/    
+    optim_1 = SGD(lr=p_params['learning_rate_init'], decay=0.001, momentum=0.9)
+
+    # -- Metrics: https://keras.io/api/metrics/
+    mets_1 = ['accuracy', 'AUC']
+    mlp_model.compile(loss='binary_crossentropy', optimizer=optim_1, metrics=mets_1)
 
     # model fit
-    mlp_model.fit(p_data['train_x'].copy(), p_data['train_y'].copy())
+    history = mlp_model.fit(p_data['train_x'].copy(), p_data['train_y'].copy(),
+                            epochs=50, batch_size=batch, verbose=0)
 
     # performance metrics of the model
-    metrics_mlp_model = model_metrics(p_model=mlp_model, p_model_data=p_data.copy())
+    metrics_mlp_model = tf_model_metrics(p_model=mlp_model, p_model_data=p_data.copy(), p_history=history)
 
     return metrics_mlp_model
 
@@ -1289,6 +1513,7 @@ def genetic_algo_optimization(p_gen_data, p_model, p_opt_params, p_fit_type):
 
         # define how each gene will be generated (e.g. criterion is a random choice from the criterion list).
         toolbox_mlp.register("attr_hidden_layers", random.choice, p_model['params']['hidden_layers'])
+        toolbox_mlp.register("attr_hidden_neurons", random.choice, p_model['params']['hidden_neurons'])
         toolbox_mlp.register("attr_activation", random.choice, p_model['params']['activation'])
         toolbox_mlp.register("attr_alpha", random.choice, p_model['params']['alpha'])
         toolbox_mlp.register("attr_learning_rate_init",
@@ -1297,6 +1522,7 @@ def genetic_algo_optimization(p_gen_data, p_model, p_opt_params, p_fit_type):
         # This is the order in which genes will be combined to create a chromosome
         toolbox_mlp.register("Individual_mlp", tools.initCycle, creator.Individual_mlp,
                              (toolbox_mlp.attr_hidden_layers,
+                              toolbox_mlp.attr_hidden_neurons,
                               toolbox_mlp.attr_activation,
                               toolbox_mlp.attr_alpha,
                               toolbox_mlp.attr_learning_rate_init), n=1)
@@ -1313,19 +1539,21 @@ def genetic_algo_optimization(p_gen_data, p_model, p_opt_params, p_fit_type):
             if gene == 0:
                 individual[0] = random.choice(p_model['params']['hidden_layers'])
             elif gene == 1:
-                individual[1] = random.choice(p_model['params']['activation'])
+                individual[1] = random.choice(p_model['params']['hidden_neurons'])
             elif gene == 2:
-                individual[2] = random.choice(p_model['params']['alpha'])
+                individual[2] = random.choice(p_model['params']['activation'])
             elif gene == 3:
-                individual[3] = random.choice(p_model['params']['learning_rate_init'])
+                individual[3] = random.choice(p_model['params']['alpha'])
+            elif gene == 4:
+                individual[4] = random.choice(p_model['params']['learning_rate_init'])
             return individual,
 
         # ------------------------------------------------------------ funcion de evaluacion para LS SVM -- #
         def evaluate_mlp(eva_individual):
 
             model_fit = genetic_algo_evaluate(p_individual=eva_individual,
-                                                p_eval_data=p_gen_data, p_model='ann-mlp',
-                                                p_fit_type=p_fit_type)
+                                              p_eval_data=p_gen_data, p_model='ann-mlp',
+                                              p_fit_type=p_fit_type)
 
             return model_fit,
 
@@ -1354,7 +1582,7 @@ def genetic_algo_optimization(p_gen_data, p_model, p_opt_params, p_fit_type):
 
         return {'population': mlp_pop, 'logs': mlp_log, 'hof': mlp_hof}
 
-    return 'error, sin modelo seleccionado'
+    return 'error, invalid model selection'
 
 
 # -------------------------------------------------------------------------- Model Evaluations by period -- #
@@ -1373,8 +1601,9 @@ def model_evaluation(p_features, p_optim_data, p_model):
         return l1_svm(p_data=p_features, p_params=parameters)
 
     elif p_model == 'ann-mlp':
-        parameters = {'hidden_layers': p_optim_data[0], 'activation': p_optim_data[1],
-                      'alpha': p_optim_data[2], 'learning_rate_init': p_optim_data[3]}
+        parameters = {'hidden_layers': p_optim_data[0], 'hidden_neurons': p_optim_data[1],
+                      'activation': p_optim_data[2], 'alpha': p_optim_data[3],
+                      'learning_rate_init': p_optim_data[4]}
 
         return ann_mlp(p_data=p_features, p_params=parameters)
 
@@ -1629,11 +1858,13 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
     file_name = route + period[0] + \
                  '_' + p_fit_type + '_' + p_transform + '_' + p_scaling + '_' + p_inner_split + '.dat'
 
+    # (pending) Extract tensorflow model and parameters separately
+    
     # objects to be saved
     pickle_rick = {'data': dt.ohlc_data, 't_folds': period, 'memory_palace': memory_palace}
 
     # pickle format function
-    dt.data_save_load(p_data_objects=pickle_rick, p_data_file=file_name, p_data_action='save')
+    # dt.data_save_load(p_data_objects=pickle_rick, p_data_file=file_name, p_data_action='save')
 
     return memory_palace
 
@@ -1694,20 +1925,27 @@ def global_evaluation(p_case, p_global_data, p_features, p_model):
     
         if p_model == 'logistic-elasticnet':
             parameters = {'ratio': individual_params[0], 'c': individual_params[1]}
+            global_results.append({'global_data': global_data, 'global_parameters': parameters,
+                                   'model': sk_model_metrics(p_model=individual_model,
+                                                             p_model_data=global_data)})
 
         elif p_model == 'l1-svm':
             parameters = {'c': individual_params[0], 'kernel': individual_params[1],
                           'gamma': individual_params[2]}
+            global_results.append({'global_data': global_data, 'global_parameters': parameters,
+                                   'model': sk_model_metrics(p_model=individual_model, 
+                                                             p_model_data=global_data)})
 
         elif p_model == 'ann-mlp':
             parameters = {'hidden_layers': individual_params[0], 'activation': individual_params[1],
                           'alpha': individual_params[2], 'learning_rate_init': individual_params[3]}
+            
+            global_results.append({'global_data': global_data, 'global_parameters': parameters,
+                                   'model': tf_model_metrics(p_model=individual_model, 
+                                                             p_model_data=global_data)})
 
         else: 
             print('error in model selection during (global_evaluation)')
-        
-        global_results.append({'global_data': global_data, 'global_parameters': parameters,
-                               'model': model_metrics(p_model=individual_model, p_model_data=global_data)})
 
     return global_results
 

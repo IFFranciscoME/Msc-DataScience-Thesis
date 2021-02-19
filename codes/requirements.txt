@@ -8,13 +8,18 @@
 # -- Repository: https://github.com/IFFranciscoME/Msc_Thesis                                             -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 
+# In order to use tensorflow, the interpreter must be /usr/bin/python3
+# since is the one i manage to configure correctly for GPU usage with cuDNN in T490 machine
+numpy==1.19.5  # specific for tensorflow
+six==1.15.0    # specific for tensorflow
+
 deap>=1.3.1
 gplearn>=0.4.1
-numpy>=1.19.4
 pandas>=1.1.4
 requests>=2.24
 plotly>=4.12
 scikit-learn>=0.23
 chart_studio>=1.1.0
 rich>=9.5
+tensorflow>=2.4.1
 keras>=2.4.3

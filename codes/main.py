@@ -10,6 +10,10 @@
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 
+# Suppress console log messages from TensorFlow
+import os
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+
 from data import ohlc_data as data
 from data import iter_fold
 from data import iter_exp
@@ -56,12 +60,17 @@ if __name__ == "__main__":
 
         # List with the names of the models
         ml_models = list(dt.models.keys())
-        # ml_models = ['l1-svm']
+        # ml_models = ['ann-mlp']
 
-        # Create a pool of workers with as many cores as the computer has
+        # Establish the number of workers with as many cores as the computer has
         workers = cpu_count()-1
-        # workers = 4
+        # workers = 1
+
+        # create pool of workers for asyncronous parallelism
         pool = mp.Pool(workers)
+
+        # configuration for tensorflow and CPU/GPU processing
+        fn.tf_processing(p_option='cpu', p_cores=workers)
         
         # Parallel Asyncronous Process 
         fold_process = {'fold_' + str(iteration): pool.starmap(fn.fold_process,
@@ -74,7 +83,10 @@ if __name__ == "__main__":
         # rejoin sepparated resources
         pool.join()
 
+        # -- ------------------------------------------------------------------------ PRINT ELAPSED TIME -- #
+        # -- ------------------------------------------------------------------------ ------------------ -- #
+
         # Measure the end of the code execution process
         end_time = datetime.now()
-        print('elapsed time for the wholes process: ', str(end_time - ini_time))
+        print('elapsed time for the whole process: ', str(end_time - ini_time))
         # ---------------------------------------------------------------------------------------------- -- #

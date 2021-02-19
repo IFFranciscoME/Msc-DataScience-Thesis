@@ -22,7 +22,7 @@ import itertools
 # Short Version for Testing
 iter_fold = ['semester']
 iter_opt = {'inner-split': ['20'], 'transform': ['robust'], 'scaling': ['post-features'],
-            'fitness': ['auc-train']}
+            'fitness': ['auc-mean']}
 
 # ---------------------------------------------------------------- Complete list of available parameters -- #
 
@@ -86,17 +86,17 @@ models = {
 
     'ann-mlp': {
         'label': 'ann-mlp',
-        'params': {'hidden_layers': [(10,), (20,), (40,), (10, 20), (20, 10),
-                                     (10, 30), (30, 10), (20, 30), (30, 20), (30, 30),
-
-                                     (10,), (20,), (40,), (10, 20), (20, 10),
-                                     (10, 30), (30, 10), (20, 30), (30, 20), (30, 30)],
+        'params': {'hidden_layers': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                     2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+                    
+                   'hidden_neurons': [2, 5, 10, 15, 20, 35, 40, 45, 55, 60,
+                                      2, 5, 10, 15, 20, 35, 40, 45, 55, 60],
 
                    'activation': ['relu', 'relu', 'relu', 'relu', 'relu',
-                                  'relu', 'relu', 'relu', 'relu', 'relu',
-
-                                  'logistic', 'logistic', 'logistic', 'logistic', 'logistic',
-                                  'logistic', 'logistic', 'logistic', 'logistic', 'logistic'],
+                                  'relu', 'relu', 'relu', 'relu', 'relu', 
+                                  
+                                  'sigmoid', 'sigmoid', 'sigmoid', 'sigmoid', 'sigmoid',
+                                  'sigmoid', 'sigmoid', 'sigmoid', 'sigmoid', 'sigmoid'],
 
                    'alpha': [0.01, 0.1, 0.15, 0.30, 0.60, 0.75, 0.90, 1.0, 1.5, 3.0,
                              0.01, 0.1, 0.15, 0.30, 0.60, 0.75, 0.90, 1.0, 1.5, 3.0],
@@ -104,11 +104,10 @@ models = {
                    'learning_rate_init': [0.2, 0.1, 0.02, 0.01, 0.001, 0.2, 0.1, 0.02, 0.01, 0.001,
                                           0.2, 0.1, 0.02, 0.01, 0.001, 0.2, 0.1, 0.02, 0.01, 0.001]}}}
 
-
 # ------------------------------------------------------------------ Parameters for Genetic Optimization -- #
 # ------------------------------------------------------------------ ----------------------------------- -- #
 
-optimization_params = {'halloffame': 10, 'tournament': 20, 'population': 40, 'generations': 2,
+optimization_params = {'halloffame': 10, 'tournament': 15, 'population': 20, 'generations': 1,
                        'mutation': 0.2, 'crossover': 0.8}
 
 # ------------------------------------------------------------------------------------- Themes for plots -- #
@@ -221,11 +220,11 @@ for file_f in files_f:
         price_data['MP_D_' + year_f] = data_f
 
 # One period data concatenation (Fast run of main.py)
-# ohlc_data = pd.concat([price_data[list(price_data.keys())[0]]])
+ohlc_data = pd.concat([price_data[list(price_data.keys())[0]]])
 
-ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
-                       price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
-                       price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]]])
+# ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
+#                        price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
+#                        price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]]])
 
 # All periods data concatenation (Slow run of main.py)
 # ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],

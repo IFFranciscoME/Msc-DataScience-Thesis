@@ -21,3 +21,55 @@ Experiment: Compare statistical momments among data sets (folds)
 
 [2] 
 
+
+# Notas 
+
+las 3 componentes principales de un metodo de regresion/clasificacion
+
+- modelo predictivo
+- funcion de costo
+- algoritmo de aprendizaje o de entrenamiento (Como minimizar la funcion de costo)
+
+
+Por que la funcion relu ?, tiene algo que ver con su derivada ? con el rango de salida dado el rango de entrada ? 
+Citar a bengio ? 
+
+una red neuronal es 
+	una combinacion no lineal (funciones de activacion no lineales) de variables lineales o no lineales
+	una combinacion lineal (funciones de activacion lineales) de variables lineales o no lineales
+
+una neurona con una funcion sigmoide es como una regresion logistica
+
+escalar las variables de entrada en una red neuronal sirve para que no se saturen los valores obtenidos por la funcion
+de activacion en cada neurona, y es malo que se sature por que si esto pasa, la derivada no cambia y backprop determina
+que no se actualiza el peso de la neurona por que ya no esta "aprendiendo". 
+
+la capa de salida es la que determina que uso tiene la red neuronal
+
+- regresion (la funcion de activacion en la capa de salida debe de ser lineal)
+- clasificacion ()
+
+funcion de costo para regresion
+
+- MSE (offline, se entrena 1 vez)
+- Average of all MSE (cuando es red que se entrena en linea, es decir, a cada dato nuevo se reentrena)
+
+red neuronal, al entrenarse, no se garantiza que se encuentre la mejor solucion y que sea repetible el proceso de encontrar esa solucion encontrada
+
+ALGORITMO DE APRENDIZAJE
+
+la NN aprende en un sentido sequencial y de actualizacion, los pesos se van actualizando con base a un algoritmo de aprendizaje (gradiente descendente normalmente)
+
+la funcion de costo es convexa respecto a los pesos
+
+gradiente descentende tiene problemas con funciones de costo no convexas, y dado que la funcion de costo para regresion con respecto a los pesos es no convexa, 
+es posible que GD sea "estanque" en minimos locales, o, que desde la inicializacion caiga en una zona plana de la funcion y como no hay mas cambio por que la 
+derivada es cero, entonces se para el entrenamiento. 
+
+backprop no es algoritmo de aprendizaje sino la logica de actualizacion de pesos
+
+La desventaja de proponer muchas capas ocultas es que "exploten" o "desvanecer" los gradientes, esto por el efecto multiplicativo entre gradientes. .
+(Cuando gradientes desvanecen) una actividad que hacer para verificar esto es comparar los pesos de las entradas no se mueven mucho respecto a los iniciales. Entonces, el mayor efecto
+del proceso de aprendizaje recae mas en la capa de salida. y asi al caso contrario. (todo esto puede evitarse al normalizar las entradas, y posiblemente, normalizar la salida tambien)
+
+

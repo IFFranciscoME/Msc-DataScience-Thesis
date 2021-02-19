@@ -45,6 +45,12 @@
 |   Learning       | cross-validation in finance        | 20:00 13.Feb.2021  | 1.0          |                  |
 |   Coding         | K-Fold without inner-split feature | 21:00 13.Feb.2021  | 4.0          |                  |
 |   Coding         | Fix errors train/test option       | 10:00 14.Feb.2021  | 2.0          |                  |
-
 |   Meeting        | With researcher (Riemann)          | 11:00 15.Feb.2021  | 1.0          |                  |
 |   Content        | Read Bibliography for K-Fold       | 15:00 15.Feb.2021  | 1.0          |                  |
+|   Coding         | SDK for GPU usage                  | 17:00 15.Feb.2021  | 7.0          |                  |
+|   Writing        | normalization of data              | 15:00 17.Feb.2021  | 1.0          |                  |
+
+|   Coding         | basic conexion to ludwig           | 10:00 18.Feb.2021  | 1.0          |                  |
+|   Coding         | migration to keras                 | 11:00 18.Feb.2021  | 8.0          |                  |
+
+|   Coding         | migration to keras                 | 09:00 19.Feb.2021  | 0            |                  |

@@ -2,6 +2,9 @@
 # -- -------------------------------------------------------------------------- QUESTIONS AND REFERENCES -- # 
 # -- --------------------------------------------------------------------------------------------------- -- #
 
+# -- types of normalization scores
+https://en.wikipedia.org/wiki/Normalization_(statistics)
+
 # -- AUC vs Logloss as cost functions, which is better for binary classification
 Whereas the AUC is computed with regards to binary classification with a varying decision threshold,
 logloss actually takes "certainty" of classification into account.
@@ -223,6 +226,8 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 - (pending) Expand hyperparameters to search for ANN-MLP
 
 - (pending) add RandomForest classification model with scikit learn
+
+- (pending) final prediction criterias (best of bests, )
 
 - (pending) Refactor code for timeseries data of metric evolution g_timeseries_auc
 
