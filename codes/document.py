@@ -42,19 +42,20 @@ plot_1 =vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_1, p_vlines=None)
 # ------------------------------------------------------------------------------------ ----------------- -- #
 
 # Fold size
-fold_case = 'year'
+fold_case = 'semester'
 
 # Timeseries data division in t-folds
 folds = fn.t_folds(p_data=data, p_period=fold_case)
 
 # List with the names of the models
-ml_models = list(dt.models.keys())
+# ml_models = list(dt.models.keys())
+ml_models = ['ann-mlp']
 
 # File name to save the data
-file_name = 'files/pickle_rick/y_auc-inv-weighted_robust_post-features_0.dat'
+file_name = 'files/pickle_rick/s_auc-mean_robust_post-features_20.dat'
 
 # Load previously generated data
-memory_palace = dt.data_save_load(p_data_objects=None, p_data_action='load', p_data_file=file_name)
+memory_palace = dt.data_pickle(p_data_objects=None, p_data_action='load', p_data_file=file_name)
 memory_palace = memory_palace['memory_palace']
 
 # -- ----------------------------------------------------------------- PLOT 2: TIME SERIES BLOCK T-FOLDS -- #
@@ -127,10 +128,10 @@ tgv_corr_train = pd.concat([memory_palace[period]['features']['train_y'],
 # -- ------------------------------------------------------------------------------- ------------------- -- #
 
 # metric type (all the available in iter_opt['fitness'])
-metric_case = 'acc-train'
+metric_case = 'auc-mean'
 
 # models to explore results
-model_case = 'l1-svm'
+model_case = 'ann-mlp'
 
 # -- Min, max and mode cases
 met_cases = fn.model_cases(p_models=ml_models, p_global_cases=memory_palace, p_data_folds=folds,
@@ -153,10 +154,10 @@ mode_repetitions = pd.DataFrame(met_cases[model_case]['met_mode']['data']).T
 # -- ------------------------------------------------------------------------ -------------------------- -- #
 
 # period to explore results
-period_case = 'q_02_2011'
+period_case = 's_01_2011'
 
 # models to explore results
-model_case = 'logistic-elasticnet'
+model_case = 'ann-mlp'
 
 # data
 sym_data = met_cases[model_case]['hof_metrics']['data'][period_case]['features']['sym_features']
@@ -178,7 +179,7 @@ sym_fitness = sym_data['best_programs']['fitness']
 case = 'met_max'
 
 # Pick model to generate the plot
-model_case = 'l1-svm'
+model_case = 'ann-mlp'
 
 # Generate title
 plot_title = 'inFold ' + case + ' for: ' + model_case + ' ' + met_cases[model_case][case]['period']
@@ -217,13 +218,13 @@ case = 'met_max'
 subset = 'train'
 
 # metric to use
-metric_case = 'acc-train'
+metric_case = 'auc-mean'
 
 # Model to evaluate
-model_case = 'logistic-elasticnet'
+model_case = 'ann-mlp'
 
 # period 
-period_case = 'q_02_2011'
+period_case = 's_01_2011'
 
 # parameters of the evaluated models
 d_params = memory_palace[period_case][model_case]['p_hof']['hof']
@@ -250,13 +251,13 @@ plot_4 = vs.g_multiroc(p_data=d_plot_4, p_metric=metric_case, p_theme=dt.theme_p
 # -- --------------------------------------------------------------------------------- ----------------- -- #
 
 # metric type (all the available in iter_opt['fitness'])
-metric_case = 'acc-train'
+metric_case = 'auc-mean'
 
 # Model to evaluate
-model_case = 'logistic-elasticnet'
+model_case = 'ann-mlp'
 
 # period 
-period_case = 'q_02_2011'
+period_case = 's_01_2011'
 
 # data subset to use
 subset = 'train'

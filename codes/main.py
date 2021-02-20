@@ -10,10 +10,7 @@
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 
-# Suppress console log messages from TensorFlow
-import os
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-
+from os import environ
 from data import ohlc_data as data
 from data import iter_fold
 from data import iter_exp
@@ -31,6 +28,9 @@ random.seed(123)
 
 # ignore warnings
 warnings.filterwarnings("ignore")
+
+# Suppress console log messages from TensorFlow
+environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 # main process to run from console
 if __name__ == "__main__":

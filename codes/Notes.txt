@@ -216,14 +216,32 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 - Fix: model fit and predict separation in model evaluation
 - Enhacement: Train&Test option for plots
 
+# -- 17.02.2021
+- Enhacement: Install GPU capabilities in T490
+
+# -- 18.02.2021
+- Enhacement: Migrate from sklearn to keras (basic tests)
+- Modification: Hide tensorflow console messages
+
+# -- 19.02.2021
+- Fix: use pickle to save tf.keras model 
+
+- (goal) Fix: global evaluation test for tf.keras models (with model.predict())
+
+
+- (goal) Enhacement: Expand hyperparameter to search for ann-mlp model 
+-                      (1) list of additional elements for model, (2) include in genetic_algo_opt, (3) testing
 
 # ---------------------------------------------------------------------------------------------- BACKLOG -- # 
 # ---------------------------------------------------------------------------------------------- ------- -- #
 
 # -- NECESSARY
 
+- (pending) Implement embargo criteria for t-fold variation
 - (pending) Change from sklearn to keras for ANN-MLP
 - (pending) Expand hyperparameters to search for ANN-MLP
+
+- (pending) Refactor tf_model_metrics and sk_model_metrics to not use train/test condition (just any data)
 
 - (pending) add RandomForest classification model with scikit learn
 
@@ -249,6 +267,9 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 - (pending) (paper) design hypothesis based experiments 
 - (pending) (code) register the modifications in the code necessary for each experiment
 
+# -- GOOD TO HAVE
+
+- (pending) guide to multi-gpu & distributed training.
 
 ***************************************************************************************** UNORGANIZED NOTES 
 ***********************************************************************************************************

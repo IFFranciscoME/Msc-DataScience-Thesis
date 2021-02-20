@@ -11,10 +11,13 @@
 """
 
 import pickle
-import pandas as pd
-from os import listdir, path
-from os.path import isfile, join
 import itertools
+import pandas as pd
+from os import listdir, path, environ
+from os.path import isfile, join
+
+# Suppress console log messages from TensorFlow
+environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 # ---------------------------------------------------------------------------------- PARALLEL EXPERIMENT -- #
 # ---------------------------------------------------------------------------------- ------------------- -- #
@@ -234,10 +237,10 @@ ohlc_data = pd.concat([price_data[list(price_data.keys())[0]]])
 #                        price_data[list(price_data.keys())[8]], price_data[list(price_data.keys())[9]]])
 
 
-# -------------------------------------------------------------------------------------------- Save Data -- #
-# -------------------------------------------------------------------------------------------- --------- -- #
+# ------------------------------------------------------------------------ SAVE/LOAD DATA: PICKLE FORMAT -- #
+# ----------------------------------------------------------------------------- ------------------------ -- #
 
-def data_save_load(p_data_objects, p_data_action, p_data_file):
+def data_pickle(p_data_objects, p_data_action, p_data_file):
     """
     Save or load data in pickle format for offline use
     Parameters
@@ -255,6 +258,7 @@ def data_save_load(p_data_objects, p_data_action, p_data_file):
 
     # if saving is required`
     if p_data_action == 'save':
+
         # define and create file
         pick = p_data_file
         with open(pick, "wb") as f:
