@@ -51,10 +51,10 @@
 |   Writing        | normalization of data              | 15:00 17.Feb.2021  | 1.0          |                  |
 |   Coding         | basic conexion to ludwig           | 10:00 18.Feb.2021  | 1.0          |                  |
 |   Coding         | migration to keras                 | 11:00 18.Feb.2021  | 8.0          |                  |
-
 |   Coding         | migration to keras                 | 09:00 19.Feb.2021  | 3.0          |                  |
 |   Meeting        | With thesis director               | 12:00 19.Feb.2021  | 1.0          |                  |
 |   Coding         | migration to keras                 | 13:00 19.Feb.2021  | 1.0          |                  |
 |   Meeting        | With PhD researcher (olascuaga)    | 14:00 19.Feb.2021  | 1.0          |                  |
+|   Coding         | migration to keras                 | 16:00 19.Feb.2021  | 7.0          |                  |
 
-|   Coding         | migration to keras                 | 16:00 19.Feb.2021  |              |                  |
+|   Tech Stack     | ssh for github                     | 16:00 20.Feb.2021  | 1.0          |                  |

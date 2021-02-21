@@ -225,8 +225,7 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 
 # -- 19.02.2021
 - Fix: use pickle to save tf.keras model 
-
-- (goal) Fix: global evaluation test for tf.keras models (with model.predict())
+- Fix: global evaluation test with pickle object with tf.keras model (use of model.predict())
 
 
 - (goal) Enhacement: Expand hyperparameter to search for ann-mlp model 
