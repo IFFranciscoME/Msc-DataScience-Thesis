@@ -31,9 +31,10 @@ from sklearn.metrics import confusion_matrix, accuracy_score, roc_auc_score, roc
 import tensorflow as tf
 from tensorflow.python.keras import backend as K
 
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout, Activation
-from tensorflow.keras.optimizers import SGD, Adam
+from tensorflow.keras import layers, models, regularizers, optimizers
+# from tensorflow.keras.models import Sequential
+# from tensorflow.keras.layers import Dense, Dropout, Activation
+# from tensorflow.keras.optimizers import SGD, Adam
 
 from datetime import datetime
 from scipy.stats import kurtosis as m_kurtosis
@@ -1188,28 +1189,33 @@ def ann_mlp(p_data, p_params):
 
     # ------------------------------------------------------------------------------ FUNCTION PARAMETERS -- #
     # model hyperparameters
-    # hidden_layer_sizes, activation, solver, alpha, 
-
-    # mlp_model = MLPClassifier(hidden_layer_sizes=p_params['hidden_layers'],
-    #                           activation=p_params['activation'], alpha=p_params['alpha'],
-    #                           learning_rate_init=p_params['learning_rate_init'],
-
-    #                           learning_rate='adaptive',
-    #                           batch_size=batch, solver='sgd', power_t=0.5, max_iter=10000, shuffle=False,
-    #                           random_state=123, tol=1e-7, verbose=False, warm_start=True, momentum=0.9,
-    #                           nesterovs_momentum=True, early_stopping=True, validation_fraction=0.2,
-    #                           n_iter_no_change=100)
-    
-
-    # trained example for debugging
-    # metrics = [1, 45, 'sigmoid', 0.01, 0.001]
+    # hidden_layer_sizes, activation, solver, alpha,    
 
     # the batch size will be 50% of the training data length or 75
-    batch = max(25, len(p_data['train_x'])//8)
+    batch = max(32, len(p_data['train_x'])//8)
     # print(batch)
 
     # model for a Multilayer perceptron
-    mlp_model = Sequential(name='ann-mlp')
+    mlp_model = models.Sequential(name='ann-mlp')
+
+    # -- OPTIMIZER : https://keras.io/api/optimizers/ 
+    # specify before compile function in order to modify default parameters for optimizer
+    # Gradient Descent with Momentum
+    opt_1 = optimizers.SGD(lr=p_params['learning_rate'], momentum=0.9)
+
+    # -- REGULARIZATION : https://keras.io/api/layers/regularization_layers/  
+    # L1 and L2 inputs regularization 
+    reg_1 = regularizers.l1_l2(l1=0.01, l2=0.01)
+    # L1 and L2 weights regularization
+    reg_2 = regularizers.l1_l2(l1=0.01, l2=0.01)
+
+    # -- METRICS: https://keras.io/api/metrics/
+    # For model performance tracking
+    met_1 = ['accuracy', 'AUC']
+
+    # -- LOSS (COST) FUNCTION : https://keras.io/api/losses/
+    # For binary classification
+    loss_1 = 'binary_crossentropy'
     
     # number of inputs
     # n_inputs = len(list(p_data['train_x'].columns))
@@ -1220,24 +1226,24 @@ def ann_mlp(p_data, p_params):
     for i in range(0, p_params['hidden_layers']):
     
         # hidden layer (1)
-        mlp_model.add(Dense(p_params['hidden_neurons'],
-                            activation=p_params['activation'],
-                            name='hidden_layer_' + str(i)))
+        mlp_model.add(layers.Dense(p_params['hidden_neurons'],
+                                   activation=p_params['activation'],
+                                   name='hidden_layer_' + str(i),
+                                   kernel_regularizer=reg_1,
+                                   bias_regularizer=reg_2,
+                                   activity_regularizer=reg_1))
     
     # output layer
-    mlp_model.add(Dense(1, activation='sigmoid', name='output_layer'))
-    
-    # -- Optimizer : https://keras.io/api/optimizers/    
-    optim_1 = SGD(lr=p_params['learning_rate_init'], decay=0.001, momentum=0.9)
+    mlp_model.add(layers.Dense(1, activation='sigmoid', name='output_layer'))
 
-    # -- Metrics: https://keras.io/api/metrics/
-    mets_1 = ['accuracy', 'AUC']
-    mlp_model.compile(loss='binary_crossentropy', optimizer=optim_1, metrics=mets_1)
+    # -- Model compilation
+    mlp_model.compile(optimizer=opt_1, loss=loss_1, metrics=met_1)
 
-    # model fit
-    history = mlp_model.fit(p_data['train_x'].copy(), p_data['train_y'].copy(),
-                            epochs=20, batch_size=batch, verbose=0)
+    # -- Model fit
+    history = mlp_model.fit(x=p_data['train_x'].copy(), y=p_data['train_y'].copy(),
+                            epochs=20, batch_size=batch, verbose=0, shuffle=False)
 
+    # preparation of metrics history data to analyze later
     metrics_history = {str(i): history.history[i] for i in ['loss', 'accuracy', 'auc']}
 
     # performance metrics of the model

@@ -72,4 +72,75 @@ La desventaja de proponer muchas capas ocultas es que "exploten" o "desvanecer" 
 (Cuando gradientes desvanecen) una actividad que hacer para verificar esto es comparar los pesos de las entradas no se mueven mucho respecto a los iniciales. Entonces, el mayor efecto
 del proceso de aprendizaje recae mas en la capa de salida. y asi al caso contrario. (todo esto puede evitarse al normalizar las entradas, y posiblemente, normalizar la salida tambien)
 
+# -- General Layout of document
 
+- CHAPTER 1: INTRODUCTION
+
+- CHAPTER 2: FINANCIAL MACHINE LEARNING
+- - Review of literature of machine learning topics applied to finance problems, in particular, price prediction and investments
+- - Argument: Define and address differences between ML and FML, particularly 3 in interest of this work
+- - (1) Parsimony of the Features/Model, (2) Crossvalidaton, (3) Cost function, (4) Parametric Stability of Models, (5) Particularities of my work
+
+- CHAPTER 3: FEATURE ENGINEERING 
+- The use of data preprocessing techniques, genetic programming and heuristics for feature engineering
+
+- - Data pre-processing
+- - The process and benefits of symbolic variables as features
+- - Argument: Heuristics/Explainability in synthetic-symbolic features
+
+- CHAPTER 4: PREDICTIVE MODELS
+- THe use of Statistical Learning and Machine Learning models for FML
+
+- - No free lunch
+- - Logistic, SVM, XGBoost, Neural Net (universal approximation theorem)
+- - Regularization For Bias-Variance trade-off
+- - Argument: Models of different Nature
+
+- CHAPTER 5: OPTIMIZATION and BACKTESTING
+- Bias-Variance tradeoff, overfitting, biases in optimizing models for FML
+- On the conditions of applying CV in financial time series
+
+- Crossvalidation
+- - Different CV schemes
+- - Sequential structure, the IID assumption, Leakage of information
+- - Ensemble methods
+- - Argument: T-fold
+
+- Hyperparameter Optimization
+- - Cost function (Convexity)
+- - Optimization technique
+- - Argument: Variations of cost functions
+
+- CHAPTER 6: MATERIALS AND METHODS: PARALLEL PROCESSING FOR MULTI MODEL HYPERPARAMETER OPTIMIZATION
+- Project structure to quasi-exhaustive train-test scenarios 
+
+- Parallel CPU processing and cloud computing
+- - T-Fold complexity (posterior analysis)
+- - Train in parallel
+- - Saving model hyperparameters
+- - Deployment
+
+
+# -- Why use the network architecture proposed
+https://en.wikipedia.org/wiki/Universal_approximation_theorem
+
+# -- How to choose activation function 
+https://machinelearningmastery.com/choose-an-activation-function-for-deep-learning/
+
+# -- Impact of errors in FML
+the roll of "drawdown" of a trade that was made as a result of a prediction
+
+# -- IDEA: ENCAPSULAR LO ENCONTRADO EN CADA CAPITULO DEL DOCUMENTO Y ESO ENVIARLO/EXPONERLO EN UN EVENTO
+
+
+# -- Structuring MLP
+
+- Number of layers
+- Number of hidden neurons
+- Activation function per layer 
+- Loss function
+- Optimizer
+- Hyperparameters of optimizer
+- Control capacity (parsimony)
+- Dropout
+- Regularization (weight: L1, L2, L1-L2)

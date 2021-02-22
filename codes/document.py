@@ -312,5 +312,3 @@ plot_5 = vs.g_ohlc_class(p_ohlc=ohlc_prices, p_theme=dt.theme_plot_3, p_data_cla
 
 # Generate plot online with chartstudio
 # py.plot(plot_5)
-
-# 
