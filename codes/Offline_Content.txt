@@ -172,4 +172,5 @@ the roll of "drawdown" of a trade that was made as a result of a prediction
 
 tensorflow.python.framework.errors_impl.InvalidArgumentError: assertion failed: [predictions must be >= 0] [Condition x >= y did not hold element-wise:] [x (ann-mlp/output_layer/Sigmoid:0) =
 
-- removing the 
+- removing the regularization layers but kept dropout resumed the process without code error but lower results. 
+

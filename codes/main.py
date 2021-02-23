@@ -63,8 +63,8 @@ if __name__ == "__main__":
         ml_models = ['ann-mlp']
 
         # Establish the number of workers with as many cores as the computer has
-        # workers = cpu_count()-1
-        workers = 1
+        workers = cpu_count()-1
+        # workers = 1
 
         # create pool of workers for asyncronous parallelism
         pool = mp.Pool(workers)

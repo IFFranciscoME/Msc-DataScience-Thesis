@@ -753,12 +753,22 @@ def tf_model_metrics(p_model, p_model_data, p_history):
         # Fitted train values
         p_y_train_d = p_model.predict(p_model_data['train_x'])
 
+        # check if there is a NAN in the prediction
+        if np.isnan(p_y_train_d).any():
+            print(' *** there was a NaN *** ')
+        
+        p_y_train_d = np.nan_to_num(p_y_train_d)
+
         # tensorflow output
         # reshape array as a 1d array (list)
         p_y_train_d = p_y_train_d.reshape(len(p_y_train_d),)
         p_y_train_d[p_y_train_d.reshape(len(p_y_train_d),) >= 0.5] = 1
         p_y_train_d[p_y_train_d.reshape(len(p_y_train_d),) < 0.5] = 0
         # p_y_train_d = p_y_train_d.astype(int)
+
+        # **** hardcode at least 1 case for each class in order to avoid loss function error
+        p_y_train_d[0] = 1
+        p_y_train_d[1] = 0
 
         p_y_result_train = pd.DataFrame({'train_y': p_model_data['train_y'], 'train_pred_y': p_y_train_d})
         # Confussion matrix
@@ -802,6 +812,11 @@ def tf_model_metrics(p_model, p_model_data, p_history):
 
         # Fitted test values
         p_y_test_d = p_model.predict(p_model_data['test_x'])
+        
+        if np.isnan(p_y_test_d).any():
+            print(' *** there was a NaN *** ')
+        
+        p_y_test_d = np.nan_to_num(p_y_test_d)
 
         # tensorflow output
         # reshape array as a 1d array (list)
@@ -810,6 +825,10 @@ def tf_model_metrics(p_model, p_model_data, p_history):
         p_y_test_d[p_y_test_d.reshape(len(p_y_test_d),) >= 0.5] = 1
         p_y_test_d[p_y_test_d.reshape(len(p_y_test_d),) < 0.5] = 0
         # p_y_test_d = p_y_test_d.astype(int)
+
+        # **** hardcode at least 1 case for each class in order to avoid loss function error
+        p_y_test_d[0] = 1
+        p_y_test_d[1] = 0
         
         p_y_result_test = pd.DataFrame({'test_y': p_model_data['test_y'], 'test_pred_y': p_y_test_d})
         cm_test = confusion_matrix(p_y_result_test['test_y'], p_y_result_test['test_pred_y'])
@@ -1213,8 +1232,7 @@ def ann_mlp(p_data, p_params):
 
         # -- REGULARIZATION : https://keras.io/api/layers/regularization_layers/  
         # L1 and L2 inputs regularization 
-        reg_1 = regularizers.l2(0.001)
-        # L1 and L2 weights regularization
+        reg_1 = regularizers.l1_l2(l1=p_params['reg_1'][0], l2=p_params['reg_1'][1])
         reg_2 = regularizers.l1_l2(l1=p_params['reg_2'][0], l2=p_params['reg_2'][1])
 
         # -- METRICS: https://keras.io/api/metrics/
@@ -1235,7 +1253,8 @@ def ann_mlp(p_data, p_params):
         
             # Add hidden layer
             mlp_model.add(layers.Dense(p_params['hidden_neurons'], activation=p_params['activation'],
-                                       name='hidden_layer_' + str(layer), kernel_regularizer=reg_1))
+                                       name='hidden_layer_' + str(layer), activity_regularizer=reg_2,
+                                       kernel_regularizer=reg_1, bias_regularizer=reg_2))
 
             # Add dropout layer
             mlp_model.add(layers.Dropout(p_params['dropout']))
@@ -1259,12 +1278,12 @@ def ann_mlp(p_data, p_params):
 
     # -- Model fit
     history = keras_class.fit(x=p_data['train_x'].copy(), y=p_data['train_y'].copy(),
-                              epochs=100, batch_size=batch, verbose=0, shuffle=False)
+                              epochs=200, batch_size=batch, verbose=0, shuffle=False)
 
     # preparation of metrics history data to analyze later
     metrics_history = {str(i): history.history[i] for i in ['loss', 'accuracy', 'auc']}
 
-    print(metrics_history['accuracy'][-1])
+    # print(metrics_history['accuracy'][-1])
 
     # performance metrics of the model
     metrics_mlp_model = tf_model_metrics(p_model=keras_class, p_model_data=p_data.copy(),

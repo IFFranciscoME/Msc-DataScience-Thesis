@@ -23,9 +23,9 @@ environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 # ---------------------------------------------------------------------------------- ------------------- -- #
 
 # Short Version for Testing
-iter_fold = ['quarter']
+iter_fold = ['quarter', 'semester', 'year']
 iter_opt = {'inner-split': ['20'], 'transform': ['robust'], 'scaling': ['post-features'],
-            'fitness': ['logloss-train']}
+            'fitness': ['logloss-inv-weighted']}
 
 # ---------------------------------------------------------------- Complete list of available parameters -- #
 
@@ -46,11 +46,12 @@ iter_exp = list(itertools.product(*[iter_opt['fitness'], iter_opt['transform'],
 # --------------------------------------------------------------------- Parameters for Symbolic Features -- #
 # --------------------------------------------------------------------- -------------------------------- -- #
 
-symbolic_params = {'functions': ["sub", "add", 'inv', 'mul', 'div', 'abs', 'log'],
-                   'population': 5000, 'tournament':20, 'hof': 20, 'generations': 10, 'n_features':10,
-                   'init_depth': (4,8), 'init_method': 'half and half', 'parsimony': 0, 'constants': None,
-                   'metric': 'pearson', 'metric_goal': 0.60, 
-                   'prob_cross': 0.4, 'prob_mutation_subtree': 0.3,
+symbolic_params = {'functions': ["sub", "add", 'inv', 'mul', 'div', 'abs', 'log', 'sqrt'],
+                   'population': 5000, 'tournament':20, 'hof': 20, 'generations': 4, 'n_features':20,
+                   'init_depth': (4,18), 'init_method': 'half and half', 'parsimony': 0.001,
+                   'constants': None,
+                   'metric': 'pearson', 'metric_goal': 0.65, 
+                   'prob_cross': 0.5, 'prob_mutation_subtree': 0.2,
                    'prob_mutation_hoist': 0.1, 'prob_mutation_point': 0.2,
                    'verbose': True, 'parallelization': True, 'warm_start': True}
 
@@ -89,20 +90,20 @@ models = {
 
     'ann-mlp': {
         'label': 'ann-mlp',
-        'params': {'hidden_layers': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                     2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+        'params': {'hidden_layers': [1, 1, 1, 1, 2, 2, 2, 3, 3, 3,
+                                     1, 1, 1, 1, 2, 2, 2, 3, 3, 3],
                     
-                   'hidden_neurons': [10, 15, 20, 35, 40, 55, 60, 65, 75, 90,
-                                      10, 15, 20, 35, 40, 55, 60, 65, 75, 90],
+                   'hidden_neurons': [5, 10, 15, 20, 35, 40, 55, 60, 65, 75,
+                                      5, 10, 15, 20, 35, 40, 55, 60, 65, 75],
 
                    'activation': ['relu', 'relu', 'relu', 'relu', 'relu',
                                   'relu', 'relu', 'relu', 'relu', 'relu', 
                                   
-                                  'relu', 'relu', 'relu', 'relu', 'relu',
-                                  'relu', 'relu', 'relu', 'relu', 'relu'],
+                                  'sigmoid', 'sigmoid', 'sigmoid', 'sigmoid', 'sigmoid',
+                                  'sigmoid', 'sigmoid', 'sigmoid', 'sigmoid', 'sigmoid'],
 
-                   'reg_1': [[0.001, 0.001], [0.005, 0.005], [0.015, 0.005], [0.005, 0.015], [0.030, 0.030],
-                             [0.001, 0.001], [0.005, 0.005], [0.015, 0.005], [0.005, 0.015], [0.030, 0.030]],
+                   'reg_1': [[0.001, 0.001], [0.01, 0.01], [0.001, 0.01], [0.01, 0.001], [0, 0],
+                             [0.001, 0.001], [0.01, 0.01], [0.001, 0.01], [0.01, 0.001], [0, 0]],
                     
                    'reg_2': [[0.001, 0.001], [0.005, 0.005], [0.015, 0.005], [0.005, 0.015], [0.030, 0.030],
                              [0.001, 0.001], [0.005, 0.005], [0.015, 0.005], [0.005, 0.015], [0.030, 0.030]],
@@ -110,17 +111,17 @@ models = {
                     'dropout': [0.01, 0.01, 0.02, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35,
                                 0.01, 0.01, 0.02, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35],
 
-                   'learning_rate': [.2, .1, 0.085, 0.030, 0.015, 0.01, 0.005, 0.002, 0.001, 0.0001,
-                                     .2, .1, 0.085, 0.030, 0.015, 0.01, 0.005, 0.002, 0.001, 0.0001],
+                   'learning_rate': [0.2, 0.1, 0.085, 0.030, 0.015, 0.01, 0.005, 0.002, 0.001, 0.0001,
+                                     0.2, 0.1, 0.085, 0.030, 0.015, 0.01, 0.005, 0.002, 0.001, 0.0001],
 
-                   'momentum': [0.2, 0.1, 0.02, 0.01, 0.001, 0.2, 0.1, 0.02, 0.01, 0.001,
-                                0.2, 0.1, 0.02, 0.01, 0.001, 0.2, 0.1, 0.02, 0.01, 0.001] }}}
+                   'momentum': [0.4, 0.2, 0.1, 0.07, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001,
+                                0.4, 0.2, 0.1, 0.07, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001]}}}
 
 # ------------------------------------------------------------------ Parameters for Genetic Optimization -- #
 # ------------------------------------------------------------------ ----------------------------------- -- #
 
 optimization_params = {'halloffame': 10, 'tournament': 15, 'population': 20, 'generations': 10,
-                       'mutation': 0.2, 'crossover': 0.8}
+                       'mutation': 0.8, 'crossover': 0.8}
 
 # ------------------------------------------------------------------------------------- Themes for plots -- #
 # ------------------------------------------------------------------------------------- ---------------- -- #
