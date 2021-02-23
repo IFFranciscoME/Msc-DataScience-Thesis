@@ -58,6 +58,9 @@
 |   Coding         | migration to keras                 | 16:00 19.Feb.2021  | 7.0          |                  |
 |   Tech Stack     | ssh for github                     | 16:00 20.Feb.2021  | 1.0          |                  |
 |   Research       | Content organization and new ideas | 10:00 21.Feb.2021  | 2.0          |                  |
-
 |   Coding         | add ann-mlp optimization params    | 14:00 22.Feb.2021  | 4.0          |                  |
-|   Coding         | sklearn wrapper tf.keras for opt   | 18:00 22.Feb.2021  | 7.0          |                  |
+|   Coding         | sklearn wrapper tf.keras for opt   | 18:00 22.Feb.2021  | 1.0          |                  |
+|   Coding         | debugging nan / 0s error in tf     | 19:00 22.Feb.2021  | 6.0          |                  |
+
+|   Coding         | debugging nan / 0s error in tf     | 10:00 23.Feb.2021  | 1.0          |                  |
+|   Coding         | H8 prices to run the project with  | 14:00 23.Feb.2021  | 1.0          |                  |

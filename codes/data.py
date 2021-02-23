@@ -166,22 +166,25 @@ theme_plot_5 = dict(p_colors={'color_1': '#6b6b6b', 'color_2': '#ABABAB', 'color
 # -------------------------------------------------------------------- --------------------------------- -- #
 
 def group_daily():
-    main_path_g = 'files/'
+    
+    # resample by the minute "T", and by the day will be "D", and by 8 hours will be "8H"
+    file_nom = 'M1'
+    
+    main_path_g = 'files/prices/raw/'
     abspath = path.abspath(main_path_g)
-    p_years_list = ['2007', '2008', '2009']
+    p_years_list = ['2007', '2008']
     r_data = {}
     files = sorted([f for f in listdir(abspath) if isfile(join(abspath, f))])
     # swap high with low since the original data is wrong
     column_names = ["timestamp", "open", "high", "low", "close", "volume"]
 
     for file in files:
-        # file = files[1]
+        # file = files[0]
         data = pd.read_csv(main_path_g + file,
                            names=column_names, parse_dates=["timestamp"], index_col=["timestamp"])
 
-        # resample by the minute "T", and by the day will be "D"
-        data = data.resample("D").agg({'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last',
-                                         'volume': 'sum'})
+        data = data.resample("T").agg({'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last',
+                                          'volume': 'sum'})
         # eliminar los NAs originados por que ese minuto
         data = data.dropna()
 
@@ -191,8 +194,8 @@ def group_daily():
 
         for year in years:
             data_temp = data.groupby(pd.Grouper(freq='1Y')).get_group(year + '-12-31')
-            data_temp.to_csv('files/' + 'MP_D_' + year + '.csv')
-            r_data['MP_D_' + year] = data_temp
+            data_temp.to_csv('files/prices/' + file_nom + '/MP_' + file_nom + '_' + year + '.csv')
+            r_data['MP_' + file_nom + '_' + year] = data_temp
 
     return r_data
 
@@ -203,9 +206,10 @@ def group_daily():
 # the price in the file is expressed as the USD to purchase one MXN
 # if is needed to convert to the inverse, the MXN to purchase one USD, uncomment the following line
 mode = 'MXN_USD'
+file_nom = 'H8'
 
 # path in order to read files
-main_path = 'files/daily/'
+main_path = 'files/prices/' + file_nom + '/'
 abspath_f = path.abspath(main_path)
 files_f = sorted([f for f in listdir(abspath_f) if isfile(join(abspath_f, f))])
 price_data = {}
@@ -230,10 +234,10 @@ for file_f in files_f:
 
     years_f = set([str(datadate.year) for datadate in list(data_f['timestamp'])])
     for year_f in years_f:
-        price_data['MP_D_' + year_f] = data_f
+        price_data[file_nom + year_f] = data_f
 
 # One period data concatenation (Fast run of main.py)
-ohlc_data = pd.concat([price_data[list(price_data.keys())[0]]])
+ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]]])
 
 # ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
 #                        price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
@@ -244,8 +248,9 @@ ohlc_data = pd.concat([price_data[list(price_data.keys())[0]]])
 #                        price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
 #                        price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]],
 #                        price_data[list(price_data.keys())[6]], price_data[list(price_data.keys())[7]],
-#                        price_data[list(price_data.keys())[8]], price_data[list(price_data.keys())[9]]])
-
+#                        price_data[list(price_data.keys())[8]], price_data[list(price_data.keys())[9]],
+#                        price_data[list(price_data.keys())[10]], price_data[list(price_data.keys())[11]],
+#                        price_data[list(price_data.keys())[12]]])
 
 # ------------------------------------------------------------------------ SAVE/LOAD DATA: PICKLE FORMAT -- #
 # ----------------------------------------------------------------------------- ------------------------ -- #
