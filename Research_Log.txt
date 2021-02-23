@@ -57,6 +57,7 @@
 |   Meeting        | With PhD researcher (olascuaga)    | 14:00 19.Feb.2021  | 1.0          |                  |
 |   Coding         | migration to keras                 | 16:00 19.Feb.2021  | 7.0          |                  |
 |   Tech Stack     | ssh for github                     | 16:00 20.Feb.2021  | 1.0          |                  |
-
 |   Research       | Content organization and new ideas | 10:00 21.Feb.2021  | 2.0          |                  |
 
+|   Coding         | add ann-mlp optimization params    | 14:00 22.Feb.2021  | 4.0          |                  |
+|   Coding         | sklearn wrapper tf.keras for opt   | 18:00 22.Feb.2021  |   0          |                  |

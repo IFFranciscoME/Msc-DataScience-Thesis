@@ -1192,7 +1192,7 @@ def ann_mlp(p_data, p_params):
     # hidden_layer_sizes, activation, solver, alpha,    
 
     # the batch size will be 50% of the training data length or 75
-    batch = max(32, len(p_data['train_x'])//8)
+    batch = 32
     # print(batch)
 
     # model for a Multilayer perceptron
@@ -1201,13 +1201,13 @@ def ann_mlp(p_data, p_params):
     # -- OPTIMIZER : https://keras.io/api/optimizers/ 
     # specify before compile function in order to modify default parameters for optimizer
     # Gradient Descent with Momentum
-    opt_1 = optimizers.SGD(lr=p_params['learning_rate'], momentum=0.9)
+    opt_1 = optimizers.SGD(lr=p_params['learning_rate'], momentum=p_params['momentum'])
 
     # -- REGULARIZATION : https://keras.io/api/layers/regularization_layers/  
     # L1 and L2 inputs regularization 
-    reg_1 = regularizers.l1_l2(l1=0.01, l2=0.01)
+    reg_1 = regularizers.l1_l2(l1=p_params['reg_1'][0], l2=p_params['reg_1'][1])
     # L1 and L2 weights regularization
-    reg_2 = regularizers.l1_l2(l1=0.01, l2=0.01)
+    reg_2 = regularizers.l1_l2(l1=p_params['reg_2'][0], l2=p_params['reg_2'][1])
 
     # -- METRICS: https://keras.io/api/metrics/
     # For model performance tracking
@@ -1221,17 +1221,21 @@ def ann_mlp(p_data, p_params):
     # n_inputs = len(list(p_data['train_x'].columns))
 
     # input layer
-    # mlp_model.add(Dense(n_inputs, activation=p_params['activation'], input_dim=n_inputs, name='input_layer'))
+    # mlp_model.add(layers.Dense(n_inputs, input_dim=n_inputs, name='input_layer'))
 
     for i in range(0, p_params['hidden_layers']):
     
-        # hidden layer (1)
+        # Add hidden layer
         mlp_model.add(layers.Dense(p_params['hidden_neurons'],
                                    activation=p_params['activation'],
                                    name='hidden_layer_' + str(i),
                                    kernel_regularizer=reg_1,
                                    bias_regularizer=reg_2,
                                    activity_regularizer=reg_1))
+
+        # Add dropout layer
+
+        # mlp_model.add(layers.Dropout(p_params['dropout']))
     
     # output layer
     mlp_model.add(layers.Dense(1, activation='sigmoid', name='output_layer'))
@@ -1241,7 +1245,7 @@ def ann_mlp(p_data, p_params):
 
     # -- Model fit
     history = mlp_model.fit(x=p_data['train_x'].copy(), y=p_data['train_y'].copy(),
-                            epochs=20, batch_size=batch, verbose=0, shuffle=False)
+                            epochs=30, batch_size=batch, verbose=0, shuffle=False)
 
     # preparation of metrics history data to analyze later
     metrics_history = {str(i): history.history[i] for i in ['loss', 'accuracy', 'auc']}
@@ -1300,6 +1304,7 @@ def genetic_algo_evaluate(p_individual, p_eval_data, p_model, p_fit_type):
     elif p_model == 'ann-mlp':
         # model results  
         model = ann_mlp(p_data=p_eval_data, p_params=chromosome)
+
         # return the already calculated metric
         return model['pro-metrics'][p_fit_type]
     
@@ -1532,17 +1537,22 @@ def genetic_algo_optimization(p_gen_data, p_model, p_opt_params, p_fit_type):
         toolbox_mlp.register("attr_hidden_layers", random.choice, p_model['params']['hidden_layers'])
         toolbox_mlp.register("attr_hidden_neurons", random.choice, p_model['params']['hidden_neurons'])
         toolbox_mlp.register("attr_activation", random.choice, p_model['params']['activation'])
-        toolbox_mlp.register("attr_alpha", random.choice, p_model['params']['alpha'])
-        toolbox_mlp.register("attr_learning_rate_init",
-                             random.choice, p_model['params']['learning_rate_init'])
+        toolbox_mlp.register("attr_reg_1", random.choice, p_model['params']['reg_1'])
+        toolbox_mlp.register("attr_reg_2", random.choice, p_model['params']['reg_2'])
+        toolbox_mlp.register("attr_dropout", random.choice, p_model['params']['dropout'])
+        toolbox_mlp.register("attr_learning_rate", random.choice, p_model['params']['learning_rate'])
+        toolbox_mlp.register("attr_momentum", random.choice, p_model['params']['momentum'])
 
         # This is the order in which genes will be combined to create a chromosome
         toolbox_mlp.register("Individual_mlp", tools.initCycle, creator.Individual_mlp,
                              (toolbox_mlp.attr_hidden_layers,
                               toolbox_mlp.attr_hidden_neurons,
                               toolbox_mlp.attr_activation,
-                              toolbox_mlp.attr_alpha,
-                              toolbox_mlp.attr_learning_rate_init), n=1)
+                              toolbox_mlp.attr_reg_1,
+                              toolbox_mlp.attr_reg_2,
+                              toolbox_mlp.attr_dropout,
+                              toolbox_mlp.attr_learning_rate,
+                              toolbox_mlp.attr_momentum), n=1)
 
         # population definition
         toolbox_mlp.register("population", tools.initRepeat, list, toolbox_mlp.Individual_mlp)
@@ -1560,9 +1570,16 @@ def genetic_algo_optimization(p_gen_data, p_model, p_opt_params, p_fit_type):
             elif gene == 2:
                 individual[2] = random.choice(p_model['params']['activation'])
             elif gene == 3:
-                individual[3] = random.choice(p_model['params']['alpha'])
+                individual[3] = random.choice(p_model['params']['reg_1'])
             elif gene == 4:
-                individual[4] = random.choice(p_model['params']['learning_rate_init'])
+                individual[4] = random.choice(p_model['params']['reg_2'])
+            elif gene == 5:
+                individual[5] = random.choice(p_model['params']['dropout'])
+            elif gene == 6:
+                individual[6] = random.choice(p_model['params']['learning_rate'])
+            elif gene == 7:
+                individual[7] = random.choice(p_model['params']['momentum'])
+
             return individual,
 
         # ------------------------------------------------------------ funcion de evaluacion para LS SVM -- #
@@ -1619,8 +1636,9 @@ def model_evaluation(p_features, p_optim_data, p_model):
 
     elif p_model == 'ann-mlp':
         parameters = {'hidden_layers': p_optim_data[0], 'hidden_neurons': p_optim_data[1],
-                      'activation': p_optim_data[2], 'alpha': p_optim_data[3],
-                      'learning_rate_init': p_optim_data[4]}
+                      'activation': p_optim_data[2], 'reg_1': p_optim_data[3], 'reg_2': p_optim_data[4],
+                      'dropout': p_optim_data[5], 'learning_rate': p_optim_data[6],
+                      'momentum': p_optim_data[7]}
 
         return ann_mlp(p_data=p_features, p_params=parameters)
 

@@ -227,9 +227,9 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 - Fix: use pickle to save tf.keras model 
 - Fix: global evaluation test with pickle object with tf.keras model (use of model.predict())
 
-
-- (goal) Enhacement: Expand hyperparameter to search for ann-mlp model 
--                      (1) list of additional elements for model, (2) include in genetic_algo_opt, (3) testing
+# -- 22.02.2021
+- Enhacement: Expand hyperparameter to search for ann-mlp model 
+- (goal) Fix: sklearn wrapper for tf.keras in order to use it with current genetic_algo_optimization
 
 # ---------------------------------------------------------------------------------------------- BACKLOG -- # 
 # ---------------------------------------------------------------------------------------------- ------- -- #
@@ -315,12 +315,6 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 # -- -- What is the memory complexity of this method ? 
 
 # -- ANN-MLP
-# -- -- HYPERPARAMETERS
-
-# -- -- -- hidden_layer_sizes: The ith element represents the number of neurons in the ith hidden layer.
-# -- -- -- alpha: L2 penalty (regularization term) parameter.
-# -- -- -- activation: Activation function for the hidden layer.
-# -- -- -- learning_rate_init: The initial learning rate used. It controls the step-size in updating the weights.
 
 # cross analysis (Winning Fold Vs Global Test)
 # -- outliers vs regularization

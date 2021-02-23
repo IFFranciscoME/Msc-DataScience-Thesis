@@ -120,6 +120,10 @@ del proceso de aprendizaje recae mas en la capa de salida. y asi al caso contrar
 - - Saving model hyperparameters
 - - Deployment
 
+- - Baseline (model benchmark)
+- - Naive prediction (martingale property): 
+https://en.wikipedia.org/wiki/Martingale_(probability_theory)
+The conditional expected value of the next observation, given all the past observations, is equal to the most recent observation. 
 
 # -- Why use the network architecture proposed
 https://en.wikipedia.org/wiki/Universal_approximation_theorem
@@ -132,15 +136,31 @@ the roll of "drawdown" of a trade that was made as a result of a prediction
 
 # -- IDEA: ENCAPSULAR LO ENCONTRADO EN CADA CAPITULO DEL DOCUMENTO Y ESO ENVIARLO/EXPONERLO EN UN EVENTO
 
-
 # -- Structuring MLP
 
-- Number of layers
+- Number of layers: 1 to 3
 - Number of hidden neurons
 - Activation function per layer 
 - Loss function
+	
 - Optimizer
+
+	- it minimizes the cost (loss) function with respect to the weights.
+	- When used a gradient based method, the gradient of the cost function can be calculated recursively
+	- Is it possible to speed up the execution of Gradient Descent if the update is carried out through batches ?
+	- Is it prone to converge to local minimus ?
+
 - Hyperparameters of optimizer
-- Control capacity (parsimony)
+- Capacity (model parameters)
 - Dropout
-- Regularization (weight: L1, L2, L1-L2)
+- Regularization (weight, )
+
+- General elements of a predictive model
+- - Architecture of the model
+- - Loss Function
+- - Learning Algorithm
+
+- General elements of Neural Network
+- - FeedForward Multilayer (shallow) perceptron (ReLU, Sigmoid, Bias)
+- - Binary crossentropy (with regularization)
+- - Backpropagation (weight update) + Gradient Descent
