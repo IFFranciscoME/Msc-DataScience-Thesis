@@ -164,3 +164,12 @@ the roll of "drawdown" of a trade that was made as a result of a prediction
 - - FeedForward Multilayer (shallow) perceptron (ReLU, Sigmoid, Bias)
 - - Binary crossentropy (with regularization)
 - - Backpropagation (weight update) + Gradient Descent
+
+# -- 
+
+- tried all types of regularization: kernel_regularizer, bias_regularizer, activity_regularizer
+- too much regularization provoque very bad model (all values are 1 class) and resulted in a code error
+
+tensorflow.python.framework.errors_impl.InvalidArgumentError: assertion failed: [predictions must be >= 0] [Condition x >= y did not hold element-wise:] [x (ann-mlp/output_layer/Sigmoid:0) =
+
+- removing the 

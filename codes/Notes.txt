@@ -327,3 +327,32 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 # -- Regularization effects in logistic regression
 # -- kernel in SVM
 # -- training time in ANN-MLP
+
+# -- NOTES ON EXPERIMENTS
+
+# -- the order and nomenclature of sub-sets is: Train (stays the same), Validation (what conpcetually was test), 
+Test a sub-data set used at the very final stage (never seen by any model under any situation)
+
+# -- instead of auc-test, logloss-test, acc-test, i will add auc-diff, logloss-diff, acc-diff as the result of the
+difference of the metric in train and in validation sets
+
+# -- apparently, L1 and L2 regularizers for the kernel (applied to weights), is in the order of 0.001
+
+# -- the ratio of generations is useful to be sufficient, like 10 or more, in order to provide several oportunities
+of weight initialization at each block of epochs. That is, not varying too much the hyper parameters in order to
+for the same hyperparameters find through several iterations the optimal weights.But after 8, it stopped to provide
+sufficiently different individuals. 
+
+# -- Dropout is applied to each hidden layer (so it is not applied to the input and the output). One connection
+could be that getting the dropped inputs and compare them to the statistical properties of the inputs in that
+particular fold, whether they were pre-processed (scaled or normalized)
+
+# -- Note on simmetry when using integers as clases, if use -1, 0, +1, they have a simmetry at 0 ant apparently that
+causes numerical instability in the output of the loss function (for the case of cross-entropy)
+
+# -- ERRORS
+tensorflow.python.framework.errors_impl.InvalidArgumentError:  assertion failed: [predictions must be >= 0] [Condition x >= y did not hold element-wise:] [x (ann-mlp/output_layer/Sigmoid:0) = ] [[-nan][-nan][-nan]...] [y (Cast_8/x:0) = ] [0]
+
+tensorflow.python.framework.errors_impl.InvalidArgumentError:  assertion failed: [predictions must be >= 0] [Condition x >= y did not hold element-wise:] [x (ann-mlp/output_layer/Sigmoid:0) = ] [[0][0][0]...] [y (Cast_8/x:0) = ] [0]
+
+# -- maximize the 1/logloss function in order to not change the GA code

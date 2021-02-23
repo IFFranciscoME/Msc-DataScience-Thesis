@@ -28,13 +28,10 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.metrics import confusion_matrix, accuracy_score, roc_auc_score, roc_curve, log_loss
 
+import keras as ks
 import tensorflow as tf
 from tensorflow.python.keras import backend as K
-
 from tensorflow.keras import layers, models, regularizers, optimizers
-# from tensorflow.keras.models import Sequential
-# from tensorflow.keras.layers import Dense, Dropout, Activation
-# from tensorflow.keras.optimizers import SGD, Adam
 
 from datetime import datetime
 from scipy.stats import kurtosis as m_kurtosis
@@ -759,9 +756,9 @@ def tf_model_metrics(p_model, p_model_data, p_history):
         # tensorflow output
         # reshape array as a 1d array (list)
         p_y_train_d = p_y_train_d.reshape(len(p_y_train_d),)
-        p_y_train_d[p_y_train_d.reshape(len(p_y_train_d),) > 0.5] = 1
-        p_y_train_d[p_y_train_d.reshape(len(p_y_train_d),) <= 0.5] = 0
-        p_y_train_d = p_y_train_d.astype(int)
+        p_y_train_d[p_y_train_d.reshape(len(p_y_train_d),) >= 0.5] = 1
+        p_y_train_d[p_y_train_d.reshape(len(p_y_train_d),) < 0.5] = 0
+        # p_y_train_d = p_y_train_d.astype(int)
 
         p_y_result_train = pd.DataFrame({'train_y': p_model_data['train_y'], 'train_pred_y': p_y_train_d})
         # Confussion matrix
@@ -770,25 +767,25 @@ def tf_model_metrics(p_model, p_model_data, p_history):
         # Probabilities of class in train data
         probs_train = p_model.predict(p_model_data['train_x']).reshape(len(p_model_data['train_x']),)
         # In case of a nan, replace it with zero (to prevent errors)
-        probs_train = np.nan_to_num(probs_train)
+        # probs_train = np.nan_to_num(probs_train)
 
         # Accuracy rate
         # historical info
         acc_h_train = p_history['accuracy']
         # last configuration
-        acc_train = np.round(acc_h_train[-1], 4)
+        acc_train = acc_h_train[-1]
         # False Positive Rate, True Positive Rate, Thresholds
         fpr_train, tpr_train, thresholds = roc_curve(list(p_model_data['train_y']), probs_train, pos_label=1)
         # Area Under the Curve (ROC) for train data
         # historical info
         auc_h_train = p_history['auc']
         # last configuration
-        auc_train = np.round(auc_h_train[-1], 4)
+        auc_train = auc_h_train[-1] + 1e-5
         # Logloss (Binary cross-entropy function)
         # `historic`al info
         logloss_h_train = p_history['loss']
         # last configuration
-        logloss_train = np.round(logloss_h_train[-1], 4)
+        logloss_train = logloss_h_train[-1] + 1e-5
 
         if 'test_x' not in data_keys and 'test_y' not in data_keys:
             cm_test = cm_train
@@ -810,34 +807,34 @@ def tf_model_metrics(p_model, p_model_data, p_history):
         # reshape array as a 1d array (list)
         p_y_test_d = p_y_test_d.reshape(len(p_y_test_d),)
         # trigger for class is 1 if > 0.5
-        p_y_test_d[p_y_test_d.reshape(len(p_y_test_d),) > 0.5] = 1
-        p_y_test_d[p_y_test_d.reshape(len(p_y_test_d),) <= 0.5] = 0
-        p_y_test_d = p_y_test_d.astype(int)
+        p_y_test_d[p_y_test_d.reshape(len(p_y_test_d),) >= 0.5] = 1
+        p_y_test_d[p_y_test_d.reshape(len(p_y_test_d),) < 0.5] = 0
+        # p_y_test_d = p_y_test_d.astype(int)
         
         p_y_result_test = pd.DataFrame({'test_y': p_model_data['test_y'], 'test_pred_y': p_y_test_d})
         cm_test = confusion_matrix(p_y_result_test['test_y'], p_y_result_test['test_pred_y'])
         # Probabilities of class in test data
         probs_test = p_model.predict(p_model_data['test_x']).reshape(len(p_model_data['test_x']),)
         # In case of a nan, replace it with zero (to prevent errors)
-        probs_test = np.nan_to_num(probs_test)
+        # probs_test = np.nan_to_num(probs_test)
 
         # Accuracy rate
         # historical info
         acc_h_test = p_history['accuracy']
         # last configuration
-        acc_test = np.round(acc_h_test[-1], 4)
+        acc_test = acc_h_test[-1]
         # False Positive Rate, True Positive Rate, Thresholds
         fpr_test, tpr_test, thresholds = roc_curve(list(p_model_data['test_y']), probs_test, pos_label=1)
         # Area Under the Curve (ROC) for train data
         # historical info
         auc_h_test = p_history['auc']
         # last configuration
-        auc_test = np.round(auc_h_test[-1], 4)
+        auc_test = auc_h_test[-1] + 1e-5
         # Logloss (Binary cross-entropy function)
         # historical info
         logloss_h_test = p_history['loss']
         # last configuration
-        logloss_test = np.round(logloss_h_test[-1], 4)
+        logloss_test = logloss_h_test[-1] + 1e-5
 
         if 'train_x' not in data_keys and 'train_y' not in data_keys:
             cm_train = cm_test
@@ -852,20 +849,23 @@ def tf_model_metrics(p_model, p_model_data, p_history):
     # -- ----------------------------------------------------------------------------------------------------
 
     # calculate relevant metrics
-    pro_metrics = {'acc-train': round(acc_train, 4), 'acc-test': round(acc_test, 4), 
-                   'acc-mean': round((acc_train + acc_test)/2, 4), 
-                   'acc-weighted': round((acc_train*0.80 + acc_test*0.20)/2, 4), 
-                   'acc-inv-weighted': round((acc_train*0.20 + acc_test*0.80)/2, 4),
+    pro_metrics = {'acc-train': acc_train,
+                   'acc-test': acc_test, 
+                   'acc-mean': (acc_train + acc_test)/2 + 1e-5, 
+                   'acc-weighted': (acc_train*0.80 + acc_test*0.20)/2 + 1e-5,
+                   'acc-inv-weighted': (acc_train*0.20 + acc_test*0.80)/2 + 1e-5,
 
-                   'auc-train': round(auc_train, 4), 'auc-test': round(auc_test, 4),
-                   'auc-mean': round((auc_train + auc_test)/2, 4),
-                   'auc-weighted': round((auc_train*0.80 + auc_test*0.20)/2, 4),
-                   'auc-inv-weighted': round((auc_train*0.20 + auc_test*0.80)/2, 4),
+                   'auc-train': auc_train,
+                   'auc-test': auc_test,
+                   'auc-mean': (auc_train + auc_test)/2 + 1e-5, 
+                   'auc-weighted': (auc_train*0.80 + auc_test*0.20)/2 + 1e-5,
+                   'auc-inv-weighted': (auc_train*0.20 + auc_test*0.80)/2 + 1e-5,
 
-                   'logloss-train': round(auc_train, 4), 'logloss-test': round(auc_test, 4),
-                   'logloss-mean': round((logloss_train + logloss_test)/2, 4),
-                   'logloss-weighted': round((logloss_train*0.80 + logloss_test*0.20)/2, 4),
-                   'logloss-inv-weighted': round((logloss_train*0.20 + logloss_test*0.80)/2, 4)}
+                   'logloss-train': 1/logloss_train,
+                   'logloss-test': 1/logloss_test,
+                   'logloss-mean': (1/logloss_train + 1/logloss_test)/2 + 1e-5,
+                   'logloss-weighted': (1/logloss_train*0.80 + 1/logloss_test*0.20)/2 + 1e-5,
+                   'logloss-inv-weighted': (1/logloss_train*0.20 + 1/logloss_test*0.80)/2 + 1e-5}
 
     # -- ----------------------------------------------------------------------------------------------------
 
@@ -921,15 +921,15 @@ def sk_model_metrics(p_model, p_model_data):
         probs_train = np.nan_to_num(probs_train)
 
         # Accuracy rate
-        acc_train = round(accuracy_score(list(p_model_data['train_y']), p_y_train_d), 4)
+        acc_train = accuracy_score(list(p_model_data['train_y']), p_y_train_d)
         # False Positive Rate, True Positive Rate, Thresholds
         fpr_train, tpr_train, thresholds = roc_curve(list(p_model_data['train_y']),
                                                             probs_train[:, 1], pos_label=1)
         # Area Under the Curve (ROC) for train data
-        auc_train = round(roc_auc_score(list(p_model_data['train_y']), probs_train[:, 1]), 4)
+        auc_train = roc_auc_score(list(p_model_data['train_y']), probs_train[:, 1]) + 1e-5
 
         # Logloss (Binary cross-entropy function)
-        logloss_train = log_loss(p_model_data['train_y'], p_y_train_d)
+        logloss_train = log_loss(p_model_data['train_y'], p_y_train_d) + 1e-5
     
         if 'test_x' not in data_keys and 'test_y' not in data_keys:
             cm_test = cm_train
@@ -954,15 +954,15 @@ def sk_model_metrics(p_model, p_model_data):
         probs_test = np.nan_to_num(probs_test)
 
         # Accuracy rate
-        acc_test = round(accuracy_score(list(p_model_data['test_y']), p_y_test_d), 4)
+        acc_test = accuracy_score(list(p_model_data['test_y']), p_y_test_d)
         # False Positive Rate, True Positive Rate, Thresholds
         fpr_test, tpr_test, thresholds_test = roc_curve(list(p_model_data['test_y']),
                                                              probs_test[:, 1], pos_label=1)
         # Area Under the Curve (ROC) for train data
-        auc_test = round(roc_auc_score(list(p_model_data['test_y']), probs_test[:, 1]), 4)
+        auc_test = roc_auc_score(list(p_model_data['test_y']), probs_test[:, 1]) + 1e-5
 
         # Logloss (Binary cross-entropy function)
-        logloss_test = log_loss(p_model_data['test_y'], p_y_test_d)
+        logloss_test = log_loss(p_model_data['test_y'], p_y_test_d) + 1e-5
 
         if 'train_x' not in data_keys and 'train_y' not in data_keys:
             cm_train = cm_test
@@ -980,20 +980,23 @@ def sk_model_metrics(p_model, p_model_data):
     # -- ----------------------------------------------------------------------------------------------------
 
     # calculate relevant metrics
-    pro_metrics = {'acc-train': round(acc_train, 4), 'acc-test': round(acc_test, 4), 
-                   'acc-mean': round((acc_train + acc_test)/2, 4), 
-                   'acc-weighted': round((acc_train*0.80 + acc_test*0.20)/2, 4), 
-                   'acc-inv-weighted': round((acc_train*0.20 + acc_test*0.80)/2, 4),
+    pro_metrics = {'acc-train': acc_train,
+                   'acc-test': acc_test,
+                   'acc-mean': (acc_train + acc_test)/2 + 1e-5, 
+                   'acc-weighted': (acc_train*0.80 + acc_test*0.20)/2 + 1e-5, 
+                   'acc-inv-weighted': (acc_train*0.20 + acc_test*0.80)/2 + 1e-5,
 
-                   'auc-train': round(auc_train, 4), 'auc-test': round(auc_test, 4),
-                   'auc-mean': round((auc_train + auc_test)/2, 4),
-                   'auc-weighted': round((auc_train*0.80 + auc_test*0.20)/2, 4),
-                   'auc-inv-weighted': round((auc_train*0.20 + auc_test*0.80)/2, 4),
+                   'auc-train': auc_train,
+                   'auc-test': auc_test,
+                   'auc-mean': (auc_train + auc_test)/2 + 1e-5,
+                   'auc-weighted': (auc_train*0.80 + auc_test*0.20)/2 + 1e-5,
+                   'auc-inv-weighted': (auc_train*0.20 + auc_test*0.80)/2 + 1e-5,
 
-                   'logloss-train': round(auc_train, 4), 'logloss-test': round(auc_test, 4),
-                   'logloss-mean': round((logloss_train + logloss_test)/2, 4),
-                   'logloss-weighted': round((logloss_train*0.80 + logloss_test*0.20)/2, 4),
-                   'logloss-inv-weighted': round((logloss_train*0.20 + logloss_test*0.80)/2, 4)}
+                   'logloss-train': auc_train,
+                   'logloss-test': auc_test,
+                   'logloss-mean': (logloss_train + logloss_test)/2 + 1e-5,
+                   'logloss-weighted': (logloss_train*0.80 + logloss_test*0.20)/2 + 1e-5,
+                   'logloss-inv-weighted': (logloss_train*0.20 + logloss_test*0.80)/2 + 1e-5}
 
     # -- ----------------------------------------------------------------------------------------------------
 
@@ -1193,65 +1196,78 @@ def ann_mlp(p_data, p_params):
 
     # the batch size will be 50% of the training data length or 75
     batch = 32
-    # print(batch)
+    # reset the variable to prevent numerical errors for leaked previous info
+    history = 0
 
-    # model for a Multilayer perceptron
-    mlp_model = models.Sequential(name='ann-mlp')
+    def build_model(p_params):
+        # clear variable in case of previously used
+        mlp_model = 0
 
-    # -- OPTIMIZER : https://keras.io/api/optimizers/ 
-    # specify before compile function in order to modify default parameters for optimizer
-    # Gradient Descent with Momentum
-    opt_1 = optimizers.SGD(lr=p_params['learning_rate'], momentum=p_params['momentum'])
+        # model for a Multilayer perceptron
+        mlp_model = models.Sequential(name='ann-mlp')
 
-    # -- REGULARIZATION : https://keras.io/api/layers/regularization_layers/  
-    # L1 and L2 inputs regularization 
-    reg_1 = regularizers.l1_l2(l1=p_params['reg_1'][0], l2=p_params['reg_1'][1])
-    # L1 and L2 weights regularization
-    reg_2 = regularizers.l1_l2(l1=p_params['reg_2'][0], l2=p_params['reg_2'][1])
+        # -- OPTIMIZER : https://keras.io/api/optimizers/ 
+        # specify before compile function in order to modify default parameters for optimizer
+        # Gradient Descent with Momentum
+        opt_1 = optimizers.SGD(lr=p_params['learning_rate'], momentum=p_params['momentum'])
 
-    # -- METRICS: https://keras.io/api/metrics/
-    # For model performance tracking
-    met_1 = ['accuracy', 'AUC']
+        # -- REGULARIZATION : https://keras.io/api/layers/regularization_layers/  
+        # L1 and L2 inputs regularization 
+        reg_1 = regularizers.l2(0.001)
+        # L1 and L2 weights regularization
+        reg_2 = regularizers.l1_l2(l1=p_params['reg_2'][0], l2=p_params['reg_2'][1])
 
-    # -- LOSS (COST) FUNCTION : https://keras.io/api/losses/
-    # For binary classification
-    loss_1 = 'binary_crossentropy'
+        # -- METRICS: https://keras.io/api/metrics/
+        # For model performance tracking
+        met_1 = ['accuracy', 'AUC']
+
+        # -- LOSS (COST) FUNCTION : https://keras.io/api/losses/
+        # For binary classification
+        loss_1 = 'binary_crossentropy'
+        
+        # number of inputs
+        n_inputs = len(list(p_data['train_x'].columns))
+
+        # input layer
+        mlp_model.add(layers.InputLayer(input_shape=[n_inputs], name='input_layer'))
+
+        for layer in range(p_params['hidden_layers']):
+        
+            # Add hidden layer
+            mlp_model.add(layers.Dense(p_params['hidden_neurons'], activation=p_params['activation'],
+                                       name='hidden_layer_' + str(layer), kernel_regularizer=reg_1))
+
+            # Add dropout layer
+            mlp_model.add(layers.Dropout(p_params['dropout']))
+        
+        # output layer
+        mlp_model.add(layers.Dense(1, activation='sigmoid', name='output_layer'))
+
+        # -- Model compilation
+        mlp_model.compile(optimizer=opt_1, loss=loss_1, metrics=met_1)
     
-    # number of inputs
-    # n_inputs = len(list(p_data['train_x'].columns))
+        return mlp_model
 
-    # input layer
-    # mlp_model.add(layers.Dense(n_inputs, input_dim=n_inputs, name='input_layer'))
+    # tf object wrapped in sklearn function type
+    keras_class = build_model(p_params)
 
-    for i in range(0, p_params['hidden_layers']):
-    
-        # Add hidden layer
-        mlp_model.add(layers.Dense(p_params['hidden_neurons'],
-                                   activation=p_params['activation'],
-                                   name='hidden_layer_' + str(i),
-                                   kernel_regularizer=reg_1,
-                                   bias_regularizer=reg_2,
-                                   activity_regularizer=reg_1))
+    # print('chromosome: ', p_params)
+    # print('len train_x', len(p_data['train_x']))
+    # print('len train_y', len(p_data['train_y']))
 
-        # Add dropout layer
-
-        # mlp_model.add(layers.Dropout(p_params['dropout']))
-    
-    # output layer
-    mlp_model.add(layers.Dense(1, activation='sigmoid', name='output_layer'))
-
-    # -- Model compilation
-    mlp_model.compile(optimizer=opt_1, loss=loss_1, metrics=met_1)
+    # p_params = {'hidden_layers': 2, 'hidden_neurons': 35, 'activation': 'relu', 'reg_1': [0.03, 0.03], #'reg_2': [0.03, 0.03], 'dropout': 0.25, 'learning_rate': 1, 'momentum': 0.1}
 
     # -- Model fit
-    history = mlp_model.fit(x=p_data['train_x'].copy(), y=p_data['train_y'].copy(),
-                            epochs=30, batch_size=batch, verbose=0, shuffle=False)
+    history = keras_class.fit(x=p_data['train_x'].copy(), y=p_data['train_y'].copy(),
+                              epochs=100, batch_size=batch, verbose=0, shuffle=False)
 
     # preparation of metrics history data to analyze later
     metrics_history = {str(i): history.history[i] for i in ['loss', 'accuracy', 'auc']}
 
+    print(metrics_history['accuracy'][-1])
+
     # performance metrics of the model
-    metrics_mlp_model = tf_model_metrics(p_model=mlp_model, p_model_data=p_data.copy(),
+    metrics_mlp_model = tf_model_metrics(p_model=keras_class, p_model_data=p_data.copy(),
                                          p_history=metrics_history)
 
     return metrics_mlp_model
