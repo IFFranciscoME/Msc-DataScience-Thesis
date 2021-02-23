@@ -880,11 +880,11 @@ def tf_model_metrics(p_model, p_model_data, p_history):
                    'auc-weighted': (auc_train*0.80 + auc_test*0.20)/2 + 1e-5,
                    'auc-inv-weighted': (auc_train*0.20 + auc_test*0.80)/2 + 1e-5,
 
-                   'logloss-train': 1/logloss_train,
-                   'logloss-test': 1/logloss_test,
-                   'logloss-mean': (1/logloss_train + 1/logloss_test)/2 + 1e-5,
-                   'logloss-weighted': (1/logloss_train*0.80 + 1/logloss_test*0.20)/2 + 1e-5,
-                   'logloss-inv-weighted': (1/logloss_train*0.20 + 1/logloss_test*0.80)/2 + 1e-5}
+                   'logloss-train': logloss_train,
+                   'logloss-test': logloss_test,
+                   'logloss-mean': (logloss_train + logloss_test)/2 + 1e-5,
+                   'logloss-weighted': (logloss_train*0.80 + logloss_test*0.20)/2 + 1e-5,
+                   'logloss-inv-weighted': (logloss_train*0.20 + logloss_test*0.80)/2 + 1e-5}
 
     # -- ----------------------------------------------------------------------------------------------------
 
@@ -1214,7 +1214,7 @@ def ann_mlp(p_data, p_params):
     # hidden_layer_sizes, activation, solver, alpha,    
 
     # the batch size will be 50% of the training data length or 75
-    batch = 32
+    batch = 16
     # reset the variable to prevent numerical errors for leaked previous info
     history = 0
 
@@ -1253,8 +1253,7 @@ def ann_mlp(p_data, p_params):
         
             # Add hidden layer
             mlp_model.add(layers.Dense(p_params['hidden_neurons'], activation=p_params['activation'],
-                                       name='hidden_layer_' + str(layer), activity_regularizer=reg_2,
-                                       kernel_regularizer=reg_1, bias_regularizer=reg_2))
+                                       name='hidden_layer_' + str(layer)))
 
             # Add dropout layer
             mlp_model.add(layers.Dropout(p_params['dropout']))
@@ -1278,12 +1277,13 @@ def ann_mlp(p_data, p_params):
 
     # -- Model fit
     history = keras_class.fit(x=p_data['train_x'].copy(), y=p_data['train_y'].copy(),
-                              epochs=200, batch_size=batch, verbose=0, shuffle=False)
+                              epochs=100, batch_size=batch, verbose=0, shuffle=False)
 
     # preparation of metrics history data to analyze later
     metrics_history = {str(i): history.history[i] for i in ['loss', 'accuracy', 'auc']}
 
-    # print(metrics_history['accuracy'][-1])
+    print('loss', metrics_history['loss'][-1])
+    print('acc', metrics_history['accuracy'][-1])
 
     # performance metrics of the model
     metrics_mlp_model = tf_model_metrics(p_model=keras_class, p_model_data=p_data.copy(),
@@ -1350,7 +1350,7 @@ def genetic_algo_evaluate(p_individual, p_eval_data, p_model, p_fit_type):
 # -------------------------------------------------------------------------- FUNCTION: Genetic Algorithm -- #
 # ------------------------------------------------------- ------------------------------------------------- #
 
-def genetic_algo_optimization(p_gen_data, p_model, p_opt_params, p_fit_type):
+def genetic_algo_optimization(p_gen_data, p_model, p_opt_params, p_fit_type, p_minmax):
     """
     El uso de algoritmos geneticos para optimizacion de hiperparametros de varios modelos
 
@@ -1373,6 +1373,11 @@ def genetic_algo_optimization(p_gen_data, p_model, p_opt_params, p_fit_type):
         'weighted': a weighted average is calculated between train (80%) and test (20%) AUC
         'inv-weighted': an inverse weighted average is calculated between train (20%) and test (80%) AUC
 
+    p_minmax: str
+        To control whether is a minimization or maximization problem
+        'min' = minimizes
+        'max' = maximizes
+
     Returns
     -------
     r_model_ols_elasticnet: dict
@@ -1393,20 +1398,23 @@ def genetic_algo_optimization(p_gen_data, p_model, p_opt_params, p_fit_type):
 
     """
 
+    # establish weight to specify maximization or minimization in the optimization process
+    ga_type = -1.0 if p_minmax == 'min' else 1.0
+
     # -- ------------------------------------------------------- OLS con regularizacion tipo Elastic Net -- #
     # ----------------------------------------------------------------------------------------------------- #
     if p_model['label'] == 'logistic-elasticnet':
 
         # borrar clases previas si existen
         try:
-            del creator.FitnessMax_en
+            del creator.Fitness_en
             del creator.Individual_en
         except AttributeError:
             pass
 
         # inicializar ga
-        creator.create("FitnessMax_en", base.Fitness, weights=(1.0,))
-        creator.create("Individual_en", list, fitness=creator.FitnessMax_en)
+        creator.create("Fitness_en", base.Fitness, weights=(ga_type,))
+        creator.create("Individual_en", list, fitness=creator.Fitness_en)
         toolbox_en = base.Toolbox()
 
         # define how each gene will be generated (e.g. criterion is a random choice from the criterion list).
@@ -1475,14 +1483,14 @@ def genetic_algo_optimization(p_gen_data, p_model, p_opt_params, p_fit_type):
 
         # borrar clases previas si existen
         try:
-            del creator.FitnessMax_svm
+            del creator.Fitness_svm
             del creator.Individual_svm
         except AttributeError:
             pass
 
         # inicializar ga
-        creator.create("FitnessMax_svm", base.Fitness, weights=(1.0, ))
-        creator.create("Individual_svm", list, fitness=creator.FitnessMax_svm)
+        creator.create("Fitness_svm", base.Fitness, weights=(ga_type, ))
+        creator.create("Individual_svm", list, fitness=creator.Fitness_svm)
         toolbox_svm = base.Toolbox()
 
         # define how each gene will be generated (e.g. criterion is a random choice from the criterion list).
@@ -1558,14 +1566,14 @@ def genetic_algo_optimization(p_gen_data, p_model, p_opt_params, p_fit_type):
 
         # borrar clases previas si existen
         try:
-            del creator.FitnessMax_mlp
+            del creator.Fitness_mlp
             del creator.Individual_mlp
         except AttributeError:
             pass
 
         # inicializar ga
-        creator.create("FitnessMax_mlp", base.Fitness, weights=(1.0,))
-        creator.create("Individual_mlp", list, fitness=creator.FitnessMax_mlp)
+        creator.create("Fitness_mlp", base.Fitness, weights=(ga_type, ))
+        creator.create("Individual_mlp", list, fitness=creator.Fitness_mlp)
         toolbox_mlp = base.Toolbox()
 
         # define how each gene will be generated (e.g. criterion is a random choice from the criterion list).
@@ -1814,7 +1822,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
             data_folds = data_scaler(p_data=p_data_folds[period], p_trans=p_transform)
         
             # Feature engineering (Autoregressive, Hadamard)
-            linear_data = linear_features(p_data=data_folds, p_memory=7)
+            linear_data = linear_features(p_data=data_folds, p_memory=4)
             
             # Symbolic features generation with genetic programming
             m_features = genetic_programed_features(p_data=linear_data, p_split=p_inner_split)
@@ -1831,7 +1839,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
             data_folds = p_data_folds[period].copy()
 
             # Feature engineering (Autoregressive, Hadamard)
-            linear_data = linear_features(p_data=data_folds, p_memory=7)
+            linear_data = linear_features(p_data=data_folds, p_memory=4)
             
             # Symbolic features generation with genetic programming
             m_features = genetic_programed_features(p_data=linear_data, p_split=p_inner_split)
@@ -1895,11 +1903,18 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
             logger.debug('---------------------------------------------------------------------------------\n')
 
             # -- model optimization and evaluation for every element in the Hall of Fame for every period
-            
+               
+            print(p_fit_type[0:2])
+            ob_type = 'min'
+            if p_fit_type[0:3] == 'auc':
+                ob_type = 'max'
+            if p_fit_type[0:3] == 'acc':
+                ob_type = 'max'
+
             # optimization process NEEDS TO INCLUDE MODEL OBJECT OR WEIGHTS FOR MLP for reproducibility
             hof_model = genetic_algo_optimization(p_gen_data=m_features['model_data'],
                                                   p_model=dt.models[model], p_fit_type=p_fit_type,
-                                                  p_opt_params=dt.optimization_params)
+                                                  p_opt_params=dt.optimization_params, p_minmax=ob_type)
 
             # log the result of genetic algorithm
             logger.info('\n\n{}\n'.format(hof_model['logs']))
@@ -1983,7 +1998,7 @@ def global_evaluation(p_case, p_global_data, p_features, p_model):
     # -------------------------------------------------------------------------------------- GLOBAL DATA -- #
     
     # get all the linear features 
-    g_linear_data = linear_features(p_data=p_global_data, p_memory=7)
+    g_linear_data = linear_features(p_data=p_global_data, p_memory=4)
     g_y_target = g_linear_data['co_d'].copy()
     g_linear_data = g_linear_data.drop(['co_d'], axis=1, inplace=False)
 
