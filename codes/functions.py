@@ -751,12 +751,6 @@ def tf_model_metrics(p_model, p_model_data, p_history):
     
         # Fitted train values
         p_y_train_d = p_model.predict(p_model_data['train_x'])
-
-        # check if there is a NAN in the prediction
-        if np.isnan(p_y_train_d).any():
-            print(' *** there was a NaN *** ')
-            print(p_y_train_d)
-        
         p_y_train_d = np.nan_to_num(p_y_train_d)
 
         # tensorflow output
@@ -764,7 +758,6 @@ def tf_model_metrics(p_model, p_model_data, p_history):
         p_y_train_d = p_y_train_d.reshape(len(p_y_train_d),)
         p_y_train_d[p_y_train_d.reshape(len(p_y_train_d),) >= 0.5] = 1
         p_y_train_d[p_y_train_d.reshape(len(p_y_train_d),) < 0.5] = 0
-        # p_y_train_d = p_y_train_d.astype(int)
 
         # **** hardcode at least 1 case for each class in order to avoid loss function error
         p_y_train_d[0] = 1
@@ -812,10 +805,6 @@ def tf_model_metrics(p_model, p_model_data, p_history):
 
         # Fitted test values
         p_y_test_d = p_model.predict(p_model_data['test_x'])
-        
-        if np.isnan(p_y_test_d).any():
-            print(' *** there was a NaN *** ')
-        
         p_y_test_d = np.nan_to_num(p_y_test_d)
 
         # tensorflow output
@@ -824,7 +813,6 @@ def tf_model_metrics(p_model, p_model_data, p_history):
         # trigger for class is 1 if > 0.5
         p_y_test_d[p_y_test_d.reshape(len(p_y_test_d),) >= 0.5] = 1
         p_y_test_d[p_y_test_d.reshape(len(p_y_test_d),) < 0.5] = 0
-        # p_y_test_d = p_y_test_d.astype(int)
 
         # **** hardcode at least 1 case for each class in order to avoid loss function error
         p_y_test_d[0] = 1
@@ -872,17 +860,20 @@ def tf_model_metrics(p_model, p_model_data, p_history):
     pro_metrics = {'acc-train': acc_train,
                    'acc-test': acc_test, 
                    'acc-mean': (acc_train + acc_test)/2 + 1e-5, 
+                   'acc-diff': acc_train - acc_test, 
                    'acc-weighted': (acc_train*0.80 + acc_test*0.20)/2 + 1e-5,
                    'acc-inv-weighted': (acc_train*0.20 + acc_test*0.80)/2 + 1e-5,
 
                    'auc-train': auc_train,
                    'auc-test': auc_test,
+                   'auc-diff': auc_train - auc_test, 
                    'auc-mean': (auc_train + auc_test)/2 + 1e-5, 
                    'auc-weighted': (auc_train*0.80 + auc_test*0.20)/2 + 1e-5,
                    'auc-inv-weighted': (auc_train*0.20 + auc_test*0.80)/2 + 1e-5,
 
                    'logloss-train': logloss_train,
                    'logloss-test': logloss_test,
+                   'logloss-diff': logloss_train - logloss_test,
                    'logloss-mean': (logloss_train + logloss_test)/2 + 1e-5,
                    'logloss-weighted': (logloss_train*0.80 + logloss_test*0.20)/2 + 1e-5,
                    'logloss-inv-weighted': (logloss_train*0.20 + logloss_test*0.80)/2 + 1e-5}
@@ -1002,18 +993,21 @@ def sk_model_metrics(p_model, p_model_data):
     # calculate relevant metrics
     pro_metrics = {'acc-train': acc_train,
                    'acc-test': acc_test,
+                   'acc-diff': acc_train - acc_test, 
                    'acc-mean': (acc_train + acc_test)/2 + 1e-5, 
                    'acc-weighted': (acc_train*0.80 + acc_test*0.20)/2 + 1e-5, 
                    'acc-inv-weighted': (acc_train*0.20 + acc_test*0.80)/2 + 1e-5,
 
                    'auc-train': auc_train,
                    'auc-test': auc_test,
+                   'auc-diff': auc_train - auc_test, 
                    'auc-mean': (auc_train + auc_test)/2 + 1e-5,
                    'auc-weighted': (auc_train*0.80 + auc_test*0.20)/2 + 1e-5,
                    'auc-inv-weighted': (auc_train*0.20 + auc_test*0.80)/2 + 1e-5,
 
                    'logloss-train': auc_train,
                    'logloss-test': auc_test,
+                   'logloss-diff': logloss_train - logloss_test, 
                    'logloss-mean': (logloss_train + logloss_test)/2 + 1e-5,
                    'logloss-weighted': (logloss_train*0.80 + logloss_test*0.20)/2 + 1e-5,
                    'logloss-inv-weighted': (logloss_train*0.20 + logloss_test*0.80)/2 + 1e-5}

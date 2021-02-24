@@ -234,15 +234,18 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 
 # -- 23.02.2021
 - Addition: Create new prices files with H8 intervals for grouping the minute files
+- Addition: Added historical prices from 2009 to 2020, and 2021 will be left as ultimate test
+- Fix: Error with tf evaluating loss function when producing nan, with callback type TerminateOnNaN()
+
 
 # ---------------------------------------------------------------------------------------------- BACKLOG -- # 
 # ---------------------------------------------------------------------------------------------- ------- -- #
 
 # -- NECESSARY
 
+- (pending) add another metric for optimization: Difference between train and validation metric result
 
 - (pending) change all the messages from test to validation. Test will be a hold out set at the very end
-- (pending) add another metric for optimization: Difference between train and validation metric result
 - (pending) Implement embargo criteria for t-fold variation
 
 - (pending) Refactor tf_model_metrics and sk_model_metrics to not use train/test condition (just any data)

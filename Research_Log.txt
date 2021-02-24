@@ -64,3 +64,4 @@
 
 |   Coding         | debugging nan / 0s error in tf     | 10:00 23.Feb.2021  | 1.0          |                  |
 |   Coding         | H8 prices to run the project with  | 14:00 23.Feb.2021  | 1.0          |                  |
+|   Coding         | debugging nan / 0s error (fixed)   | 16:00 23.Feb.2021  | 5.0          |                  |
