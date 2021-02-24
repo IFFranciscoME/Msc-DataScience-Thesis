@@ -23,9 +23,9 @@ environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 # ---------------------------------------------------------------------------------- ------------------- -- #
 
 # Short Version for Testing
-iter_fold = ['quarter', 'semester']
+iter_fold = ['semester']
 iter_opt = {'inner-split': ['20'], 'transform': ['robust'], 'scaling': ['post-features'],
-            'fitness': ['logloss-inv-weighted']}
+            'fitness': ['logloss-train', 'logloss-inv-weighted']}
 
 # ---------------------------------------------------------------- Complete list of available parameters -- #
 
@@ -239,11 +239,11 @@ for file_f in files_f:
         price_data[file_nom + year_f] = data_f
 
 # One period data concatenation (Fast run of main.py)
-# ohlc_data = pd.concat([price_data[list(price_data.keys())[0]]])
+ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]] ])
 
-ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
-                       price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
-                       price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]]])
+# ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
+#                        price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
+#                        price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]]])
 
 # All periods data concatenation (Slow run of main.py)
 # ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],

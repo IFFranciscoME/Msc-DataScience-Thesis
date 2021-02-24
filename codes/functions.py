@@ -1239,7 +1239,7 @@ def ann_mlp(p_data, p_params):
                       'learning_rate': p_params['learning_rate'],
                       'momentum': p_params['momentum']}
 
-    keras_class = tf.keras.wrappers.scikit_learn.KerasClassifier(build_fn = build_model, **param_distribs)
+    keras_class = tf.keras.wrappers.scikit_learn.KerasClassifier(build_fn=build_model, **param_distribs)
     keras_class.model = build_model(**param_distribs)
 
     history = keras_class.fit(p_data['train_x'], p_data['train_y'], epochs=100, batch_size=32,
@@ -1247,11 +1247,11 @@ def ann_mlp(p_data, p_params):
                               callbacks=[tf.keras.callbacks.TerminateOnNaN(),
 
                               tf.keras.callbacks.ReduceLROnPlateau(monitor='kullback_leibler_divergence', 
-                              factor=0.2, patience=5, verbose=0, mode='min', min_delta=0.01, 
+                              factor=0.2, patience=10, verbose=0, mode='min', min_delta=0.01, 
                               cooldown=0, min_lr=0.00001),
                               
                               tf.keras.callbacks.EarlyStopping(monitor='accuracy',
-                              min_delta=0.01, patience=5, verbose=0, mode='max', baseline=0.45, restore_best_weights=True)])
+                              min_delta=0.005, patience=10, verbose=0, mode='max', baseline=0.40, restore_best_weights=True)])
    
     # preparation of metrics history data to analyze later
     metrics_history = {str(i): history.history[i]

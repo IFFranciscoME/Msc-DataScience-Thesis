@@ -20,6 +20,7 @@ from multiprocessing import cpu_count
 import functions as fn
 import data as dt
 import multiprocessing as mp
+import tensorflow as tf
 import warnings
 import random
 
@@ -65,12 +66,15 @@ if __name__ == "__main__":
         # Establish the number of workers with as many cores as the computer has
         workers = cpu_count()-1
         # workers = 1
+        # print(workers)
 
         # create pool of workers for asyncronous parallelism
         pool = mp.Pool(workers)
 
         # configuration for tensorflow and CPU/GPU processing
         fn.tf_processing(p_option='cpu', p_cores=workers)
+        tf.config.threading.set_intra_op_parallelism_threads(workers)
+        tf.config.threading.set_inter_op_parallelism_threads(workers)
         
         # Parallel Asyncronous Process 
         fold_process = {'fold_' + str(iteration): pool.starmap(fn.fold_process,
