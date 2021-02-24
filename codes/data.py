@@ -47,7 +47,7 @@ iter_exp = list(itertools.product(*[iter_opt['fitness'], iter_opt['transform'],
 # --------------------------------------------------------------------- -------------------------------- -- #
 
 symbolic_params = {'functions': ["sub", "add", 'inv', 'mul', 'div', 'abs', 'log', 'sqrt'],
-                   'population': 5000, 'tournament':20, 'hof': 20, 'generations': 4, 'n_features':5,
+                   'population': 5000, 'tournament':20, 'hof': 20, 'generations': 4, 'n_features': 10,
                    'init_depth': (4, 12), 'init_method': 'half and half', 'parsimony': 0.1,
                    'constants': None,
                    'metric': 'pearson', 'metric_goal': 0.65, 

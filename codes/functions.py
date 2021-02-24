@@ -28,7 +28,6 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.metrics import confusion_matrix, accuracy_score, roc_auc_score, roc_curve, log_loss
 
-import keras as ks
 import tensorflow as tf
 from tensorflow.python.keras import backend as K
 from tensorflow.keras import layers, models, regularizers, optimizers
@@ -756,6 +755,7 @@ def tf_model_metrics(p_model, p_model_data, p_history):
         # check if there is a NAN in the prediction
         if np.isnan(p_y_train_d).any():
             print(' *** there was a NaN *** ')
+            print(p_y_train_d)
         
         p_y_train_d = np.nan_to_num(p_y_train_d)
 
@@ -777,7 +777,7 @@ def tf_model_metrics(p_model, p_model_data, p_history):
         # Probabilities of class in train data
         probs_train = p_model.predict(p_model_data['train_x']).reshape(len(p_model_data['train_x']),)
         # In case of a nan, replace it with zero (to prevent errors)
-        # probs_train = np.nan_to_num(probs_train)
+        probs_train = np.nan_to_num(probs_train)
 
         # Accuracy rate
         # historical info
@@ -788,9 +788,9 @@ def tf_model_metrics(p_model, p_model_data, p_history):
         fpr_train, tpr_train, thresholds = roc_curve(list(p_model_data['train_y']), probs_train, pos_label=1)
         # Area Under the Curve (ROC) for train data
         # historical info
-        auc_h_train = p_history['auc']
+        # auc_h_train = p_history['auc']
         # last configuration
-        auc_train = auc_h_train[-1] + 1e-5
+        auc_train = roc_auc_score(list(p_model_data['train_y']), probs_train) + 1e-5
         # Logloss (Binary cross-entropy function)
         # `historic`al info
         logloss_h_train = p_history['loss']
@@ -835,7 +835,7 @@ def tf_model_metrics(p_model, p_model_data, p_history):
         # Probabilities of class in test data
         probs_test = p_model.predict(p_model_data['test_x']).reshape(len(p_model_data['test_x']),)
         # In case of a nan, replace it with zero (to prevent errors)
-        # probs_test = np.nan_to_num(probs_test)
+        probs_test = np.nan_to_num(probs_test)
 
         # Accuracy rate
         # historical info
@@ -846,9 +846,10 @@ def tf_model_metrics(p_model, p_model_data, p_history):
         fpr_test, tpr_test, thresholds = roc_curve(list(p_model_data['test_y']), probs_test, pos_label=1)
         # Area Under the Curve (ROC) for train data
         # historical info
-        auc_h_test = p_history['auc']
+        # auc_h_test = p_history['auc']
         # last configuration
-        auc_test = auc_h_test[-1] + 1e-5
+        auc_test = roc_auc_score(list(p_model_data['test_y']), probs_test) + 1e-5
+
         # Logloss (Binary cross-entropy function)
         # historical info
         logloss_h_test = p_history['loss']
@@ -889,7 +890,7 @@ def tf_model_metrics(p_model, p_model_data, p_history):
     # -- ----------------------------------------------------------------------------------------------------
 
     # Return all the results for the model
-    r_model_metrics = {'model': p_model.to_json(), 'pro-metrics': pro_metrics, 
+    r_model_metrics = {'model': p_model, 'pro-metrics': pro_metrics, 
                        'results': {'data': {'train': p_y_result_train, 'test': p_y_result_test},
                                    'matrix': {'train': cm_train, 'test': cm_test}},
                        'metrics': {'train': {'tpr': tpr_train, 'fpr': fpr_train, 'probs': probs_train},
@@ -1209,83 +1210,50 @@ def ann_mlp(p_data, p_params):
 
     """
 
-    # ------------------------------------------------------------------------------ FUNCTION PARAMETERS -- #
-    # model hyperparameters
-    # hidden_layer_sizes, activation, solver, alpha,    
+    n_inputs = len(list(p_data['train_x'].columns))
 
-    # the batch size will be 50% of the training data length or 75
-    batch = 16
-    # reset the variable to prevent numerical errors for leaked previous info
-    history = 0
+    def build_model(hidden_layers, hidden_neurons, activation, dropout, reg_1, reg_2,
+                    learning_rate, momentum, input_shape=[n_inputs]):
 
-    def build_model(p_params):
-        # clear variable in case of previously used
-        mlp_model = 0
-
-        # model for a Multilayer perceptron
-        mlp_model = models.Sequential(name='ann-mlp')
-
-        # -- OPTIMIZER : https://keras.io/api/optimizers/ 
-        # specify before compile function in order to modify default parameters for optimizer
-        # Gradient Descent with Momentum
-        opt_1 = optimizers.SGD(lr=p_params['learning_rate'], momentum=p_params['momentum'])
-
-        # -- REGULARIZATION : https://keras.io/api/layers/regularization_layers/  
-        # L1 and L2 inputs regularization 
-        reg_1 = regularizers.l1_l2(l1=p_params['reg_1'][0], l2=p_params['reg_1'][1])
-        reg_2 = regularizers.l1_l2(l1=p_params['reg_2'][0], l2=p_params['reg_2'][1])
-
-        # -- METRICS: https://keras.io/api/metrics/
-        # For model performance tracking
-        met_1 = ['accuracy', 'AUC']
-
-        # -- LOSS (COST) FUNCTION : https://keras.io/api/losses/
-        # For binary classification
-        loss_1 = 'binary_crossentropy'
+        model = models.Sequential()
+        model.add(layers.InputLayer(input_shape=input_shape))
         
-        # number of inputs
-        n_inputs = len(list(p_data['train_x'].columns))
+        # dynamic construction of neural net
+        for layer in range(hidden_layers):
 
-        # input layer
-        mlp_model.add(layers.InputLayer(input_shape=[n_inputs], name='input_layer'))
-
-        for layer in range(p_params['hidden_layers']):
-        
             # Add hidden layer
-            mlp_model.add(layers.Dense(p_params['hidden_neurons'], activation=p_params['activation'],
-                                       name='hidden_layer_' + str(layer)))
-
+            model.add(layers.Dense(hidden_neurons, activation=activation, name='hidden_layer_' + str(layer),
+                                   kernel_regularizer=regularizers.l1_l2(reg_2[0], reg_2[1]),
+                                   bias_regularizer=regularizers.l1_l2(reg_2[0], reg_2[1]),
+                                   activity_regularizer=regularizers.l1_l2(reg_1[0], reg_1[1])))
             # Add dropout layer
-            mlp_model.add(layers.Dropout(p_params['dropout']))
-        
-        # output layer
-        mlp_model.add(layers.Dense(1, activation='sigmoid', name='output_layer'))
+            model.add(layers.Dropout(dropout))
 
-        # -- Model compilation
-        mlp_model.compile(optimizer=opt_1, loss=loss_1, metrics=met_1)
+        model.add(layers.Dense(1, activation='sigmoid'))
+        optimizer = optimizers.SGD(lr=learning_rate, momentum=momentum)
+        model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+
+        return model
+
+    param_distribs = {'hidden_layers': p_params['hidden_layers'],
+                      'hidden_neurons': p_params['hidden_neurons'],
+                      'activation': p_params['activation'],
+                      'dropout': p_params['dropout'],
+                      'reg_1': p_params['reg_1'],
+                      'reg_2': p_params['reg_2'],
+                      'learning_rate': p_params['learning_rate'],
+                      'momentum': p_params['momentum']}
+
+    keras_class = tf.keras.wrappers.scikit_learn.KerasClassifier(build_fn = build_model, **param_distribs)
+    keras_class.model = build_model(**param_distribs)
+
+    history = keras_class.fit(p_data['train_x'], p_data['train_y'], epochs=100, batch_size=32,
+                              verbose=0, shuffle=False,
+                              callbacks=[tf.keras.callbacks.TerminateOnNaN()])
     
-        return mlp_model
-
-    # tf object wrapped in sklearn function type
-    keras_class = build_model(p_params)
-
-    # print('chromosome: ', p_params)
-    # print('len train_x', len(p_data['train_x']))
-    # print('len train_y', len(p_data['train_y']))
-
-    # p_params = {'hidden_layers': 2, 'hidden_neurons': 35, 'activation': 'relu', 'reg_1': [0.03, 0.03], #'reg_2': [0.03, 0.03], 'dropout': 0.25, 'learning_rate': 1, 'momentum': 0.1}
-
-    # -- Model fit
-    history = keras_class.fit(x=p_data['train_x'].copy(), y=p_data['train_y'].copy(),
-                              epochs=100, batch_size=batch, verbose=0, shuffle=False)
-
     # preparation of metrics history data to analyze later
-    metrics_history = {str(i): history.history[i] for i in ['loss', 'accuracy', 'auc']}
+    metrics_history = {str(i): history.history[i] for i in ['loss', 'accuracy']}
 
-    print('loss', metrics_history['loss'][-1])
-    print('acc', metrics_history['accuracy'][-1])
-
-    # performance metrics of the model
     metrics_mlp_model = tf_model_metrics(p_model=keras_class, p_model_data=p_data.copy(),
                                          p_history=metrics_history)
 
@@ -1904,7 +1872,6 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
 
             # -- model optimization and evaluation for every element in the Hall of Fame for every period
                
-            print(p_fit_type[0:2])
             ob_type = 'min'
             if p_fit_type[0:3] == 'auc':
                 ob_type = 'max'

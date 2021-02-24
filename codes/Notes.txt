@@ -233,14 +233,14 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 - Fix: snippets and tricks to avoid errors when numeric instability is present in loss function (Futile)
 
 # -- 23.02.2021
-
+- Addition: Create new prices files with H8 intervals for grouping the minute files
 
 # ---------------------------------------------------------------------------------------------- BACKLOG -- # 
 # ---------------------------------------------------------------------------------------------- ------- -- #
 
 # -- NECESSARY
 
-- (pending) create new prices files with H8 intervals for grouping the minute files
+
 - (pending) change all the messages from test to validation. Test will be a hold out set at the very end
 - (pending) add another metric for optimization: Difference between train and validation metric result
 - (pending) Implement embargo criteria for t-fold variation
