@@ -1225,7 +1225,8 @@ def ann_mlp(p_data, p_params):
 
         model.add(layers.Dense(1, activation='sigmoid'))
         optimizer = optimizers.SGD(lr=learning_rate, momentum=momentum)
-        model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+        model.compile(loss='binary_crossentropy', optimizer=optimizer,
+                      metrics=['accuracy', 'kullback_leibler_divergence'])
 
         return model
 
@@ -1243,10 +1244,21 @@ def ann_mlp(p_data, p_params):
 
     history = keras_class.fit(p_data['train_x'], p_data['train_y'], epochs=100, batch_size=32,
                               verbose=0, shuffle=False,
-                              callbacks=[tf.keras.callbacks.TerminateOnNaN()])
-    
+                              callbacks=[tf.keras.callbacks.TerminateOnNaN(),
+
+                              tf.keras.callbacks.ReduceLROnPlateau(monitor='kullback_leibler_divergence', 
+                              factor=0.2, patience=5, verbose=0, mode='min', min_delta=0.01, 
+                              cooldown=0, min_lr=0.00001),
+                              
+                              tf.keras.callbacks.EarlyStopping(monitor='accuracy',
+                              min_delta=0.01, patience=5, verbose=0, mode='max', baseline=0.45, restore_best_weights=True)])
+   
     # preparation of metrics history data to analyze later
-    metrics_history = {str(i): history.history[i] for i in ['loss', 'accuracy']}
+    metrics_history = {str(i): history.history[i]
+                       for i in ['loss', 'accuracy', 'kullback_leibler_divergence']}
+
+    # print(metrics_history['kullback_leibler_divergence'][-1])
+    # print(metrics_history['accuracy'][-1])
 
     metrics_mlp_model = tf_model_metrics(p_model=keras_class, p_model_data=p_data.copy(),
                                          p_history=metrics_history)
@@ -1684,13 +1696,14 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
 
     p_fit_type: str
         type of fitness metric for the optimization process:
-            'train': the train AUC is used
-            'test': the test AUC is used
-            'simple': a simple average is calculated between train and test AUC
-            'weighted': a weighted average is calculated between train (80%) and test (20%) AUC
-            'inv-weighted': an inverse weighted average is calculated between train (20%) and test (80%) AUC
+            'metrics-train'
+            'metric-test'
+            'metric-diff'
+            'metric-mean'
+            'metric-weighted'
+            'metric-inv-weighted'
         
-        p_fit_type = 'auc-mean'
+        p_fit_type = 'auc-diff'
     
     p_transform: str
         type of transformation to perform to the data
@@ -1784,7 +1797,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
             data_folds = data_scaler(p_data=p_data_folds[period], p_trans=p_transform)
         
             # Feature engineering (Autoregressive, Hadamard)
-            linear_data = linear_features(p_data=data_folds, p_memory=4)
+            linear_data = linear_features(p_data=data_folds, p_memory=dt.symbolic_params['memory'])
             
             # Symbolic features generation with genetic programming
             m_features = genetic_programed_features(p_data=linear_data, p_split=p_inner_split)
@@ -1959,7 +1972,7 @@ def global_evaluation(p_case, p_global_data, p_features, p_model):
     # -------------------------------------------------------------------------------------- GLOBAL DATA -- #
     
     # get all the linear features 
-    g_linear_data = linear_features(p_data=p_global_data, p_memory=4)
+    g_linear_data = linear_features(p_data=p_global_data, p_memory=dt.symbolic_params['memory'])
     g_y_target = g_linear_data['co_d'].copy()
     g_linear_data = g_linear_data.drop(['co_d'], axis=1, inplace=False)
 

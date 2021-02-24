@@ -23,7 +23,7 @@ environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 # ---------------------------------------------------------------------------------- ------------------- -- #
 
 # Short Version for Testing
-iter_fold = ['quarter', 'semester', 'year']
+iter_fold = ['quarter', 'semester']
 iter_opt = {'inner-split': ['20'], 'transform': ['robust'], 'scaling': ['post-features'],
             'fitness': ['logloss-inv-weighted']}
 
@@ -31,13 +31,15 @@ iter_opt = {'inner-split': ['20'], 'transform': ['robust'], 'scaling': ['post-fe
 
 # iter_fold = ['quarter', 'semester', 'year', 'bi-year', '80-20']
 
-# iter_opt = {'inner-split': ['20', 0],
+# iter_opt = {'inner-split': ['30', '10', '0'],
 #             'transform': ['scale', 'normalize', 'robust'],
 #             'scaling': ['post-features', 'pre-features'],
-#             'fitness': ['auc-train', 'auc-test', 'auc-mean', 'auc-weighted', 'auc-inv-weighted',
-#                         'acc-train', 'acc-test', 'acc-mean', 'acc-weighted', 'acc-inv-weighted',
-#                         'logloss-train', 'logloss-test', 'logloss-mean', 'logloss-weighted', 
-#                         'logloss-inv-weighted']}
+#             'fitness': ['auc-train', 'auc-test', 'auc-diff',
+#                         'auc-mean', 'auc-weighted', 'auc-inv-weighted',
+#                         'acc-train', 'acc-test', 'acc-diff',
+#                         'acc-mean', 'acc-weighted', 'acc-inv-weighted',
+#                         'logloss-train', 'logloss-test', 'logloss-diff',
+#                         'logloss-mean', 'logloss-weighted', 'logloss-inv-weighted']}
 
 # Iterative/Parallel Experiment Data
 iter_exp = list(itertools.product(*[iter_opt['fitness'], iter_opt['transform'],
@@ -46,13 +48,13 @@ iter_exp = list(itertools.product(*[iter_opt['fitness'], iter_opt['transform'],
 # --------------------------------------------------------------------- Parameters for Symbolic Features -- #
 # --------------------------------------------------------------------- -------------------------------- -- #
 
-symbolic_params = {'functions': ["sub", "add", 'inv', 'mul', 'div', 'abs', 'log', 'sqrt'],
-                   'population': 5000, 'tournament':20, 'hof': 20, 'generations': 4, 'n_features': 10,
-                   'init_depth': (4, 12), 'init_method': 'half and half', 'parsimony': 0.1,
+symbolic_params = {'memory': 3, 'functions': ['sub', 'add', 'inv', 'mul', 'div', 'abs', 'log', 'sqrt'],
+                   'population': 1000, 'tournament': 20, 'hof': 20, 'generations': 10, 'n_features': 10,
+                   'init_depth': (6, 22), 'init_method': 'half and half', 'parsimony': 0.05,
                    'constants': None,
-                   'metric': 'pearson', 'metric_goal': 0.65, 
-                   'prob_cross': 0.5, 'prob_mutation_subtree': 0.2,
-                   'prob_mutation_hoist': 0.1, 'prob_mutation_point': 0.2,
+                   'metric': 'pearson', 'metric_goal': 0.70, 
+                   'prob_cross': 0.5, 'prob_mutation_subtree': 0.3,
+                   'prob_mutation_hoist': 0.1, 'prob_mutation_point': 0.1,
                    'verbose': True, 'parallelization': True, 'warm_start': True}
 
 # ----------------------------------------------------------------------- Hyperparameters for the Models -- #
@@ -90,11 +92,11 @@ models = {
 
     'ann-mlp': {
         'label': 'ann-mlp',
-        'params': {'hidden_layers': [1, 1, 1, 1, 2, 2, 2, 3, 3, 3,
-                                     1, 1, 1, 1, 2, 2, 2, 3, 3, 3],
+        'params': {'hidden_layers': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                     2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
                     
-                   'hidden_neurons': [15, 20, 35, 40, 55, 60, 65, 75, 80, 100,
-                                      15, 20, 35, 40, 55, 60, 65, 75, 80, 100],
+                   'hidden_neurons': [20, 35, 40, 55, 60, 65, 75, 80, 100, 105,
+                                      20, 35, 40, 55, 60, 65, 75, 80, 100, 105],
 
                    'activation': ['relu', 'relu', 'relu', 'relu', 'relu',
                                   'relu', 'relu', 'relu', 'relu', 'relu', 
@@ -111,8 +113,8 @@ models = {
                     'dropout': [0.001, 0.005, 0.01, 0.01, 0.02, 0.05, 0.10, 0.15, 0.20, 0.25, 
                                 0.001, 0.005, 0.01, 0.01, 0.02, 0.05, 0.10, 0.15, 0.20, 0.25],
 
-                   'learning_rate': [0.15, 0.1, 0.085, 0.030, 0.015, 0.01, 0.005, 0.002, 0.001, 0.0001,
-                                     0.15, 0.1, 0.085, 0.030, 0.015, 0.01, 0.005, 0.002, 0.001, 0.0001],
+                   'learning_rate': [1.05, 0.75, 0.55, 0.30, 0.15, 0.1, 0.05, 0.02, 0.01, 0.001,
+                                     1.05, 0.75, 0.55, 0.30, 0.15, 0.1, 0.05, 0.02, 0.01, 0.001],
 
                    'momentum': [0.4, 0.2, 0.1, 0.07, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001,
                                 0.4, 0.2, 0.1, 0.07, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001]}}}
@@ -120,8 +122,8 @@ models = {
 # ------------------------------------------------------------------ Parameters for Genetic Optimization -- #
 # ------------------------------------------------------------------ ----------------------------------- -- #
 
-optimization_params = {'halloffame': 10, 'tournament': 15, 'population': 20, 'generations': 10,
-                       'mutation': 0.8, 'crossover': 0.8}
+optimization_params = {'halloffame': 10, 'tournament': 15, 'population': 20, 'generations': 4,
+                       'mutation': 0.5, 'crossover': 0.5}
 
 # ------------------------------------------------------------------------------------- Themes for plots -- #
 # ------------------------------------------------------------------------------------- ---------------- -- #
@@ -237,11 +239,11 @@ for file_f in files_f:
         price_data[file_nom + year_f] = data_f
 
 # One period data concatenation (Fast run of main.py)
-ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]]])
+# ohlc_data = pd.concat([price_data[list(price_data.keys())[0]]])
 
-# ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
-#                        price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
-#                        price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]]])
+ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
+                       price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
+                       price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]]])
 
 # All periods data concatenation (Slow run of main.py)
 # ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
