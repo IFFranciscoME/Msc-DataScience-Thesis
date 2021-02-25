@@ -42,7 +42,7 @@ plot_1 =vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_1, p_vlines=None)
 # ------------------------------------------------------------------------------------ ----------------- -- #
 
 # Fold size
-fold_case = 'year'
+fold_case = 'semester'
 
 # Timeseries data division in t-folds
 folds = fn.t_folds(p_data=data, p_period=fold_case)
@@ -52,7 +52,7 @@ folds = fn.t_folds(p_data=data, p_period=fold_case)
 ml_models = ['ann-mlp']
 
 # File name to save the data
-file_name = 'files/pickle_rick/y_logloss-train_robust_post-features_20.dat'
+file_name = 'files/pickle_rick/s_logloss-train_robust_post-features_20.dat'
 
 # Load previously generated data
 memory_palace = dt.data_pickle(p_data_objects=None, p_data_action='load', p_data_file=file_name)
@@ -154,7 +154,7 @@ mode_repetitions = pd.DataFrame(met_cases[model_case]['met_mode']['data']).T
 # -- ------------------------------------------------------------------------ -------------------------- -- #
 
 # period to explore results
-period_case = 'y_2011'
+period_case = 's_01_2009'
 
 # models to explore results
 model_case = 'ann-mlp'
@@ -218,13 +218,13 @@ case = 'met_max'
 subset = 'train'
 
 # metric to use
-metric_case = 'acc-mean'
+metric_case = 'logloss-mean'
 
 # Model to evaluate
 model_case = 'ann-mlp'
 
 # period 
-period_case = 'y_01_2011'
+period_case = 's_01_2009'
 
 # parameters of the evaluated models
 d_params = memory_palace[period_case][model_case]['p_hof']['hof']

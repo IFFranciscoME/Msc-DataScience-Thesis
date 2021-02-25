@@ -22,6 +22,11 @@ import pandas as pd
 import numpy as np
 import data as dt
 
+import h5py
+import io
+import copy
+from tensorflow.keras.wrappers.scikit_learn import KerasClassifier
+
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, RobustScaler, MaxAbsScaler
 from sklearn.linear_model import LogisticRegression
@@ -41,7 +46,6 @@ from deap import base, creator, tools, algorithms
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 warnings.filterwarnings('ignore', 'Solver terminated early.*')
-
 
 # ------------------------------------------------------------------ PROCESSING RESOURCES FOR TENSORFLOW -- #
 # ------------------------------------------------------------------ ----------------------------------- -- #
@@ -878,10 +882,12 @@ def tf_model_metrics(p_model, p_model_data, p_history):
                    'logloss-weighted': (logloss_train*0.80 + logloss_test*0.20)/2 + 1e-5,
                    'logloss-inv-weighted': (logloss_train*0.20 + logloss_test*0.80)/2 + 1e-5}
 
-    # -- ----------------------------------------------------------------------------------------------------
+    # -- -------------------------------------------------------------------------------------------------- #
+    # weights = p_model.model.weights
+    # layers = p_model.model.layers
 
     # Return all the results for the model
-    r_model_metrics = {'model': p_model, 'pro-metrics': pro_metrics, 
+    r_model_metrics = {'model': p_model.model.to_json(), 'pro-metrics': pro_metrics, 
                        'results': {'data': {'train': p_y_result_train, 'test': p_y_result_test},
                                    'matrix': {'train': cm_train, 'test': cm_test}},
                        'metrics': {'train': {'tpr': tpr_train, 'fpr': fpr_train, 'probs': probs_train},
@@ -1204,46 +1210,90 @@ def ann_mlp(p_data, p_params):
 
     """
 
+    class Modified_KerasClassifier(KerasClassifier):
+
+        """
+        TensorFlow Keras API neural network classifier.
+
+        Workaround the tf.keras.wrappers.scikit_learn.KerasClassifier serialization
+        issue using BytesIO and HDF5 in order to enable pickle dumps.
+
+        Adapted from: https://github.com/keras-team/keras/issues/4274#issuecomment-522115115
+        and https://github.com/keras-team/keras/issues/4274#issuecomment-519226139
+
+        """
+
+        def __getstate__(self):
+            state = self.__dict__
+            if "model" in state:
+                model = state["model"]
+                model_hdf5_bio = io.BytesIO()
+                with h5py.File(model_hdf5_bio, mode="w") as file:
+                    model.save(file)
+                state["model"] = model_hdf5_bio
+                state_copy = copy.deepcopy(state)
+                state["model"] = model
+                return state_copy
+            else:
+                return state
+
+        def __setstate__(self, state):
+            if "model" in state:
+                model_hdf5_bio = state["model"]
+                with h5py.File(model_hdf5_bio, mode="r") as file:
+                    state["model"] = tf.keras.models.load_model(file)
+            self.__dict__ = state
+
+    # number of inputs in the neural net
     n_inputs = len(list(p_data['train_x'].columns))
 
+    # function to build base model that is used with the KerasClassifier sklearn wrapper for tf.keras
     def build_model(hidden_layers, hidden_neurons, activation, dropout, reg_1, reg_2,
                     learning_rate, momentum, input_shape=[n_inputs]):
 
+        # create base model
         model = models.Sequential()
-        model.add(layers.InputLayer(input_shape=input_shape))
+        # add input layer
+        model.add(layers.InputLayer(input_shape=input_shape, name='input_layer'))
         
         # dynamic construction of neural net
         for layer in range(hidden_layers):
 
-            # Add hidden layer
-            model.add(layers.Dense(hidden_neurons, activation=activation, name='hidden_layer_' + str(layer),
+            # Add hidden layers with hyperparameters
+            model.add(layers.Dense(hidden_neurons, activation=activation,
+                                   name='hidden_layer_' + str(layer),
                                    kernel_regularizer=regularizers.l1_l2(reg_2[0], reg_2[1]),
                                    bias_regularizer=regularizers.l1_l2(reg_2[0], reg_2[1]),
                                    activity_regularizer=regularizers.l1_l2(reg_1[0], reg_1[1])))
             # Add dropout layer
             model.add(layers.Dropout(dropout))
 
-        model.add(layers.Dense(1, activation='sigmoid'))
+        # output layer
+        model.add(layers.Dense(1, activation='sigmoid', name='output_layer'))
+        
+        # optimizer for the training
         optimizer = optimizers.SGD(lr=learning_rate, momentum=momentum)
+        
+        # compile model 
         model.compile(loss='binary_crossentropy', optimizer=optimizer,
                       metrics=['accuracy', 'kullback_leibler_divergence'])
 
         return model
 
+    # re-mapping of hyperparameters in order to use them inside the wrapper
     param_distribs = {'hidden_layers': p_params['hidden_layers'],
                       'hidden_neurons': p_params['hidden_neurons'],
-                      'activation': p_params['activation'],
-                      'dropout': p_params['dropout'],
-                      'reg_1': p_params['reg_1'],
-                      'reg_2': p_params['reg_2'],
-                      'learning_rate': p_params['learning_rate'],
-                      'momentum': p_params['momentum']}
+                      'activation': p_params['activation'], 'dropout': p_params['dropout'],
+                      'reg_1': p_params['reg_1'], 'reg_2': p_params['reg_2'],
+                      'learning_rate': p_params['learning_rate'], 'momentum': p_params['momentum']}
 
-    keras_class = tf.keras.wrappers.scikit_learn.KerasClassifier(build_fn=build_model, **param_distribs)
+    # build model with modified wrapper
+    keras_class = Modified_KerasClassifier(build_fn=build_model, **param_distribs)
     keras_class.model = build_model(**param_distribs)
 
-    history = keras_class.fit(p_data['train_x'], p_data['train_y'], epochs=100, batch_size=32,
-                              verbose=0, shuffle=False,
+    # fit model with corresponding training scheme
+    history = keras_class.fit(p_data['train_x'], p_data['train_y'],
+                              epochs=10, batch_size=32, verbose=0, shuffle=False,
                               callbacks=[tf.keras.callbacks.TerminateOnNaN(),
 
                               tf.keras.callbacks.ReduceLROnPlateau(monitor='kullback_leibler_divergence', 
@@ -1257,9 +1307,7 @@ def ann_mlp(p_data, p_params):
     metrics_history = {str(i): history.history[i]
                        for i in ['loss', 'accuracy', 'kullback_leibler_divergence']}
 
-    # print(metrics_history['kullback_leibler_divergence'][-1])
-    # print(metrics_history['accuracy'][-1])
-
+    # output of the function is sent to the model metrics calculations for tensorflow
     metrics_mlp_model = tf_model_metrics(p_model=keras_class, p_model_data=p_data.copy(),
                                          p_history=metrics_history)
 

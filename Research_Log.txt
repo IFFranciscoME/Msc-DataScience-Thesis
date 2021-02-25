@@ -61,8 +61,10 @@
 |   Coding         | add ann-mlp optimization params    | 14:00 22.Feb.2021  | 4.0          |                  |
 |   Coding         | sklearn wrapper tf.keras for opt   | 18:00 22.Feb.2021  | 1.0          |                  |
 |   Coding         | debugging nan / 0s error in tf     | 19:00 22.Feb.2021  | 6.0          |                  |
-
 |   Coding         | debugging nan / 0s error in tf     | 10:00 23.Feb.2021  | 1.0          |                  |
 |   Coding         | H8 prices to run the project with  | 14:00 23.Feb.2021  | 1.0          |                  |
 |   Coding         | debugging nan / 0s error (fixed)   | 16:00 23.Feb.2021  | 5.0          |                  |
 |   Coding         | added callbacks for stability      | 21:00 23.Feb.2021  | 3.0          |                  |
+|   Coding         | added callbacks for stability      | 21:00 23.Feb.2021  | 3.0          |                  |
+|   Coding         | minor changes to make pickle tests | 09:00 24.Feb.2021  | 1.0          |                  |
+|   Coding         | save sklear wrapped ann-mlp models | 17:00 24.Feb.2021  | 5.0          |                  |

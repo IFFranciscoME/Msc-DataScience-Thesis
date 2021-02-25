@@ -148,7 +148,7 @@ the roll of "drawdown" of a trade that was made as a result of a prediction
 	- it minimizes the cost (loss) function with respect to the weights.
 	- When used a gradient based method, the gradient of the cost function can be calculated recursively
 	- Is it possible to speed up the execution of Gradient Descent if the update is carried out through batches ?
-	- Is it prone to converge to local minimus ?
+	- Is it prone to converge to local mins ?
 
 - Hyperparameters of optimizer
 - Capacity (model parameters)
@@ -173,3 +173,7 @@ the roll of "drawdown" of a trade that was made as a result of a prediction
 tensorflow.python.framework.errors_impl.InvalidArgumentError: assertion failed: [predictions must be >= 0] [Condition x >= y did not hold element-wise:] [x (ann-mlp/output_layer/Sigmoid:0) =
 
 - removing the regularization layers but kept dropout resumed the process without code error but lower results. 
+
+- neural net minimizes logloss but with genetic algorithms the fitness function can be another one.
+I that reggard, the goal is to have the "best weights that classifies with least errros in order to maximices the
+ accuracy out of sample"

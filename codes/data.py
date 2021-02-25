@@ -10,14 +10,15 @@
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 
+# Modify environmental variable to suppress console log messages from TensorFlow
+import os
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+
 import pickle
 import itertools
 import pandas as pd
-from os import listdir, path, environ
+from os import listdir, path
 from os.path import isfile, join
-
-# Suppress console log messages from TensorFlow
-environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 # ---------------------------------------------------------------------------------- PARALLEL EXPERIMENT -- #
 # ---------------------------------------------------------------------------------- ------------------- -- #
@@ -25,7 +26,7 @@ environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 # Short Version for Testing
 iter_fold = ['semester']
 iter_opt = {'inner-split': ['20'], 'transform': ['robust'], 'scaling': ['post-features'],
-            'fitness': ['logloss-train', 'logloss-inv-weighted']}
+            'fitness': ['logloss-train']}
 
 # ---------------------------------------------------------------- Complete list of available parameters -- #
 
@@ -48,8 +49,8 @@ iter_exp = list(itertools.product(*[iter_opt['fitness'], iter_opt['transform'],
 # --------------------------------------------------------------------- Parameters for Symbolic Features -- #
 # --------------------------------------------------------------------- -------------------------------- -- #
 
-symbolic_params = {'memory': 3, 'functions': ['sub', 'add', 'inv', 'mul', 'div', 'abs', 'log', 'sqrt'],
-                   'population': 1000, 'tournament': 20, 'hof': 20, 'generations': 10, 'n_features': 10,
+symbolic_params = {'memory': 15, 'functions': ['sub', 'add', 'inv', 'mul', 'div', 'abs', 'log', 'sqrt'],
+                   'population': 2000, 'tournament': 20, 'hof': 20, 'generations': 4, 'n_features': 10,
                    'init_depth': (6, 22), 'init_method': 'half and half', 'parsimony': 0.05,
                    'constants': None,
                    'metric': 'pearson', 'metric_goal': 0.70, 
@@ -123,7 +124,7 @@ models = {
 # ------------------------------------------------------------------ ----------------------------------- -- #
 
 optimization_params = {'halloffame': 10, 'tournament': 15, 'population': 20, 'generations': 4,
-                       'mutation': 0.5, 'crossover': 0.5}
+                       'mutation': 0.7, 'crossover': 0.7}
 
 # ------------------------------------------------------------------------------------- Themes for plots -- #
 # ------------------------------------------------------------------------------------- ---------------- -- #
@@ -239,7 +240,7 @@ for file_f in files_f:
         price_data[file_nom + year_f] = data_f
 
 # One period data concatenation (Fast run of main.py)
-ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]] ])
+ohlc_data = pd.concat([price_data[list(price_data.keys())[0]]])
 
 # ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
 #                        price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],

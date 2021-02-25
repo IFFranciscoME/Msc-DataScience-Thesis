@@ -10,7 +10,6 @@
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 
-from os import environ
 from data import ohlc_data as data
 from data import iter_fold
 from data import iter_exp
@@ -20,7 +19,6 @@ from multiprocessing import cpu_count
 import functions as fn
 import data as dt
 import multiprocessing as mp
-import tensorflow as tf
 import warnings
 import random
 
@@ -29,9 +27,6 @@ random.seed(123)
 
 # ignore warnings
 warnings.filterwarnings("ignore")
-
-# Suppress console log messages from TensorFlow
-environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 # main process to run from console
 if __name__ == "__main__":
@@ -73,8 +68,8 @@ if __name__ == "__main__":
 
         # configuration for tensorflow and CPU/GPU processing
         fn.tf_processing(p_option='cpu', p_cores=workers)
-        tf.config.threading.set_intra_op_parallelism_threads(workers)
-        tf.config.threading.set_inter_op_parallelism_threads(workers)
+        # tf.config.threading.set_intra_op_parallelism_threads(workers)
+        # tf.config.threading.set_inter_op_parallelism_threads(workers)
         
         # Parallel Asyncronous Process 
         fold_process = {'fold_' + str(iteration): pool.starmap(fn.fold_process,
@@ -84,6 +79,7 @@ if __name__ == "__main__":
 
         # close pool
         pool.close()
+        
         # rejoin sepparated resources
         pool.join()
 

@@ -240,6 +240,9 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 - Addition: added KLDivergence metric and callback with monitoring to it.
 - Addition: added callback EarlyStopping monitoring accuracy to it.
 
+# -- 24.02.2021
+- Fix: pickle tf.keras model with wrapper from scikit learn. 
+
 # ---------------------------------------------------------------------------------------------- BACKLOG -- # 
 # ---------------------------------------------------------------------------------------------- ------- -- #
 
@@ -250,7 +253,6 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 - (pending) Refactor tf_model_metrics and sk_model_metrics to not use train/test condition (just any data)
 
 - (pending) add RandomForest classification model with scikit learn
-
 - (pending) Refactor code for timeseries data of metric evolution g_timeseries_auc
 
 - (pending) reduce time elapsed by global evaluation function
@@ -374,5 +376,3 @@ class or something alike
 
 Malditos nan, todo parece que es una inestabilidad numerica en el cálculo de la función de costo, posiblemente ocasionado por regularizacion, epochs, batch. tambien sospecho
 de la cantidad de variables de entrada respecto a los datos para entrenar, ya que tengo como 200 entradas para 120 datos de entrenamiento.
-
-Siguiente prueba fue reducir las variables de entrada en un 50% aprox y la capacidad del modelo en menos epochs
