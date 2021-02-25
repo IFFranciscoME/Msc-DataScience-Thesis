@@ -136,19 +136,41 @@ the roll of "drawdown" of a trade that was made as a result of a prediction
 
 # -- IDEA: ENCAPSULAR LO ENCONTRADO EN CADA CAPITULO DEL DOCUMENTO Y ESO ENVIARLO/EXPONERLO EN UN EVENTO
 
-# -- Structuring MLP
+# -- ------------------------------------------------- Artificial Neural Network - Multilayer Perceptron -- #
+# -- --------------------------------------------------------------------------------------------------- -- #
 
-- Number of layers: 1 to 3
-- Number of hidden neurons
-- Activation function per layer 
-- Loss function
-	
-- Optimizer
+# ----- general components of modeling ----- # 
+----------------------------------------------
+MODEL ARCHITECTURE
+LEARNING ALGORITHM
+COST FUNCTION 
+HYPERPARAMETERS (Learning, Architecture)
+EXTRA CONSIDERATIONS (iterations, convergence)
+----------------------------------------------
 
+- Number of layers:
+	- 1 to 3 hidden
+
+- Number of hidden neurons:
+	- per layer from 15 to 100
+
+- Activation function per layer:
+	- sigmoid
+	- relu
+
+- Cost function:
+	- binary cross entropy
+
+- Optimizer:
+	- Gradient Descent with momentum / another 2 ?
 	- it minimizes the cost (loss) function with respect to the weights.
 	- When used a gradient based method, the gradient of the cost function can be calculated recursively
 	- Is it possible to speed up the execution of Gradient Descent if the update is carried out through batches ?
 	- Is it prone to converge to local mins ?
+
+- Regularization:
+	- for each layer it can be Kernel (weights), Kernel (bias), Activation activity (output of layer)
+	- dropout: a percentage of the neurons will be set to 0
 
 - Hyperparameters of optimizer
 - Capacity (model parameters)
@@ -177,3 +199,6 @@ tensorflow.python.framework.errors_impl.InvalidArgumentError: assertion failed: 
 - neural net minimizes logloss but with genetic algorithms the fitness function can be another one.
 I that reggard, the goal is to have the "best weights that classifies with least errros in order to maximices the
  accuracy out of sample"
+
+
+# 
