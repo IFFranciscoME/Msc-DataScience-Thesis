@@ -35,11 +35,11 @@ iter_opt = {'inner-split': ['20'], 'transform': ['robust'], 'scaling': ['post-fe
 # iter_opt = {'inner-split': ['30', '10', '0'],
 #             'transform': ['scale', 'normalize', 'robust'],
 #             'scaling': ['post-features', 'pre-features'],
-#             'fitness': ['auc-train', 'auc-test', 'auc-diff',
+#             'fitness': ['auc-train', 'auc-val', 'auc-diff',
 #                         'auc-mean', 'auc-weighted', 'auc-inv-weighted',
-#                         'acc-train', 'acc-test', 'acc-diff',
+#                         'acc-train', 'acc-val', 'acc-diff',
 #                         'acc-mean', 'acc-weighted', 'acc-inv-weighted',
-#                         'logloss-train', 'logloss-test', 'logloss-diff',
+#                         'logloss-train', 'logloss-val', 'logloss-diff',
 #                         'logloss-mean', 'logloss-weighted', 'logloss-inv-weighted']}
 
 # Iterative/Parallel Experiment Data
@@ -49,7 +49,11 @@ iter_exp = list(itertools.product(*[iter_opt['fitness'], iter_opt['transform'],
 # --------------------------------------------------------------------- Parameters for Symbolic Features -- #
 # --------------------------------------------------------------------- -------------------------------- -- #
 
-symbolic_params = {'memory': 15, 'functions': ['sub', 'add', 'inv', 'mul', 'div', 'abs', 'log', 'sqrt'],
+# parameters for features formation
+features_params = {'memory': 5}
+
+# paremeters for symbolic features generation process
+symbolic_params = {'functions': ['sub', 'add', 'inv', 'mul', 'div', 'abs', 'log', 'sqrt'],
                    'population': 2000, 'tournament': 20, 'hof': 20, 'generations': 4, 'n_features': 10,
                    'init_depth': (6, 22), 'init_method': 'half and half', 'parsimony': 0.05,
                    'constants': None,
@@ -161,7 +165,7 @@ theme_plot_4 = dict(p_colors={'color_1': '#6b6b6b', 'color_2': '#ABABAB', 'color
 theme_plot_5 = dict(p_colors={'color_1': '#6b6b6b', 'color_2': '#ABABAB', 'color_3': '#ABABAB'},
                     p_fonts={'font_title': 18, 'font_axis': 10, 'font_ticks': 10},
                     p_dims={'width': 900, 'height': 500},
-                    p_labels={'title': 'AUC por periodo (Test Data)',
+                    p_labels={'title': 'AUC por periodo (val Data)',
                               'x_title': 'Periodos', 'y_title': 'AUC'})
 
 
@@ -223,28 +227,28 @@ for file_f in files_f:
     data_f = pd.read_csv(main_path + file_f)
     data_f['timestamp'] = pd.to_datetime(data_f['timestamp'])
 
-    # swap since original is wrong
+    # swap since original was inversed and there is a mirror effect like this: min = 1/max
     low = data_f['low'].copy()
     high = data_f['high'].copy()
     data_f['high'] = low
     data_f['low'] = high
 
-    if mode == 'MXN_USD':
-        data_f['open'] = round(1/data_f['open'], 5)
-        data_f['high'] = round(1/data_f['high'], 5)
-        data_f['low'] = round(1/data_f['low'], 5)
-        data_f['close'] = round(1/data_f['close'], 5)
+    # if mode == 'MXN_USD':
+    data_f['open'] = round(1/data_f['open'], 5)
+    data_f['high'] = round(1/data_f['high'], 5)
+    data_f['low'] = round(1/data_f['low'], 5)
+    data_f['close'] = round(1/data_f['close'], 5)
 
     years_f = set([str(datadate.year) for datadate in list(data_f['timestamp'])])
     for year_f in years_f:
         price_data[file_nom + year_f] = data_f
 
 # One period data concatenation (Fast run of main.py)
-ohlc_data = pd.concat([price_data[list(price_data.keys())[0]]])
+# ohlc_data = pd.concat([price_data[list(price_data.keys())[0]]])
 
-# ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
-#                        price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
-#                        price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]]])
+ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
+                       price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
+                       price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]]])
 
 # All periods data concatenation (Slow run of main.py)
 # ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],

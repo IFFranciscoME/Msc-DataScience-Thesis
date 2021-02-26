@@ -154,8 +154,8 @@ def g_ohlc_class(p_ohlc, p_theme, p_data_class, p_vlines):
     p_ohlc.reset_index(inplace=True, drop=True)
     
     # auxiliar lists
-    train_test_error = []
-    train_test_success = []
+    train_val_error = []
+    train_val_success = []
 
     if 'train_y' in list(p_data_class.keys())[0]:
 
@@ -171,35 +171,35 @@ def g_ohlc_class(p_ohlc, p_theme, p_data_class, p_vlines):
         # error and success in train
         for row_e in np.arange(0, len(p_data_class['train_y'].index.to_list()), 1):
             if p_data_class['train_y'][row_e] != p_data_class['train_y_pred'][row_e]:
-                train_test_error.append(feature_lag + row_e)
+                train_val_error.append(feature_lag + row_e)
             else:
-                train_test_success.append(feature_lag + row_e)
+                train_val_success.append(feature_lag + row_e)
 
         # accuracy in train data set
-        train_test_acc = round(len(train_test_success) / (len(train_test_error) + len(train_test_success)), 2)
+        train_val_acc = round(len(train_val_success) / (len(train_val_error) + len(train_val_success)), 2)
 
-    # ------------------------------------------------------------------------------ In case of test set -- #
+    # ------------------------------------------------------------------------------ In case of val set -- #
     
-    if 'test_y' in list(p_data_class.keys())[0]:
+    if 'val_y' in list(p_data_class.keys())[0]:
         
         # p_ohlc has all the prices and p_data_class has the prediction classes
         # since p_data_class is smaller than p_ohlc, a lagged shift is needed
-        feature_lag = int(np.where(p_ohlc['timestamp'] == p_data_class['test_y'].index[0])[0]) 
+        feature_lag = int(np.where(p_ohlc['timestamp'] == p_data_class['val_y'].index[0])[0]) 
         ohlc_lag = list(np.arange(0, feature_lag, 1))
         
         # add vertical line to indicate where ends the ohlc lag for feature engineering
         p_vlines.append(p_ohlc['timestamp'][feature_lag])
         p_vlines = sorted(p_vlines)
 
-        # error and success in test
-        for row_s in np.arange(0, len(p_data_class['test_y'].index.to_list()), 1):
-            if p_data_class['test_y'][row_s] != p_data_class['test_y_pred'][row_s]:
-                train_test_error.append(feature_lag + row_s)
+        # error and success in val
+        for row_s in np.arange(0, len(p_data_class['val_y'].index.to_list()), 1):
+            if p_data_class['val_y'][row_s] != p_data_class['val_y_pred'][row_s]:
+                train_val_error.append(feature_lag + row_s)
             else:
-                train_test_success.append(feature_lag + row_s)
+                train_val_success.append(feature_lag + row_s)
 
         # overall accuracy
-        train_test_acc = round(len(train_test_success) / (len(train_test_error) + len(train_test_success)), 2)
+        train_val_acc = round(len(train_val_success) / (len(train_val_error) + len(train_val_success)), 2)
 
 
     # Instantiate a figure object
@@ -223,22 +223,22 @@ def g_ohlc_class(p_ohlc, p_theme, p_data_class, p_vlines):
 
     # Add layer for the success based color of candles in OHLC candlestick chart
     fig_g_ohlc.add_trace(go.Candlestick(
-        x=[p_ohlc['timestamp'].iloc[i] for i in train_test_success],
-        open=[p_ohlc['open'].iloc[i] for i in train_test_success],
-        high=[p_ohlc['high'].iloc[i] for i in train_test_success],
-        low=[p_ohlc['low'].iloc[i] for i in train_test_success],
-        close=[p_ohlc['close'].iloc[i] for i in train_test_success],
+        x=[p_ohlc['timestamp'].iloc[i] for i in train_val_success],
+        open=[p_ohlc['open'].iloc[i] for i in train_val_success],
+        high=[p_ohlc['high'].iloc[i] for i in train_val_success],
+        low=[p_ohlc['low'].iloc[i] for i in train_val_success],
+        close=[p_ohlc['close'].iloc[i] for i in train_val_success],
         increasing={'line': {'color': 'skyblue'}},
         decreasing={'line': {'color': 'skyblue'}},
         name='Prediction Success'))
 
     # Add layer for the error based color of candles in OHLC candlestick chart
     fig_g_ohlc.add_trace(go.Candlestick(
-        x=[p_ohlc['timestamp'].iloc[i] for i in train_test_error],
-        open=[p_ohlc['open'].iloc[i] for i in train_test_error],
-        high=[p_ohlc['high'].iloc[i] for i in train_test_error],
-        low=[p_ohlc['low'].iloc[i] for i in train_test_error],
-        close=[p_ohlc['close'].iloc[i] for i in train_test_error],
+        x=[p_ohlc['timestamp'].iloc[i] for i in train_val_error],
+        open=[p_ohlc['open'].iloc[i] for i in train_val_error],
+        high=[p_ohlc['high'].iloc[i] for i in train_val_error],
+        low=[p_ohlc['low'].iloc[i] for i in train_val_error],
+        close=[p_ohlc['close'].iloc[i] for i in train_val_error],
         increasing={'line': {'color': 'red'}},
         decreasing={'line': {'color': 'red'}},
         name='Prediction Error'))
@@ -275,7 +275,7 @@ def g_ohlc_class(p_ohlc, p_theme, p_data_class, p_vlines):
     # Update layout for the background
     fig_g_ohlc.update_layout(title_font_size=p_theme['p_fonts']['font_title'],
                              title=dict(x=0.5, text=p_labels['title'] + ' | acc: ' + 
-                                                    str(train_test_acc)),
+                                                    str(train_val_acc)),
                              yaxis=dict(title=p_labels['y_title'],
                                         titlefont=dict(size=p_theme['p_fonts']['font_axis'] + 4)),
                              xaxis=dict(title=p_labels['x_title'], rangeslider=dict(visible=False),
@@ -301,7 +301,7 @@ def g_timeseries(p_data, p_theme):
     ----------
     p_data_auc:dict
         Diccionario con datos para plot de series de tiempo AUC
-        p_data_auc = minmax_auc_test
+        p_data_auc = minmax_auc_val
 
     p_theme: dict
         Diccionario con informacion de tema para plot

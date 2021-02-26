@@ -27,6 +27,7 @@ import io
 import copy
 from tensorflow.keras.wrappers.scikit_learn import KerasClassifier
 
+import statsmodels.api as sm
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, RobustScaler, MaxAbsScaler
 from sklearn.linear_model import LogisticRegression
@@ -140,6 +141,66 @@ def data_scaler(p_data, p_trans):
         print('error, p_trans not valid')
 
 
+# ------------------------------------------------------------------------ EMBARGO TECHNIQUE FOR T-FOLDS -- #
+# ------------------------------------------------------------------------ -------------------------------- #
+
+def folds_embargo(p_folds, p_mode, p_memory):
+    """
+    
+    Parameters
+    ----------
+    p_data: dic
+        Dictionary in which every key is a T-Fold in pd.DataFrame TOHLCV format
+
+    p_mode: str
+        Modality to calculate the embargo number
+        'autocorrelation': Performs a PACF test and takes the most significative lag if any
+        'memory': an integer that represents the memory in the data
+    
+    Return
+    ------
+    same dictionary and pd.DataFrames with resulting from embargo operation
+
+    p_folds = folds.copy()
+    """
+
+    embargo_data = p_folds.copy()
+
+    # select keys as periods, all but the first one
+    embargo_periods = list(p_folds.keys())[1:]
+    embargo_data = pd.concat(embargo_data)
+    # embargo_data.reset_index(inplace=True, drop=True)
+    # embargo_data.index = list(embargo_data['timestamp'])
+    # embargo_data = embargo_data[['open', 'high', 'low', 'close', 'volume']].copy()
+
+    # -- check for criteria to calculate quantity of observations to drop
+    for period in embargo_periods:
+        # period = embargo_periods[0] 
+
+        # memory output
+        if p_mode == 'memory':
+            n_embargo = p_memory
+        
+        # autocorrelation function
+        elif p_mode == 'autocorrelation':
+            pacf_values = []
+            for column in embargo_data[['open', 'high', 'low', 'close', 'volume']]:
+                data_pacf = sm.tsa.pacf(embargo_data[column].diff()[1:])
+                data_acf = sm.tsa.acf(embargo_data[column].diff()[1:])
+                pacf_values.append(np.amax(data_acf))
+                pacf_values.append(np.amax(data_pacf))
+
+            # calculate autocorrelations
+            n_embargo = np.where(pacf_values == np.amax(pacf_values))[0][0] + 1
+            
+        embargo_indexes = {}
+        for period in embargo_periods:
+            # period = periods[0]
+            embargo_indexes[period] = list(embargo_data['timestamp'][p_folds[period].index[0:n_embargo]])
+            p_folds[period] = p_folds[period].drop(p_folds[period].index[0:n_embargo]).copy()
+    
+    return p_folds, embargo_indexes
+
 
 # --------------------------------------------------------------------------- Divide the data in T-Folds -- #
 # --------------------------------------------------------------------------- ----------------------------- #
@@ -158,7 +219,13 @@ def t_folds(p_data, p_period):
         'quarter': every T-Fold will be of three months (quarter) of historical data
         'year': every T-Fold will be of twelve months of historical data
         'bi-year': every T-Fold will be of 2 years of historical data
-        '80-20': Hold out method, 80% for training and 20% for testing
+        '80-20': Hold out method, 80% for training and 20% for valing
+
+    p_embargo : int
+        According to bibliography, embargo is the 'memory' kept between datasets of timeseries data,
+        this memory is proposed as the "lags" of the prices, i.e. historical observations to drop
+        from the T-Fold division. e.g. with daily prices, an embargo of 7 means 7 days must be taken out
+        at the beggining of a subdataset that proceeds a previous T-Fold sub dataset
     
     Returns
     -------
@@ -194,6 +261,7 @@ def t_folds(p_data, p_period):
         s_data = {}
         # New key for every semester_year
         for y in sorted(list(years)):
+            # y = sorted(list(years))[0]
             s_data.update({'s_' + str('0') + str(1) + '_' + str(y):
                                p_data[(pd.to_datetime(p_data['timestamp']).dt.year == y) &
                                       ((pd.to_datetime(p_data['timestamp']).dt.quarter == 1) |
@@ -414,7 +482,7 @@ def linear_features(p_data, p_memory):
     Returns
     -------
     model_data: dict
-        {'train_x': pd.DataFrame, 'train_y': pd.DataFrame, 'test_x': pd.DataFrame, 'test_y': pd.DataFrame}
+        {'train_x': pd.DataFrame, 'train_y': pd.DataFrame, 'val_x': pd.DataFrame, 'val_y': pd.DataFrame}
 
     References
     ----------
@@ -557,14 +625,14 @@ def genetic_programed_features(p_data, p_split):
         p_data = m_folds['periodo_1']
 
     p_split: int
-        split in test
+        split in val
 
         p_split = '0'
 
     Returns
     -------
     model_data: dict
-        {'train_x': pd.DataFrame, 'train_y': pd.DataFrame, 'test_x': pd.DataFrame, 'test_y': pd.DataFrame}
+        {'train_x': pd.DataFrame, 'train_y': pd.DataFrame, 'val_x': pd.DataFrame, 'val_y': pd.DataFrame}
 
     References
     ----------
@@ -594,24 +662,24 @@ def genetic_programed_features(p_data, p_split):
     datos_modelo = pd.concat([datos_had.copy(), datos_sym.copy()], axis=1)
     model_data = {}
 
-    # if size != 0 then an inner fold division is performed with size*100 % as test and the rest for train
+    # if size != 0 then an inner fold division is performed with size*100 % as val and the rest for train
     size = float(p_split)/100
     
-    # there is a inner-split in order to have train-test inside fold
+    # there is a inner-split in order to have train-val inside fold
     if size != 0:
         
         # automatic data sub-sets division according to inner-split
-        xtrain, xtest, ytrain, ytest = train_test_split(datos_modelo, datos_y, test_size=size, shuffle=False)
+        xtrain, xval, ytrain, yval = train_test_split(datos_modelo, datos_y, test_size=size, shuffle=False)
 
         # data organization
         model_data['train_x'] = xtrain.copy()
         model_data['train_y'] = ytrain.copy()
-        model_data['test_x'] = xtest.copy()
-        model_data['test_y'] = ytest.copy()
+        model_data['val_x'] = xval.copy()
+        model_data['val_y'] = yval.copy()
 
         return {'model_data': model_data, 'sym_data': sym_data}
     
-    # No inner-split in the fold, therefore, all data is considered 1 train set and wont have a test set
+    # No inner-split in the fold, therefore, all data is considered 1 train set and wont have a val set
     else:
 
         # data organization
@@ -736,7 +804,7 @@ def tf_model_metrics(p_model, p_model_data, p_history):
         string with the name of the model
     
     p_data: dict
-        With x_train, x_test, y_train, y_test keys of its respective pd.DataFrames
+        With x_train, x_val, y_train, y_val keys of its respective pd.DataFrames
    
     Returns
     -------
@@ -748,7 +816,7 @@ def tf_model_metrics(p_model, p_model_data, p_history):
 
     """
 
-     # Data keys, could be ['x_train', 'y_train'] or ['x_train', 'y_train', 'x_test', 'y_test']
+     # Data keys, could be ['x_train', 'y_train'] or ['x_train', 'y_train', 'x_val', 'y_val']
     data_keys = list(p_model_data.keys())
 
     if 'train_x' in data_keys and 'train_y' in data_keys:
@@ -794,93 +862,93 @@ def tf_model_metrics(p_model, p_model_data, p_history):
         # last configuration
         logloss_train = logloss_h_train[-1] + 1e-5
 
-        if 'test_x' not in data_keys and 'test_y' not in data_keys:
-            cm_test = cm_train
-            probs_test = probs_train
-            acc_test = acc_train
-            fpr_test = fpr_train
-            tpr_test = tpr_train
-            auc_test = auc_train
-            logloss_test = logloss_train
-            p_y_result_test = p_y_result_train
+        if 'val_x' not in data_keys and 'val_y' not in data_keys:
+            cm_val = cm_train
+            probs_val = probs_train
+            acc_val = acc_train
+            fpr_val = fpr_train
+            tpr_val = tpr_train
+            auc_val = auc_train
+            logloss_val = logloss_train
+            p_y_result_val = p_y_result_train
 
-     # -- TEST SET ALSO: In the case of the presence of a test set, do calculations accordingly
-    if 'test_x' in data_keys and 'test_y' in data_keys:
+     # -- val SET ALSO: In the case of the presence of a val set, do calculations accordingly
+    if 'val_x' in data_keys and 'val_y' in data_keys:
 
-        # Fitted test values
-        p_y_test_d = p_model.predict(p_model_data['test_x'])
-        p_y_test_d = np.nan_to_num(p_y_test_d)
+        # Fitted val values
+        p_y_val_d = p_model.predict(p_model_data['val_x'])
+        p_y_val_d = np.nan_to_num(p_y_val_d)
 
         # tensorflow output
         # reshape array as a 1d array (list)
-        p_y_test_d = p_y_test_d.reshape(len(p_y_test_d),)
+        p_y_val_d = p_y_val_d.reshape(len(p_y_val_d),)
         # trigger for class is 1 if > 0.5
-        p_y_test_d[p_y_test_d.reshape(len(p_y_test_d),) >= 0.5] = 1
-        p_y_test_d[p_y_test_d.reshape(len(p_y_test_d),) < 0.5] = 0
+        p_y_val_d[p_y_val_d.reshape(len(p_y_val_d),) >= 0.5] = 1
+        p_y_val_d[p_y_val_d.reshape(len(p_y_val_d),) < 0.5] = 0
 
         # **** hardcode at least 1 case for each class in order to avoid loss function error
-        p_y_test_d[0] = 1
-        p_y_test_d[1] = 0
+        p_y_val_d[0] = 1
+        p_y_val_d[1] = 0
         
-        p_y_result_test = pd.DataFrame({'test_y': p_model_data['test_y'], 'test_pred_y': p_y_test_d})
-        cm_test = confusion_matrix(p_y_result_test['test_y'], p_y_result_test['test_pred_y'])
-        # Probabilities of class in test data
-        probs_test = p_model.predict(p_model_data['test_x']).reshape(len(p_model_data['test_x']),)
+        p_y_result_val = pd.DataFrame({'val_y': p_model_data['val_y'], 'val_pred_y': p_y_val_d})
+        cm_val = confusion_matrix(p_y_result_val['val_y'], p_y_result_val['val_pred_y'])
+        # Probabilities of class in val data
+        probs_val = p_model.predict(p_model_data['val_x']).reshape(len(p_model_data['val_x']),)
         # In case of a nan, replace it with zero (to prevent errors)
-        probs_test = np.nan_to_num(probs_test)
+        probs_val = np.nan_to_num(probs_val)
 
         # Accuracy rate
         # historical info
-        acc_h_test = p_history['accuracy']
+        acc_h_val = p_history['accuracy']
         # last configuration
-        acc_test = acc_h_test[-1]
+        acc_val = acc_h_val[-1]
         # False Positive Rate, True Positive Rate, Thresholds
-        fpr_test, tpr_test, thresholds = roc_curve(list(p_model_data['test_y']), probs_test, pos_label=1)
+        fpr_val, tpr_val, thresholds = roc_curve(list(p_model_data['val_y']), probs_val, pos_label=1)
         # Area Under the Curve (ROC) for train data
         # historical info
-        # auc_h_test = p_history['auc']
+        # auc_h_val = p_history['auc']
         # last configuration
-        auc_test = roc_auc_score(list(p_model_data['test_y']), probs_test) + 1e-5
+        auc_val = roc_auc_score(list(p_model_data['val_y']), probs_val) + 1e-5
 
         # Logloss (Binary cross-entropy function)
         # historical info
-        logloss_h_test = p_history['loss']
+        logloss_h_val = p_history['loss']
         # last configuration
-        logloss_test = logloss_h_test[-1] + 1e-5
+        logloss_val = logloss_h_val[-1] + 1e-5
 
         if 'train_x' not in data_keys and 'train_y' not in data_keys:
-            cm_train = cm_test
-            probs_train = probs_test
-            acc_train = acc_test
-            fpr_train = fpr_test
-            tpr_train = tpr_test
-            auc_train = auc_test
-            logloss_train = logloss_test
-            p_y_result_train = p_y_result_test
+            cm_train = cm_val
+            probs_train = probs_val
+            acc_train = acc_val
+            fpr_train = fpr_val
+            tpr_train = tpr_val
+            auc_train = auc_val
+            logloss_train = logloss_val
+            p_y_result_train = p_y_result_val
        
     # -- ----------------------------------------------------------------------------------------------------
 
     # calculate relevant metrics
     pro_metrics = {'acc-train': acc_train,
-                   'acc-test': acc_test, 
-                   'acc-mean': (acc_train + acc_test)/2 + 1e-5, 
-                   'acc-diff': acc_train - acc_test, 
-                   'acc-weighted': (acc_train*0.80 + acc_test*0.20)/2 + 1e-5,
-                   'acc-inv-weighted': (acc_train*0.20 + acc_test*0.80)/2 + 1e-5,
+                   'acc-val': acc_val, 
+                   'acc-mean': (acc_train + acc_val)/2 + 1e-5, 
+                   'acc-diff': acc_train - acc_val, 
+                   'acc-weighted': (acc_train*0.80 + acc_val*0.20)/2 + 1e-5,
+                   'acc-inv-weighted': (acc_train*0.20 + acc_val*0.80)/2 + 1e-5,
 
                    'auc-train': auc_train,
-                   'auc-test': auc_test,
-                   'auc-diff': auc_train - auc_test, 
-                   'auc-mean': (auc_train + auc_test)/2 + 1e-5, 
-                   'auc-weighted': (auc_train*0.80 + auc_test*0.20)/2 + 1e-5,
-                   'auc-inv-weighted': (auc_train*0.20 + auc_test*0.80)/2 + 1e-5,
+                   'auc-val': auc_val,
+                   'auc-diff': auc_train - auc_val, 
+                   'auc-mean': (auc_train + auc_val)/2 + 1e-5, 
+                   'auc-weighted': (auc_train*0.80 + auc_val*0.20)/2 + 1e-5,
+                   'auc-inv-weighted': (auc_train*0.20 + auc_val*0.80)/2 + 1e-5,
 
                    'logloss-train': logloss_train,
-                   'logloss-test': logloss_test,
-                   'logloss-diff': logloss_train - logloss_test,
-                   'logloss-mean': (logloss_train + logloss_test)/2 + 1e-5,
-                   'logloss-weighted': (logloss_train*0.80 + logloss_test*0.20)/2 + 1e-5,
-                   'logloss-inv-weighted': (logloss_train*0.20 + logloss_test*0.80)/2 + 1e-5}
+                   'logloss-val': logloss_val,
+                   'logloss-diff': logloss_train - logloss_val,
+                   'logloss-mean': (logloss_train + logloss_val)/2 + 1e-5,
+                   'logloss-weighted': (logloss_train*0.80 + logloss_val*0.20)/2 + 1e-5,
+                   'logloss-inv-weighted': (logloss_train*0.20 + logloss_val*0.80)/2 + 1e-5}
 
     # -- -------------------------------------------------------------------------------------------------- #
     # weights = p_model.model.weights
@@ -888,10 +956,10 @@ def tf_model_metrics(p_model, p_model_data, p_history):
 
     # Return all the results for the model
     r_model_metrics = {'model': p_model.model.to_json(), 'pro-metrics': pro_metrics, 
-                       'results': {'data': {'train': p_y_result_train, 'test': p_y_result_test},
-                                   'matrix': {'train': cm_train, 'test': cm_test}},
+                       'results': {'data': {'train': p_y_result_train, 'val': p_y_result_val},
+                                   'matrix': {'train': cm_train, 'val': cm_val}},
                        'metrics': {'train': {'tpr': tpr_train, 'fpr': fpr_train, 'probs': probs_train},
-                                   'test': {'tpr': tpr_test, 'fpr': fpr_test, 'probs': probs_test},
+                                   'val': {'tpr': tpr_val, 'fpr': fpr_val, 'probs': probs_val},
                                    'history': {i: p_history[i] for i in list(p_history.keys())}}}
 
     return r_model_metrics
@@ -910,7 +978,7 @@ def sk_model_metrics(p_model, p_model_data):
         string with the name of the model
     
     p_data: dict
-        With x_train, x_test, y_train, y_test keys of its respective pd.DataFrames
+        With x_train, x_val, y_train, y_val keys of its respective pd.DataFrames
    
     Returns
     -------
@@ -922,7 +990,7 @@ def sk_model_metrics(p_model, p_model_data):
 
     """
 
-    # Data keys, could be ['x_train', 'y_train'] or ['x_train', 'y_train', 'x_test', 'y_test']
+    # Data keys, could be ['x_train', 'y_train'] or ['x_train', 'y_train', 'x_val', 'y_val']
     data_keys = list(p_model_data.keys())
 
     if 'train_x' in data_keys and 'train_y' in data_keys:
@@ -932,7 +1000,7 @@ def sk_model_metrics(p_model, p_model_data):
         p_y_result_train = pd.DataFrame({'train_y': p_model_data['train_y'], 'train_pred_y': p_y_train_d})
         # Confussion matrix
         cm_train = confusion_matrix(p_y_result_train['train_y'], p_y_result_train['train_pred_y'])
-        # Probabilities of class in test data
+        # Probabilities of class in val data
         probs_train = p_model.predict_proba(p_model_data['train_x'])
         # In case of a nan, replace it with zero (to prevent errors)
         probs_train = np.nan_to_num(probs_train)
@@ -948,48 +1016,48 @@ def sk_model_metrics(p_model, p_model_data):
         # Logloss (Binary cross-entropy function)
         logloss_train = log_loss(p_model_data['train_y'], p_y_train_d) + 1e-5
     
-        if 'test_x' not in data_keys and 'test_y' not in data_keys:
-            cm_test = cm_train
-            probs_test = probs_train
-            acc_test = acc_train
-            fpr_test = fpr_train
-            tpr_test = tpr_train
-            auc_test = auc_train
-            logloss_test = logloss_train
-            p_y_result_test = p_y_result_train
+        if 'val_x' not in data_keys and 'val_y' not in data_keys:
+            cm_val = cm_train
+            probs_val = probs_train
+            acc_val = acc_train
+            fpr_val = fpr_train
+            tpr_val = tpr_train
+            auc_val = auc_train
+            logloss_val = logloss_train
+            p_y_result_val = p_y_result_train
 
-    # -- TEST SET ALSO: In the case of the presence of a test set, do calculations accordingly
-    if 'test_x' in data_keys and 'test_y' in data_keys:
+    # -- val SET ALSO: In the case of the presence of a val set, do calculations accordingly
+    if 'val_x' in data_keys and 'val_y' in data_keys:
 
-        # Fitted test values
-        p_y_test_d = p_model.predict(p_model_data['test_x'])
-        p_y_result_test = pd.DataFrame({'test_y': p_model_data['test_y'], 'test_pred_y': p_y_test_d})
-        cm_test = confusion_matrix(p_y_result_test['test_y'], p_y_result_test['test_pred_y'])
-        # Probabilities of class in test data
-        probs_test = p_model.predict_proba(p_model_data['test_x'])
+        # Fitted val values
+        p_y_val_d = p_model.predict(p_model_data['val_x'])
+        p_y_result_val = pd.DataFrame({'val_y': p_model_data['val_y'], 'val_pred_y': p_y_val_d})
+        cm_val = confusion_matrix(p_y_result_val['val_y'], p_y_result_val['val_pred_y'])
+        # Probabilities of class in val data
+        probs_val = p_model.predict_proba(p_model_data['val_x'])
         # In case of a nan, replace it with zero (to prevent errors)
-        probs_test = np.nan_to_num(probs_test)
+        probs_val = np.nan_to_num(probs_val)
 
         # Accuracy rate
-        acc_test = accuracy_score(list(p_model_data['test_y']), p_y_test_d)
+        acc_val = accuracy_score(list(p_model_data['val_y']), p_y_val_d)
         # False Positive Rate, True Positive Rate, Thresholds
-        fpr_test, tpr_test, thresholds_test = roc_curve(list(p_model_data['test_y']),
-                                                             probs_test[:, 1], pos_label=1)
+        fpr_val, tpr_val, thresholds_val = roc_curve(list(p_model_data['val_y']),
+                                                             probs_val[:, 1], pos_label=1)
         # Area Under the Curve (ROC) for train data
-        auc_test = roc_auc_score(list(p_model_data['test_y']), probs_test[:, 1]) + 1e-5
+        auc_val = roc_auc_score(list(p_model_data['val_y']), probs_val[:, 1]) + 1e-5
 
         # Logloss (Binary cross-entropy function)
-        logloss_test = log_loss(p_model_data['test_y'], p_y_test_d) + 1e-5
+        logloss_val = log_loss(p_model_data['val_y'], p_y_val_d) + 1e-5
 
         if 'train_x' not in data_keys and 'train_y' not in data_keys:
-            cm_train = cm_test
-            probs_train = probs_test
-            acc_train = acc_test
-            fpr_train = fpr_test
-            tpr_train = tpr_test
-            auc_train = auc_test
-            logloss_train = logloss_test
-            p_y_result_train = p_y_result_test
+            cm_train = cm_val
+            probs_train = probs_val
+            acc_train = acc_val
+            fpr_train = fpr_val
+            tpr_train = tpr_val
+            auc_train = auc_val
+            logloss_train = logloss_val
+            p_y_result_train = p_y_result_val
     
     else:
         print('error in sk_model_metrics, keys in p_model_data not valid')
@@ -998,34 +1066,34 @@ def sk_model_metrics(p_model, p_model_data):
 
     # calculate relevant metrics
     pro_metrics = {'acc-train': acc_train,
-                   'acc-test': acc_test,
-                   'acc-diff': acc_train - acc_test, 
-                   'acc-mean': (acc_train + acc_test)/2 + 1e-5, 
-                   'acc-weighted': (acc_train*0.80 + acc_test*0.20)/2 + 1e-5, 
-                   'acc-inv-weighted': (acc_train*0.20 + acc_test*0.80)/2 + 1e-5,
+                   'acc-val': acc_val,
+                   'acc-diff': acc_train - acc_val, 
+                   'acc-mean': (acc_train + acc_val)/2 + 1e-5, 
+                   'acc-weighted': (acc_train*0.80 + acc_val*0.20)/2 + 1e-5, 
+                   'acc-inv-weighted': (acc_train*0.20 + acc_val*0.80)/2 + 1e-5,
 
                    'auc-train': auc_train,
-                   'auc-test': auc_test,
-                   'auc-diff': auc_train - auc_test, 
-                   'auc-mean': (auc_train + auc_test)/2 + 1e-5,
-                   'auc-weighted': (auc_train*0.80 + auc_test*0.20)/2 + 1e-5,
-                   'auc-inv-weighted': (auc_train*0.20 + auc_test*0.80)/2 + 1e-5,
+                   'auc-val': auc_val,
+                   'auc-diff': auc_train - auc_val, 
+                   'auc-mean': (auc_train + auc_val)/2 + 1e-5,
+                   'auc-weighted': (auc_train*0.80 + auc_val*0.20)/2 + 1e-5,
+                   'auc-inv-weighted': (auc_train*0.20 + auc_val*0.80)/2 + 1e-5,
 
                    'logloss-train': auc_train,
-                   'logloss-test': auc_test,
-                   'logloss-diff': logloss_train - logloss_test, 
-                   'logloss-mean': (logloss_train + logloss_test)/2 + 1e-5,
-                   'logloss-weighted': (logloss_train*0.80 + logloss_test*0.20)/2 + 1e-5,
-                   'logloss-inv-weighted': (logloss_train*0.20 + logloss_test*0.80)/2 + 1e-5}
+                   'logloss-val': auc_val,
+                   'logloss-diff': logloss_train - logloss_val, 
+                   'logloss-mean': (logloss_train + logloss_val)/2 + 1e-5,
+                   'logloss-weighted': (logloss_train*0.80 + logloss_val*0.20)/2 + 1e-5,
+                   'logloss-inv-weighted': (logloss_train*0.20 + logloss_val*0.80)/2 + 1e-5}
 
     # -- ----------------------------------------------------------------------------------------------------
 
     # Return all the results for the model
     r_model_metrics = {'model': p_model, 'pro-metrics': pro_metrics, 
-                       'results': {'data': {'train': p_y_result_train, 'test': p_y_result_test},
-                                   'matrix': {'train': cm_train, 'test': cm_test}},
+                       'results': {'data': {'train': p_y_result_train, 'val': p_y_result_val},
+                                   'matrix': {'train': cm_train, 'val': cm_val}},
                        'metrics': {'train': {'tpr': tpr_train, 'fpr': fpr_train, 'probs': probs_train},
-                                   'test': {'tpr': tpr_test, 'fpr': fpr_test, 'probs': probs_test}}}
+                                   'val': {'tpr': tpr_val, 'fpr': fpr_val, 'probs': probs_val}}}
 
     return r_model_metrics
 
@@ -1330,10 +1398,10 @@ def genetic_algo_evaluate(p_individual, p_eval_data, p_model, p_fit_type):
     p_fit_type: str
         type of fitness metric for the optimization process:
         'train': the train AUC is used
-        'test': the test AUC is used
-        'simple': a simple average is calculated between train and test AUC
-        'weighted': a weighted average is calculated between train (80%) and test (20%) AUC
-        'inv-weighted': an inverse weighted average is calculated between train (20%) and test (80%) AUC
+        'val': the val AUC is used
+        'simple': a simple average is calculated between train and val AUC
+        'weighted': a weighted average is calculated between train (80%) and val (20%) AUC
+        'inv-weighted': an inverse weighted average is calculated between train (20%) and val (80%) AUC
 
     """
 
@@ -1390,10 +1458,10 @@ def genetic_algo_optimization(p_gen_data, p_model, p_opt_params, p_fit_type, p_m
     p_fit_type: str
     type of fitness metric for the optimization process:
         'train': the train AUC is used
-        'test': the test AUC is used
-        'simple': a simple average is calculated between train and test AUC
-        'weighted': a weighted average is calculated between train (80%) and test (20%) AUC
-        'inv-weighted': an inverse weighted average is calculated between train (20%) and test (80%) AUC
+        'val': the val AUC is used
+        'simple': a simple average is calculated between train and val AUC
+        'weighted': a weighted average is calculated between train (80%) and val (20%) AUC
+        'inv-weighted': an inverse weighted average is calculated between train (20%) and val (80%) AUC
 
     p_minmax: str
         To control whether is a minimization or maximization problem
@@ -1745,7 +1813,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
     p_fit_type: str
         type of fitness metric for the optimization process:
             'metrics-train'
-            'metric-test'
+            'metric-val'
             'metric-diff'
             'metric-mean'
             'metric-weighted'
@@ -1769,8 +1837,8 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
         p_scaling = 'post-features'
     
     p_inner_split: float
-        Proportion of the test split in the data as a representation of a inner-split in a k-fold process
-        if 0 then no test split is performed and all the data is treated as train.
+        Proportion of the val split in the data as a representation of a inner-split in a k-fold process
+        if 0 then no val split is performed and all the data is treated as train.
 
         p_inner_split = '20'
 
@@ -1845,7 +1913,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
             data_folds = data_scaler(p_data=p_data_folds[period], p_trans=p_transform)
         
             # Feature engineering (Autoregressive, Hadamard)
-            linear_data = linear_features(p_data=data_folds, p_memory=dt.symbolic_params['memory'])
+            linear_data = linear_features(p_data=data_folds, p_memory=dt.features_params['memory'])
             
             # Symbolic features generation with genetic programming
             m_features = genetic_programed_features(p_data=linear_data, p_split=p_inner_split)
@@ -1904,7 +1972,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
         logger.debug('---- Optimization Fitness: ' + p_fit_type)
         logger.debug('---- Data Scaling Order: ' + p_scaling)
         logger.debug('---- Data Transformation: ' + p_transform)
-        logger.debug('---- Test set inner-split: ' + p_inner_split + '\n')
+        logger.debug('---- val set inner-split: ' + p_inner_split + '\n')
 
         logger.info("Feature Engineering in Fold done in = " + str(datetime.now() - init) + '\n')
 
@@ -2020,7 +2088,7 @@ def global_evaluation(p_case, p_global_data, p_features, p_model):
     # -------------------------------------------------------------------------------------- GLOBAL DATA -- #
     
     # get all the linear features 
-    g_linear_data = linear_features(p_data=p_global_data, p_memory=dt.symbolic_params['memory'])
+    g_linear_data = linear_features(p_data=p_global_data, p_memory=dt.features_params['memory'])
     g_y_target = g_linear_data['co_d'].copy()
     g_linear_data = g_linear_data.drop(['co_d'], axis=1, inplace=False)
 
@@ -2030,8 +2098,8 @@ def global_evaluation(p_case, p_global_data, p_features, p_model):
 
     # data format
     global_data = {}
-    global_data['test_x'] = g_global_data
-    global_data['test_y'] = g_y_target
+    global_data['val_x'] = g_global_data
+    global_data['val_y'] = g_y_target
 
     # --------------------------------------------------------------- ITERATIVE GLOBAL EVALUATION OF HOF -- #
     
@@ -2101,9 +2169,9 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
 
     p_cases_type: str
         'train': the train AUC is used
-        'simple': a simple average is calculated between train and test AUC
-        'weighted': a weighted average is calculated between train (80%) and test (20%) AUC
-        'inv-weighted': an inverse weighted average is calculated between train (20%) and test (80%) AUC
+        'simple': a simple average is calculated between train and val AUC
+        'weighted': a weighted average is calculated between train (80%) and val (20%) AUC
+        'inv-weighted': an inverse weighted average is calculated between train (20%) and val (80%) AUC
 
         p_cases_type = 'logloss-mean'
 
@@ -2229,3 +2297,5 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
                     met_cases[model]['met_mode']['period'].update({key_period: met_mode[model][i]['periods']})
 
     return met_cases
+
+# %%

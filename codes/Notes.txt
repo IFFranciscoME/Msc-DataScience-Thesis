@@ -243,13 +243,15 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 # -- 24.02.2021
 - Fix: pickle tf.keras model with wrapper from scikit learn. 
 
+# -- 25.02.2021
+- Modification: Change nomenclature from Train-Test, to Train-Validation and Test (never seen data from 2021)
+
 # ---------------------------------------------------------------------------------------------- BACKLOG -- # 
 # ---------------------------------------------------------------------------------------------- ------- -- #
 
 # -- NECESSARY
 
 - (pending) Implement embargo criteria for t-fold variation
-- (pending) change all the messages from test to validation. Test will be a hold out set at the very end
 - (pending) Refactor tf_model_metrics and sk_model_metrics to not use train/test condition (just any data)
 
 - (pending) add RandomForest classification model with scikit learn
@@ -376,3 +378,5 @@ class or something alike
 
 Malditos nan, todo parece que es una inestabilidad numerica en el cálculo de la función de costo, posiblemente ocasionado por regularizacion, epochs, batch. tambien sospecho
 de la cantidad de variables de entrada respecto a los datos para entrenar, ya que tengo como 200 entradas para 120 datos de entrenamiento.
+
+# 

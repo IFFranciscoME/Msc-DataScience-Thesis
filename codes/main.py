@@ -51,6 +51,12 @@ if __name__ == "__main__":
         # Timeseries data division in t-folds
         folds = fn.t_folds(p_data=data, p_period=iteration)
 
+        # Memory for data calculations
+        memory = dt.features_params['memory']
+
+        # Embargo technique to data
+        folds, dates = fn.folds_embargo(p_folds=folds, p_mode='memory', p_memory=memory)
+
         # -- ------------------------------------------------------------------- FOLD EVALUATION PROCESS -- #
         # -- ------------------------------------------------------------------- ----------------------- -- #
 

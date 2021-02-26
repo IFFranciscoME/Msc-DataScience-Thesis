@@ -89,35 +89,35 @@ in_profile = memory_palace[period]['metrics']['data_metrics']
 
 # -------------------------------------------------------------------------------------- target variable -- #
 
-# train and test data sets with only target variable
+# train and val data sets with only target variable
 tv_profile_train = memory_palace[period]['metrics']['feature_metrics']['train_y']
-# tv_profile_test = memory_palace[period]['metrics']['feature_metrics']['test_y']
+# tv_profile_val = memory_palace[period]['metrics']['feature_metrics']['val_y']
 
 # ------------------------------------------------------------------------------------- linear variables -- #
 # amount of symbolic features
 n_sf = dt.symbolic_params['n_features']
 
-# train and test data sets with only autoregressive variables
+# train and val data sets with only autoregressive variables
 lf_profile_train = memory_palace[period]['metrics']['feature_metrics']['train_x'].iloc[:, :-n_sf]
-# lf_profile_test = memory_palace[period]['metrics']['feature_metrics']['test_x'].iloc[:, :-n_sf]
+# lf_profile_val = memory_palace[period]['metrics']['feature_metrics']['val_x'].iloc[:, :-n_sf]
 
 # ------------------------------------------------------------------------------------ symbolic variables -- #
 
-# train and test data sets with only symbolic variables
+# train and val data sets with only symbolic variables
 sm_profile_train = memory_palace[period]['metrics']['feature_metrics']['train_x'].iloc[:, -n_sf:]
-# sm_profile_test = memory_palace[period]['metrics']['feature_metrics']['test_x'].iloc[:, -n_sf:]
+# sm_profile_val = memory_palace[period]['metrics']['feature_metrics']['val_x'].iloc[:, -n_sf:]
 
 # ---------------------------------------------------------------------------------------- All variables -- #
 
 # correlation among all variables
 all_corr_train = memory_palace[period]['features']['train_x'].corr()
-# all_corr_test = memory_palace[period]['features']['test_x'].corr()
+# all_corr_val = memory_palace[period]['features']['val_x'].corr()
 
 # correlation of all variables with target variable
 tgv_corr_train = pd.concat([memory_palace[period]['features']['train_y'],
                             memory_palace[period]['features']['train_x']], axis=1).corr().iloc[:, 0]
-# tgv_corr_test = pd.concat([memory_palace[period]['features']['test_y'],
-#                            memory_palace[period]['features']['test_x']], axis=1).corr().iloc[:, 0]
+# tgv_corr_val = pd.concat([memory_palace[period]['features']['val_y'],
+#                            memory_palace[period]['features']['val_x']], axis=1).corr().iloc[:, 0]
 
 # --------------------------------------------------------------------------------------- VISUAL PROFILE -- #
 # ----------------------------------------------------------------------------------------- ------------ -- #
@@ -294,14 +294,14 @@ global_model['model']['pro-metrics']['logloss-mean']
 ohlc_prices = data
 
 # data for plot
-ohlc_class = {'test_y': global_model['model']['results']['data']['test']['test_y'],
-              'test_y_pred': global_model['model']['results']['data']['test']['test_pred_y']}
+ohlc_class = {'val_y': global_model['model']['results']['data']['val']['val_y'],
+              'val_y_pred': global_model['model']['results']['data']['val']['val_pred_y']}
 
 # Plot title
 dt.theme_plot_3['p_labels']['title'] = 'Global results with t-fold optimized parameters'
 
 # Dates for vertical lines in the T-Folds plot
-date_vlines = [ohlc_class['test_y'].index[-1]]
+date_vlines = [ohlc_class['val_y'].index[-1]]
 
 # Make plot
 plot_5 = vs.g_ohlc_class(p_ohlc=ohlc_prices, p_theme=dt.theme_plot_3, p_data_class=ohlc_class,

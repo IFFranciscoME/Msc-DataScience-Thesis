@@ -136,6 +136,25 @@ the roll of "drawdown" of a trade that was made as a result of a prediction
 
 # -- IDEA: ENCAPSULAR LO ENCONTRADO EN CADA CAPITULO DEL DOCUMENTO Y ESO ENVIARLO/EXPONERLO EN UN EVENTO
 
+# -- --------------------------------------------- Crossvalidation for timeseries: Folds, Purge, Embargo -- #
+# -- --------------------------------------------------------------------------------------------------- -- #
+
+in AFML the author suggests a percentage criteria to embargo data from procedeing dataset whenever a 
+preceding data set is present, i propose a unit number that represents the "memory" of the timeseries,
+a more explicit way to state that embargo, which can be, for example, a PACF result and consequently the
+number of statistically significant lags in the series. 
+
+it is not necessary to perform embargo at the first fold since it has no preceding information, but to all
+of the other folts it is. 
+
+whenever this embargo result in a significative data dropping, metrics must be adjusted accordingly, like
+accuracy, since the available data as "ground truth" is diminished in comparisson with the predicted values,
+so it requires a double check of the amounts of data and subdataset divisions.
+
+this applies to any price granularity since it is trated as a timeseries by its own, i.e, autocorrelation 
+could be present in any price granularity, from seconds to monthly data. Hence, leakage of information
+could be present and embargo is a candidate data pre processing technique to be implemented.
+
 # -- ------------------------------------------------- Artificial Neural Network - Multilayer Perceptron -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 
