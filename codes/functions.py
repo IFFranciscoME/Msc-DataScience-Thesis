@@ -418,57 +418,12 @@ def autoregressive_features(p_data, p_nmax):
 
     return r_features
 
-
-# ------------------------------------------------------------------------------------ Hadamard Features -- #
-# --------------------------------------------------------------------------------------------------------- #
-
-def hadamard_features(p_data, p_nmax):
-    """
-    Creacion de variables haciendo un producto hadamard entre todas las variables
-
-    Parameters
-    ----------
-    p_data: pd.DataFrame
-        Con columnas OHLCV para construir los features
-
-    p_nmax: int
-        Para considerar n calculos de features (resagos y promedios moviles)
-
-    Returns
-    -------
-    r_features: pd.DataFrame
-        Con dataframe de features con producto hadamard
-
-    """
-
-    # reasignar datos
-    data = p_data.copy()
-
-    # ciclo para crear una combinacion secuencial
-    for n in range(p_nmax):
-
-        # lista de features previos
-        list_hadamard = ['lag_vol_' + str(n + 1),
-                         'lag_ol_' + str(n + 1),
-                         'lag_ho_' + str(n + 1),
-                         'lag_hl_' + str(n + 1)]
-
-        # producto hadamard con los features previos
-        for x in list_hadamard:
-            data['h_' + x + '_' + 'ma_ol_' + str(n + 1)] = data[x] * data['ma_ol_' + str(n + 1)]
-            data['h_' + x + '_' + 'ma_ho_' + str(n + 1)] = data[x] * data['ma_ho_' + str(n + 1)]
-            data['h_' + x + '_' + 'ma_hl_' + str(n + 1)] = data[x] * data['ma_hl_' + str(n + 1)]
-            data['h_' + x + '_' + 'ma_vol_' + str(n + 1)] = data[x] * data['ma_vol_' + str(n + 1)]
-
-    return data
-
-
-# --------------------------------------------- FUNCTION: Autoregressive and Hadamard Feature Engieering -- #
-# ------------------------------------------------------- ------------------------------------------------- #
+# ---------------------------------------------------------- FUNCTION: Autoregressive Feature Engieering -- #
+# ---------------------------------------------------------- ---------------------------------------------- #
 
 def linear_features(p_data, p_memory):
     """
-    autoregressive and hadamard product for feature engineering
+    autoregressive process for feature engineering
 
     Parameters
     ----------
@@ -493,9 +448,6 @@ def linear_features(p_data, p_memory):
     # hardcopy of data
     data = p_data.copy()
 
-    # ----------------------------------------------------------- ingenieria de variables autoregresivas -- #
-    # ----------------------------------------------------------- -------------------------------------- -- #
-
     # funcion para generar variables autoregresivas
     data_ar = autoregressive_features(p_data=data, p_nmax=p_memory)
 
@@ -505,14 +457,8 @@ def linear_features(p_data, p_memory):
     # separacion de variables independientes
     data_arf = data_ar.drop(['timestamp', 'co', 'co_d'], axis=1, inplace=False)
 
-    # ----------------------------------------------------------------- ingenieria de variables hadamard -- #
-    # ----------------------------------------------------------------- -------------------------------- -- #
-
-    # funcion para generar variables con producto hadamard
-    datos_had = hadamard_features(p_data=data_arf, p_nmax=p_memory)
-
     # datos para utilizar en la siguiente etapa
-    next_data = pd.concat([data_y.copy(), datos_had.copy()], axis=1)
+    next_data = pd.concat([data_y.copy(), data_arf.copy()], axis=1)
 
     # keep the timestamp as index
     next_data.index = data_ar['timestamp'].copy()
@@ -1937,7 +1883,7 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
             # Original data
             data_folds = data_scaler(p_data=p_data_folds[period], p_trans=p_trans_function)
         
-            # Feature engineering (Autoregressive, Hadamard)
+            # Feature engineering (Autoregressive)
             linear_data = linear_features(p_data=data_folds, p_memory=dt.features_params['lags_diffs'])
             
             # Symbolic features generation with genetic programming
@@ -1954,7 +1900,7 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
             # Original data
             data_folds = p_data_folds[period].copy()
 
-            # Feature engineering (Autoregressive, Hadamard)
+            # Feature engineering (Autoregressive)
             linear_data = linear_features(p_data=data_folds, p_memory=4)
             
             # Symbolic features generation with genetic programming

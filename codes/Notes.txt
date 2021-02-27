@@ -49,52 +49,70 @@ https://en.wikipedia.org/wiki/Universal_approximation_theorem
 https://stats.stackexchange.com/questions/181/how-to-choose-the-number-of-hidden-layers-and-nodes-
 in-a-feedforward-neural-netw
 
+# -- Relationship of numbner of samples and input variables to implementing regularization
+Perhaps those previous errors are due to the fact of numnber of samples, number of input variables and regularization
+https://www.machinecurve.com/index.php/2020/01/21/what-are-l1-l2-and-elastic-net-regularization-in-neural-networks/
+
 # -- RandomForest
 https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html
 
 # -- ------------------------------------------------------------------------------------ T-FOLD PROCESS -- # 
 # -- --------------------------------------------------------------------------------------------------- -- #
 
-# -- Define T-Fold longitudes: Quarter, Semester, Year, Bi-year, 80-20
+# -- Fold-Size: Quarter (48-Fold), Semester (24-Fold), Year (12-Fold), Bi-year (6-Fold), 80-20 (2-Fold)
 
 # -- Within each T-Fold
-# -- -- Separate data in 80% (in sample) - 20% (out of sample)
 
-# -- -- (OPTION 1) From the begining Scale data with 3 options
-# -- -- -- (OPTION 1) Normlize x/max(x)
-# -- -- -- (OPTION 2) Standarize (x-mean(x))/sd(x)
-# -- -- -- (OPTION 3) Robust Scale (x - median(x))/IQR
+# -- -- DATA SEPARATION
+# -- -- (OPTION 1) Separate data in 80% (training) - 20% (validation)
+# -- -- (OPTION 2) Use 100% of the Fold as training
 
-# -- -- -- Create Autoregressive and Hadamard features
-# -- -- -- Create Symbolic Features (genetic programming)
-# -- -- Continue
+# -- -- EMBARGO
+# -- -- -- (OPTION 1) Perform Embargo (drop N observations of data at the beging of each train): Arbitrary
+# -- -- -- (OPTION 2) Perform Embargo (drop M observations of data at the beging of each train): max(ACF,PACF)
+# -- -- -- (OPTION 3) Do not perform Embargo
 
-# -- -- (OPTION 2) After generating Symbolic Features Scale all the data with 3 options
-# -- -- -- (OPTION 1) Normlize x/max(x)
-# -- -- -- (OPTION 2) Standarize (x-mean(x))/sd(x)
-# -- -- -- (OPTION 3) Robust Scale (x - median(x))/IQR
-# -- -- Continue
+# -- -- DATA PRE-PROCESSING (Normalization)
 
-# -- -- Conduct the hyperparameter optimization for all models (Genetic Algorithms with its own parameters)
+# -- -- (OPTION 1) Before Feature Engineering
+# -- -- -- (OPTION 1) Scale x/max(x)
+# -- -- -- (OPTION 2) Standard (x-mean(x))/sd(x)
+# -- -- -- (OPTION 3) Robust (x - median(x))/IQR
+
+# -- -- (OPTION 2) After Feature Engineering
+# -- -- -- (OPTION 1) Scale x/max(x)
+# -- -- -- (OPTION 2) Standard (x-mean(x))/sd(x)
+# -- -- -- (OPTION 3) Robust (x - median(x))/IQR
+
+# -- -- Conduct the hyperparameter optimization for all models (Genetic Algorithms)
+# -- -- Select Hyperparameters for the Genetic Algorithms:
+# -- -- -- Crossover, Mutation, Generations, Population, Tournament, HallOfFame
+
 # -- -- Select the fitness metric for the optimization
         (OPTION 1) AUC with train data
-        (OPTION 2) AUC with test data
-        (OPTION 3) mean of train and test AUC
-        (OPTION 4) weighted-mean (80-20) of train and test AUC
-        (OPTION 5) inv-weighted-mean (20-80) of train and test AUC
+        (OPTION 2) AUC with val data
+        (OPTION 3) diff AUC with val and train data
+        (OPTION 4) mean AUC with val and train data
+        (OPTION 5) weighted mean AUC with innersplit proportions (e.g. 80-20) 
+        (OPTION 6) inverse weighted mean AUC with inverted innersplit proportions (e.g. 20-80) 
 
-# -- -- Save the HoF with best N individuals
+        (OPTION 1) ACC with train data
+        (OPTION 2) ACC with val data
+        (OPTION 3) diff ACC with val and train data
+        (OPTION 4) mean ACC with val and train data
+        (OPTION 5) weighted mean ACC with innersplit proportions (e.g. 80-20) 
+        (OPTION 6) inverse weighted mean ACC with inverted innersplit proportions (e.g. 20-80)
+
+        (OPTION 1) LOGLOSS with train data
+        (OPTION 2) LOGLOSS with val data
+        (OPTION 3) diff LOGLOSS with val and train data
+        (OPTION 4) mean LOGLOSS with val and train data
+        (OPTION 5) weighted mean LOGLOSS with innersplit proportions (e.g. 80-20) 
+        (OPTION 6) inverse weighted mean LOGLOSS with inverted innersplit proportions (e.g. 20-80)
+
+# -- -- Save the created input parameters for every fold
+# -- -- Evaluate and Save the HoF with best N individuals (hyperparameters and execution parameters configurations)
 # -- -- Calculate model metrics for the entire Hall of Fame
-# -- -- Calculate Model-inFold Performance Metric to find max and min in the fold: 
-        (OPTION 1) AUC with train data
-        (OPTION 2) AUC with test data
-        (OPTION 3) mean of train and test AUC
-        (OPTION 4) weighted-mean (80-20) of train and test AUC
-        (OPTION 5) inv-weighted-mean (20-80) of train and test AUC
-
-# -- -- Save the parameter set that produces the max, min value of the Choosen Performance Metric
-# -- -- Save the number of occurrences of every parameter set (extract the modes)
-
 
 # -- ---------------------------------------------------------------------- SYMBOLIC FEATURE ENGINEERING -- # 
 # -- --------------------------------------------------------------------------------------------------- -- #
@@ -115,45 +133,20 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 # -- Basic - Logistic Regression with regularization
 # -- Statistical Learning - Support Vector Machines with L1 regularization
 # -- Machine Learning - Aritificial Neural Network - Multi Layer Pereceptron
-# -- Tree-based-ensemble method - RandomForest
+# -- (Pending) Tree-based-ensemble method - RandomForest or XGBoost
 
-# ------------------------------------------------------------------------------------ SUBJECTS BY CLASS -- #
-# ------------------------------------------------------------------------------------------- ---------- -- #
+# -- ------------------------------------------------------------------------------------- MODEL TESTING -- # 
+# -- --------------------------------------------------------------------------------------------------- -- #
 
-- Machine Learning
-- - (Done) Used K-fold Cross-Validation technique as a basis and proposed some variations in order to use
-	it in financial time series data, this in line with what is included in hastie & tibshirani 
-	Elements of Statistical Learning.
+# -- USING EXTENSIVE FOLD-TESTS DATA:
+# -- -- Find the parameter set that produces the max, min value of the Choosen Performance Metric
+# -- -- Find the number of occurrences of every unique parameter set (extract the modes)
 
-- - (Pending) Gradient descent vs Genetic Algorithm as methods of learning for the models
-    SAGA: A Fast Incremental Gradient Method WithSupport for Non-Strongly Convex CompositeObjectives.
-    SGD: Stochastic Gradient Descent.
-    Loss functions for binary classification models ??
+# -- -- Individual Evaluation: Test the model and the choosen parameter set with the rest of forward global data.
+# -- -- Individual Prediction: Test the model and the choosen parameter set with unseen TEST global data.
 
-- - (Extra) Regularization factors L1, and L2 combined in Elastic Net
-
-- Time Series
-- - (Done) Base properties of time series data
-- - (Pending) AIC and BIC criterias for model selection
-
-- Convex Optimization
-- - (Pending) Convexity of loss function utilized for training the models
-- - (Done) Logistic Regression model
-- - (Done) Support Vector Machines model
-- - (Done) Regularization factors L1, and L2 combined in Elastic Net
-
-- Predictive Modeling
-- - (pending) Data profiling
-- - (pending) RandomForest model use for binary classification
-
-- Analysis and Design of Algorithms
-- - (Pending) Complexity analysis of T-Fold technique
-- - (Pending) Complexity analysis of predictive models
-- - (Pending) Calibration technique design and complexity analysis
-- - (Pending) Genetic Algorithms 
-
-- Previously
-- - (Done) Multilayer Pereceptron model
+# -- -- Ensemble Prediction: For every Fold size, find the Best in the HoF at every Fold and predict
+		with unseen TEST global data (using a voting decision system)
 
 # ------------------------------------------------------------------------------------------- CHANGE LOG -- #
 # ------------------------------------------------------------------------------------------- ---------- -- #
@@ -250,7 +243,12 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 - Addition: Implement embargo criteria for t-fold variation
 
 # -- 27.02.2021
-- (pending) Perform a general revision of fold_process to document steps and check for bugs in code
+- Testing: Data - t_folds, folds_embargo, data_profile, data_scaler
+- Testing: Features Engineering - linear_features, genetic_programed_features
+- Testing: Models - logistic-elasticnet, l1-svm, ann-mlp
+- Testing: Optimization - genetic_algo_optimization
+- Testing: Evaluation - model_evaluation, global_evaluation
+- Testing: Results - model_cases
 
 # ---------------------------------------------------------------------------------------------- BACKLOG -- # 
 # ---------------------------------------------------------------------------------------------- ------- -- #
@@ -258,9 +256,7 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 # -- NECESSARY
 
 
-- (pending) performe a general review of the project
-
-- (pending) (paper/code) design 1 hypothesis and create an experiment by searching 
+- (pending) write content and code to define and search for data to test 1 clear hypothesis for the project
 
 - (pending) Refactor tf_model_metrics and sk_model_metrics to not use train/test condition (just any data)
 
@@ -280,8 +276,6 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 - (pending) translate every comment to english
 - (pending) translate every variable name to english
 
-- (pending) (code) register the modifications in the code necessary for each experiment
-
 # -- GOOD TO HAVE
 
 - (pending) guide to multi-gpu & distributed training.
@@ -294,9 +288,6 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 - Para que sirve todo esto para mejorar el desempeño de modelos respecto a un procedimiento clasico?
 
 - como justificar el inv-weighted y proporciones
-
-- Que tan viable es que, al utilizar los parametros del mlp se puede replicar despues. 
-- lo bueno es que guardo el objeto que tiene el modelo (por las condiciones inciiales para el)
 
 - Para el caso de Ensamble, como randomforest, utilizar todos los casos en lugar de hacer los 3 mejores. 
 
@@ -367,25 +358,21 @@ particular fold, whether they were pre-processed (scaled or normalized)
 causes numerical instability in the output of the loss function (for the case of cross-entropy)
 
 # -- ERRORS
-tensorflow.python.framework.errors_impl.InvalidArgumentError:  assertion failed: [predictions must be >= 0] [Condition x >= y did not hold element-wise:] [x (ann-mlp/output_layer/Sigmoid:0) = ] [[-nan][-nan][-nan]...] [y (Cast_8/x:0) = ] [0]
+tensorflow.python.framework.errors_impl.InvalidArgumentError:  assertion failed: [predictions must be >= 0] 
+[Condition x >= y did not hold element-wise:] [x (ann-mlp/output_layer/Sigmoid:0) = ] [[-nan][-nan][-nan]...] 
+[y (Cast_8/x:0) = ] [0]
 
-tensorflow.python.framework.errors_impl.InvalidArgumentError:  assertion failed: [predictions must be >= 0] [Condition x >= y did not hold element-wise:] [x (ann-mlp/output_layer/Sigmoid:0) = ] [[0][0][0]...] [y (Cast_8/x:0) = ] [0]
+tensorflow.python.framework.errors_impl.InvalidArgumentError:  assertion failed: [predictions must be >= 0]
+ [Condition x >= y did not hold element-wise:] [x (ann-mlp/output_layer/Sigmoid:0) = ] [[0][0][0]...]
+  [y (Cast_8/x:0) = ] [0]
 
-Perhaps those previous errors are due to the fact of numnber of samples, number of input variables and regularization
-https://www.machinecurve.com/index.php/2020/01/21/what-are-l1-l2-and-elastic-net-regularization-in-neural-networks/
+- Big momentums appear to provoque nan error, so momentum 0.4 as max appear not to cause the error
 
-# -- maximize the 1/logloss function in order to not change the GA code
+- added an arbitrary result for both classes, to guarantee that everytime, at least, will be 1 of each class
+  and that way the error of nans is avoided
 
-# Big momentums appear to provoque nan error, so momentum 0.4 as max appear not to cause the error
-
-# added an arbitrary result for both classes, to guarantee that everytime, at least, will be 1 of each class
-and that way the error of nans is avoided
-
-nan errors appears to be generated by an error of calculation in the loss function, when there wasnt enough cases of any 
-class or something alike
-
-Malditos nan, todo parece que es una inestabilidad numerica en el cálculo de la función de costo, posiblemente ocasionado por regularizacion, epochs, batch. tambien sospecho
-de la cantidad de variables de entrada respecto a los datos para entrenar, ya que tengo como 200 entradas para 120 datos de entrenamiento.
+- nan errors appears to be generated by an error of calculation in the loss function, when there wasnt enough cases of any 
+  class or something alike
 
 # -- TRAINING SCHEME FOR ANN-MLP -------------------------------------------------------------------------- #
 
@@ -395,9 +382,12 @@ therefore trigger the TerminateOnNaN callback, other reason is the unimprovement
 number of examples, and also a high divergence in the similarity of distributions of the predicted values and the training
 values. 
 
-More on the divergence of the learning algorithm, the learning process is terminated for the entire batch whenever the cost function presents a NaN value, possibly caused by a divergence of the learning algorithm working on the search space of the cost function. This is implemented with TerminateOnNaN function. 
+More on the divergence of the learning algorithm, the learning process is terminated for the entire batch whenever the cost
+function presents a NaN value, possibly caused by a divergence of the learning algorithm working on the search space of the
+cost function. This is implemented with TerminateOnNaN function. 
 
-In reggards with monitoring accuracy rate dynamic under the definition of a logloss cost function, this is done with EarlyStopping function.
+In reggards with monitoring accuracy rate dynamic under the definition of a logloss cost function, this is done with
+EarlyStopping function.
 
-ReduceLROnPlateau: Reducing the learning rate of the learning algorithm given an increasing rate of the divergence on the distribution of the real value and the predicted value of the target variable.
-
+ReduceLROnPlateau: Reducing the learning rate of the learning algorithm given an increasing rate of the divergence on the
+distribution of the real value and the predicted value of the target variable.
