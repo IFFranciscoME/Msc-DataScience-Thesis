@@ -68,8 +68,11 @@
 |   Coding         | added callbacks for stability      | 21:00 23.Feb.2021  | 3.0          |                  |
 |   Coding         | minor changes to make pickle tests | 09:00 24.Feb.2021  | 1.0          |                  |
 |   Coding         | save sklear wrapped ann-mlp models | 17:00 24.Feb.2021  | 5.0          |                  |
-
 |   Coding         | data verification/train-val scheme | 11:00 25.Feb.2021  | 1.0          |                  |
 |   Content        | Define diagrams of t-folds         | 12:00 25.Feb.2021  | 2.0          |                  |
-|   Coding         | implement embargo in codes         | 14:00 25.Feb.2021  | 2.0          |                  |
+|   Coding         | implement embargo in codes         | 14:00 25.Feb.2021  | 3.0          |                  |
 
+|   Coding         | debug current version              | 09:00 26.Feb.2021  | 2.0          |                  |
+|   Meeting        | With thesis director               | 12:00 26.Feb.2021  | 1.0          |                  |
+
+|   Coding         | improve ann-mlp training scheme    | 19:00 26.Feb.2021  | 1.0          |                  |

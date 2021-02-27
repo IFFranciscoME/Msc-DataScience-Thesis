@@ -246,19 +246,25 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 # -- 25.02.2021
 - Modification: Change nomenclature from Train-Test, to Train-Validation and Test (never seen data from 2021)
 
+# -- 26.02.2021
+- Addition: Implement embargo criteria for t-fold variation
+
 # ---------------------------------------------------------------------------------------------- BACKLOG -- # 
 # ---------------------------------------------------------------------------------------------- ------- -- #
 
 # -- NECESSARY
 
-- (pending) Implement embargo criteria for t-fold variation
+
+- (pending) performe a general review of the project
+
+- (pending) (paper/code) design 1 hypothesis and create an experiment by searching 
+
 - (pending) Refactor tf_model_metrics and sk_model_metrics to not use train/test condition (just any data)
 
 - (pending) add RandomForest classification model with scikit learn
 - (pending) Refactor code for timeseries data of metric evolution g_timeseries_auc
 
 - (pending) reduce time elapsed by global evaluation function
-
 - (pending) look for repeated or not used data that is beign saved, pickle files are getting heavier
 
 - (pending) function for average or AIC/BIC for parsimony analysis of symbolic features in fold
@@ -271,7 +277,6 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 - (pending) translate every comment to english
 - (pending) translate every variable name to english
 
-- (pending) (paper) design hypothesis based experiments 
 - (pending) (code) register the modifications in the code necessary for each experiment
 
 # -- GOOD TO HAVE
@@ -336,7 +341,7 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 # -- kernel in SVM
 # -- training time in ANN-MLP
 
-# -- NOTES ON EXPERIMENTS
+# -- NOTES ON EXPERIMENTS 
 
 # -- the order and nomenclature of sub-sets is: Train (stays the same), Validation (what conpcetually was test), 
 Test a sub-data set used at the very final stage (never seen by any model under any situation)
@@ -379,4 +384,17 @@ class or something alike
 Malditos nan, todo parece que es una inestabilidad numerica en el cálculo de la función de costo, posiblemente ocasionado por regularizacion, epochs, batch. tambien sospecho
 de la cantidad de variables de entrada respecto a los datos para entrenar, ya que tengo como 200 entradas para 120 datos de entrenamiento.
 
-# 
+# -- TRAINING SCHEME FOR ANN-MLP -------------------------------------------------------------------------- #
+
+One advantage of having callback is to set a large number of epochs and let the learning process progress indefinitely
+until one condition is reach, it could be a divergence of the learning algorithm which results in a NaN reporte value
+therefore trigger the TerminateOnNaN callback, other reason is the unimprovement of the accuracy metric for a continuous
+number of examples, and also a high divergence in the similarity of distributions of the predicted values and the training
+values. 
+
+More on the divergence of the learning algorithm, the learning process is terminated for the entire batch whenever the cost function presents a NaN value, possibly caused by a divergence of the learning algorithm working on the search space of the cost function. This is implemented with TerminateOnNaN function. 
+
+In reggards with monitoring accuracy rate dynamic under the definition of a logloss cost function, this is done with EarlyStopping function.
+
+ReduceLROnPlateau: Reducing the learning rate of the learning algorithm given an increasing rate of the divergence on the distribution of the real value and the predicted value of the target variable.
+

@@ -25,14 +25,18 @@ from os.path import isfile, join
 
 # Short Version for Testing
 iter_fold = ['semester']
-iter_opt = {'inner-split': ['20'], 'transform': ['robust'], 'scaling': ['post-features'],
-            'fitness': ['logloss-train']}
+iter_opt = {'embargo': ['fix'],
+            'inner-split': ['20'],
+            'trans_function': ['robust'],
+            'trans_order': ['post-features'],
+            'fitness': ['logloss-inv-weighted']}
 
 # ---------------------------------------------------------------- Complete list of available parameters -- #
 
 # iter_fold = ['quarter', 'semester', 'year', 'bi-year', '80-20']
 
-# iter_opt = {'inner-split': ['30', '10', '0'],
+# iter_opt = {'embargo': ['fix', 'memory', 'False'],
+#             'inner-split': ['30', '10', '0'],
 #             'transform': ['scale', 'normalize', 'robust'],
 #             'scaling': ['post-features', 'pre-features'],
 #             'fitness': ['auc-train', 'auc-val', 'auc-diff',
@@ -43,18 +47,18 @@ iter_opt = {'inner-split': ['20'], 'transform': ['robust'], 'scaling': ['post-fe
 #                         'logloss-mean', 'logloss-weighted', 'logloss-inv-weighted']}
 
 # Iterative/Parallel Experiment Data
-iter_exp = list(itertools.product(*[iter_opt['fitness'], iter_opt['transform'],
-                                    iter_opt['scaling'], iter_opt['inner-split']]))
+iter_exp = list(itertools.product(*[iter_opt['embargo'], iter_opt['inner-split'], iter_opt['trans_function'],
+                                    iter_opt['trans_order'], iter_opt['fitness']]))
 
 # --------------------------------------------------------------------- Parameters for Symbolic Features -- #
 # --------------------------------------------------------------------- -------------------------------- -- #
 
 # parameters for features formation
-features_params = {'memory': 5}
+features_params = {'lags_diffs': 15}
 
 # paremeters for symbolic features generation process
 symbolic_params = {'functions': ['sub', 'add', 'inv', 'mul', 'div', 'abs', 'log', 'sqrt'],
-                   'population': 2000, 'tournament': 20, 'hof': 20, 'generations': 4, 'n_features': 10,
+                   'population': 2000, 'tournament': 20, 'hof': 20, 'generations': 10, 'n_features': 15,
                    'init_depth': (6, 22), 'init_method': 'half and half', 'parsimony': 0.05,
                    'constants': None,
                    'metric': 'pearson', 'metric_goal': 0.70, 
@@ -118,8 +122,8 @@ models = {
                     'dropout': [0.001, 0.005, 0.01, 0.01, 0.02, 0.05, 0.10, 0.15, 0.20, 0.25, 
                                 0.001, 0.005, 0.01, 0.01, 0.02, 0.05, 0.10, 0.15, 0.20, 0.25],
 
-                   'learning_rate': [1.05, 0.75, 0.55, 0.30, 0.15, 0.1, 0.05, 0.02, 0.01, 0.001,
-                                     1.05, 0.75, 0.55, 0.30, 0.15, 0.1, 0.05, 0.02, 0.01, 0.001],
+                   'learning_rate': [.05, 0.075, 0.055, 0.030, 0.015, 0.01, 0.05, 0.02, 0.01, 0.001,
+                                     .05, 0.075, 0.055, 0.030, 0.015, 0.01, 0.05, 0.02, 0.01, 0.001],
 
                    'momentum': [0.4, 0.2, 0.1, 0.07, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001,
                                 0.4, 0.2, 0.1, 0.07, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001]}}}
@@ -127,7 +131,7 @@ models = {
 # ------------------------------------------------------------------ Parameters for Genetic Optimization -- #
 # ------------------------------------------------------------------ ----------------------------------- -- #
 
-optimization_params = {'halloffame': 10, 'tournament': 15, 'population': 20, 'generations': 4,
+optimization_params = {'halloffame': 10, 'tournament': 15, 'population': 20, 'generations': 10,
                        'mutation': 0.7, 'crossover': 0.7}
 
 # ------------------------------------------------------------------------------------- Themes for plots -- #

@@ -12,6 +12,7 @@
 
 # Modify environmental variable to suppress console log messages from TensorFlow
 import os
+from re import T
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 from rich import inspect
@@ -178,11 +179,11 @@ def folds_embargo(p_folds, p_mode, p_memory):
         # period = embargo_periods[0] 
 
         # memory output
-        if p_mode == 'memory':
+        if p_mode == 'fix':
             n_embargo = p_memory
         
         # autocorrelation function
-        elif p_mode == 'autocorrelation':
+        elif p_mode == 'memory':
             pacf_values = []
             for column in embargo_data[['open', 'high', 'low', 'close', 'volume']]:
                 data_pacf = sm.tsa.pacf(embargo_data[column].diff()[1:])
@@ -828,12 +829,12 @@ def tf_model_metrics(p_model, p_model_data, p_history):
         # tensorflow output
         # reshape array as a 1d array (list)
         p_y_train_d = p_y_train_d.reshape(len(p_y_train_d),)
-        p_y_train_d[p_y_train_d.reshape(len(p_y_train_d),) >= 0.5] = 1
-        p_y_train_d[p_y_train_d.reshape(len(p_y_train_d),) < 0.5] = 0
+        # p_y_train_d[p_y_train_d.reshape(len(p_y_train_d),) > 0.5] = 1
+        # p_y_train_d[p_y_train_d.reshape(len(p_y_train_d),) <= 0.5] = 0
 
         # **** hardcode at least 1 case for each class in order to avoid loss function error
-        p_y_train_d[0] = 1
-        p_y_train_d[1] = 0
+        # p_y_train_d[0] = 1
+        # p_y_train_d[1] = 0
 
         p_y_result_train = pd.DataFrame({'train_y': p_model_data['train_y'], 'train_pred_y': p_y_train_d})
         # Confussion matrix
@@ -844,11 +845,15 @@ def tf_model_metrics(p_model, p_model_data, p_history):
         # In case of a nan, replace it with zero (to prevent errors)
         probs_train = np.nan_to_num(probs_train)
 
-        # Accuracy rate
+        # -- Accuracy rate
+        
         # historical info
         acc_h_train = p_history['accuracy']
         # last configuration
         acc_train = acc_h_train[-1]
+        # verification
+        acc_train_sk = accuracy_score(list(p_model_data['train_y']), p_y_train_d)
+
         # False Positive Rate, True Positive Rate, Thresholds
         fpr_train, tpr_train, thresholds = roc_curve(list(p_model_data['train_y']), probs_train, pos_label=1)
         # Area Under the Curve (ROC) for train data
@@ -883,12 +888,12 @@ def tf_model_metrics(p_model, p_model_data, p_history):
         # reshape array as a 1d array (list)
         p_y_val_d = p_y_val_d.reshape(len(p_y_val_d),)
         # trigger for class is 1 if > 0.5
-        p_y_val_d[p_y_val_d.reshape(len(p_y_val_d),) >= 0.5] = 1
-        p_y_val_d[p_y_val_d.reshape(len(p_y_val_d),) < 0.5] = 0
+        # p_y_val_d[p_y_val_d.reshape(len(p_y_val_d),) >= 0.5] = 1
+        # p_y_val_d[p_y_val_d.reshape(len(p_y_val_d),) < 0.5] = 0
 
         # **** hardcode at least 1 case for each class in order to avoid loss function error
-        p_y_val_d[0] = 1
-        p_y_val_d[1] = 0
+        # p_y_val_d[0] = 1
+        # p_y_val_d[1] = 0
         
         p_y_result_val = pd.DataFrame({'val_y': p_model_data['val_y'], 'val_pred_y': p_y_val_d})
         cm_val = confusion_matrix(p_y_result_val['val_y'], p_y_result_val['val_pred_y'])
@@ -899,9 +904,11 @@ def tf_model_metrics(p_model, p_model_data, p_history):
 
         # Accuracy rate
         # historical info
-        acc_h_val = p_history['accuracy']
+        # acc_h_val = p_history['accuracy']
         # last configuration
-        acc_val = acc_h_val[-1]
+        # acc_val = acc_h_val[-1]
+        acc_val = accuracy_score(list(p_model_data['val_y']), p_y_val_d)
+
         # False Positive Rate, True Positive Rate, Thresholds
         fpr_val, tpr_val, thresholds = roc_curve(list(p_model_data['val_y']), probs_val, pos_label=1)
         # Area Under the Curve (ROC) for train data
@@ -932,20 +939,20 @@ def tf_model_metrics(p_model, p_model_data, p_history):
     pro_metrics = {'acc-train': acc_train,
                    'acc-val': acc_val, 
                    'acc-mean': (acc_train + acc_val)/2 + 1e-5, 
-                   'acc-diff': acc_train - acc_val, 
+                   'acc-diff': abs(acc_train - acc_val), 
                    'acc-weighted': (acc_train*0.80 + acc_val*0.20)/2 + 1e-5,
                    'acc-inv-weighted': (acc_train*0.20 + acc_val*0.80)/2 + 1e-5,
 
                    'auc-train': auc_train,
                    'auc-val': auc_val,
-                   'auc-diff': auc_train - auc_val, 
+                   'auc-diff': abs(auc_train - auc_val), 
                    'auc-mean': (auc_train + auc_val)/2 + 1e-5, 
                    'auc-weighted': (auc_train*0.80 + auc_val*0.20)/2 + 1e-5,
                    'auc-inv-weighted': (auc_train*0.20 + auc_val*0.80)/2 + 1e-5,
 
                    'logloss-train': logloss_train,
                    'logloss-val': logloss_val,
-                   'logloss-diff': logloss_train - logloss_val,
+                   'logloss-diff': abs(logloss_train - logloss_val),
                    'logloss-mean': (logloss_train + logloss_val)/2 + 1e-5,
                    'logloss-weighted': (logloss_train*0.80 + logloss_val*0.20)/2 + 1e-5,
                    'logloss-inv-weighted': (logloss_train*0.20 + logloss_val*0.80)/2 + 1e-5}
@@ -1067,21 +1074,21 @@ def sk_model_metrics(p_model, p_model_data):
     # calculate relevant metrics
     pro_metrics = {'acc-train': acc_train,
                    'acc-val': acc_val,
-                   'acc-diff': acc_train - acc_val, 
+                   'acc-diff': abs(acc_train - acc_val), 
                    'acc-mean': (acc_train + acc_val)/2 + 1e-5, 
                    'acc-weighted': (acc_train*0.80 + acc_val*0.20)/2 + 1e-5, 
                    'acc-inv-weighted': (acc_train*0.20 + acc_val*0.80)/2 + 1e-5,
 
                    'auc-train': auc_train,
                    'auc-val': auc_val,
-                   'auc-diff': auc_train - auc_val, 
+                   'auc-diff': abs(auc_train - auc_val), 
                    'auc-mean': (auc_train + auc_val)/2 + 1e-5,
                    'auc-weighted': (auc_train*0.80 + auc_val*0.20)/2 + 1e-5,
                    'auc-inv-weighted': (auc_train*0.20 + auc_val*0.80)/2 + 1e-5,
 
                    'logloss-train': auc_train,
                    'logloss-val': auc_val,
-                   'logloss-diff': logloss_train - logloss_val, 
+                   'logloss-diff': abs(logloss_train - logloss_val), 
                    'logloss-mean': (logloss_train + logloss_val)/2 + 1e-5,
                    'logloss-weighted': (logloss_train*0.80 + logloss_val*0.20)/2 + 1e-5,
                    'logloss-inv-weighted': (logloss_train*0.20 + logloss_val*0.80)/2 + 1e-5}
@@ -1344,7 +1351,8 @@ def ann_mlp(p_data, p_params):
         
         # compile model 
         model.compile(loss='binary_crossentropy', optimizer=optimizer,
-                      metrics=['accuracy', 'kullback_leibler_divergence'])
+                      metrics=[tf.keras.metrics.BinaryAccuracy(name="accuracy", threshold=0.5),
+                      'kullback_leibler_divergence'])
 
         return model
 
@@ -1361,7 +1369,7 @@ def ann_mlp(p_data, p_params):
 
     # fit model with corresponding training scheme
     history = keras_class.fit(p_data['train_x'], p_data['train_y'],
-                              epochs=10, batch_size=32, verbose=0, shuffle=False,
+                              epochs=200, batch_size=16, verbose=0, shuffle=False,
                               callbacks=[tf.keras.callbacks.TerminateOnNaN(),
 
                               tf.keras.callbacks.ReduceLROnPlateau(monitor='kullback_leibler_divergence', 
@@ -1369,7 +1377,7 @@ def ann_mlp(p_data, p_params):
                               cooldown=0, min_lr=0.00001),
                               
                               tf.keras.callbacks.EarlyStopping(monitor='accuracy',
-                              min_delta=0.005, patience=10, verbose=0, mode='max', baseline=0.40, restore_best_weights=True)])
+                              min_delta=0.001, patience=20, verbose=2, mode='max', baseline=0.40, restore_best_weights=False)])
    
     # preparation of metrics history data to analyze later
     metrics_history = {str(i): history.history[i]
@@ -1793,7 +1801,8 @@ def setup_logger(name_logfile, path_logfile):
 # -------------------------------------------------------------------------- Model Evaluations by period -- #
 # --------------------------------------------------------------------------------------------------------- #
 
-def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_inner_split):
+def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
+                 p_trans_function, p_trans_order, p_fit_type):
     """
     Global evaluations for specified data folds for specified models
 
@@ -1847,6 +1856,21 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
     memory_palace: dict
 
     """
+
+    # -- Eembargo calculations
+
+    if p_embargo == 'fix':
+        # Fixed memory derived from features calculations
+        memory = dt.features_params['lags_diffs']
+        p_data_folds, embargo_dates = folds_embargo(p_folds=p_data_folds, p_mode='fix', p_memory=memory)
+    elif p_embargo == 'memory':
+        # Derived from max value from both PACF and ACF functions applied to first difference of ts data
+        p_data_folds, embargo_dates = folds_embargo(p_folds=p_data_folds, p_mode='memory', p_memory=None)
+    elif p_embargo == 'False':
+        # Without embargo
+        p_data_folds, embargo_dates = p_data_folds, ['no embargo']
+    else: 
+        print('error in p_embargo, invalid input')
     
     # main data structure for calculations
     memory_palace = {j: {i: {'e_hof': [], 'p_hof': {}, 'time': [], 'features': {}}
@@ -1868,7 +1892,8 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
         msg = 'na'
 
     # Construct the file name for the logfile
-    name_log = iteration + '_' + p_fit_type + '_' + p_transform + '_' + p_scaling + '_' + p_inner_split
+    name_log = iteration + '_' + p_fit_type + '_' + p_trans_function + '_' + \
+               p_trans_order + '_' + p_inner_split
 
     # Base route to save file
     route = 'files/logs/'
@@ -1907,13 +1932,13 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
         # -- DATA SCALING OPTIONS -- #
         
         # OPTION 1: Scaling original data before feature engineering
-        if p_scaling == 'pre-features':
+        if p_trans_order == 'pre-features':
             
             # Original data
-            data_folds = data_scaler(p_data=p_data_folds[period], p_trans=p_transform)
+            data_folds = data_scaler(p_data=p_data_folds[period], p_trans=p_trans_function)
         
             # Feature engineering (Autoregressive, Hadamard)
-            linear_data = linear_features(p_data=data_folds, p_memory=dt.features_params['memory'])
+            linear_data = linear_features(p_data=data_folds, p_memory=dt.features_params['lags_diffs'])
             
             # Symbolic features generation with genetic programming
             m_features = genetic_programed_features(p_data=linear_data, p_split=p_inner_split)
@@ -1924,7 +1949,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
             logger.debug('\n\n{}\n'.format(df_log))
 
         # OPTION 2: Scaling original data after feature engineering
-        elif p_scaling == 'post-features':
+        elif p_trans_order == 'post-features':
             
             # Original data
             data_folds = p_data_folds[period].copy()
@@ -1948,7 +1973,7 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
                 # just scale the features, not the target, of inner data-sets
                 if data[-1] == 'x':
                     m_features['model_data'][data] = data_scaler(p_data=m_features['model_data'][data],
-                                                                 p_trans=p_transform)
+                                                                 p_trans=p_trans_function)
         
         else:
             print('error: p_scaling value not valid')
@@ -1970,8 +1995,8 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
         logger.debug('------------------- --------------------------------------- ---------------------\n')
 
         logger.debug('---- Optimization Fitness: ' + p_fit_type)
-        logger.debug('---- Data Scaling Order: ' + p_scaling)
-        logger.debug('---- Data Transformation: ' + p_transform)
+        logger.debug('---- Data Scaling Order: ' + p_trans_order)
+        logger.debug('---- Data Transformation: ' + p_trans_function)
         logger.debug('---- val set inner-split: ' + p_inner_split + '\n')
 
         logger.info("Feature Engineering in Fold done in = " + str(datetime.now() - init) + '\n')
@@ -1995,11 +2020,15 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
 
             # -- model optimization and evaluation for every element in the Hall of Fame for every period
                
+            # verification of type of objective to optimize
+            # default to minimize in order to have an option for logloss
             ob_type = 'min'
-            if p_fit_type[0:3] == 'auc':
+            # maximize for auc and acc related metrics
+            if p_fit_type[0:3] == 'auc' or p_fit_type[0:3] == 'acc':
                 ob_type = 'max'
-            if p_fit_type[0:3] == 'acc':
-                ob_type = 'max'
+            # if it is a difference between any of acc, auc and logloss, then choose to minimize
+            elif p_fit_type[-4:] == 'diff':
+                ob_type = 'min'
 
             # optimization process NEEDS TO INCLUDE MODEL OBJECT OR WEIGHTS FOR MLP for reproducibility
             hof_model = genetic_algo_optimization(p_gen_data=m_features['model_data'],
@@ -2033,13 +2062,14 @@ def fold_process(p_data_folds, p_models, p_fit_type, p_transform, p_scaling, p_i
     route = 'files/pickle_rick/'
 
     # File name to save the data
-    file_name = route + period[0] + \
-                 '_' + p_fit_type + '_' + p_transform + '_' + p_scaling + '_' + p_inner_split + '.dat'
+    file_name = route + period[0] + '_' + p_fit_type + '_' + p_trans_function + '_' + \
+                p_trans_order + '_' + p_inner_split + '.dat'
 
     # (pending) Extract tensorflow model and parameters separately
     
     # objects to be saved
-    pickle_rick = {'data': dt.ohlc_data, 't_folds': period, 'memory_palace': memory_palace}
+    pickle_rick = {'data': dt.ohlc_data, 't_folds': period, 'embargo_dates': embargo_dates,
+                   'memory_palace': memory_palace}
 
     # print ending message
     logger.debug('---------------------------------------------------------------------------------')
@@ -2088,7 +2118,7 @@ def global_evaluation(p_case, p_global_data, p_features, p_model):
     # -------------------------------------------------------------------------------------- GLOBAL DATA -- #
     
     # get all the linear features 
-    g_linear_data = linear_features(p_data=p_global_data, p_memory=dt.features_params['memory'])
+    g_linear_data = linear_features(p_data=p_global_data, p_memory=dt.features_params['lags_diffs'])
     g_y_target = g_linear_data['co_d'].copy()
     g_linear_data = g_linear_data.drop(['co_d'], axis=1, inplace=False)
 

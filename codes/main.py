@@ -51,18 +51,12 @@ if __name__ == "__main__":
         # Timeseries data division in t-folds
         folds = fn.t_folds(p_data=data, p_period=iteration)
 
-        # Memory for data calculations
-        memory = dt.features_params['memory']
-
-        # Embargo technique to data
-        folds, dates = fn.folds_embargo(p_folds=folds, p_mode='memory', p_memory=memory)
-
         # -- ------------------------------------------------------------------- FOLD EVALUATION PROCESS -- #
         # -- ------------------------------------------------------------------- ----------------------- -- #
 
         # List with the names of the models
-        # ml_models = list(dt.models.keys())
-        ml_models = ['ann-mlp']
+        ml_models = list(dt.models.keys())
+        # ml_models = ['ann-mlp']
 
         # Establish the number of workers with as many cores as the computer has
         workers = cpu_count()-1
@@ -80,7 +74,7 @@ if __name__ == "__main__":
         # Parallel Asyncronous Process 
         fold_process = {'fold_' + str(iteration): pool.starmap(fn.fold_process,
                                                                [(folds, ml_models,
-                                                                 exp[0], exp[1], exp[2], exp[3])
+                                                                 exp[0], exp[1], exp[2], exp[3], exp[4])
                                                                for exp in iter_exp])}
 
         # close pool

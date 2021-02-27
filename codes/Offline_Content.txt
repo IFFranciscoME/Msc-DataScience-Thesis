@@ -208,16 +208,24 @@ EXTRA CONSIDERATIONS (iterations, convergence)
 
 # -- 
 
+# -- NOTES ON COMPUTATION:
 - tried all types of regularization: kernel_regularizer, bias_regularizer, activity_regularizer
 - too much regularization provoque very bad model (all values are 1 class) and resulted in a code error
-
 tensorflow.python.framework.errors_impl.InvalidArgumentError: assertion failed: [predictions must be >= 0] [Condition x >= y did not hold element-wise:] [x (ann-mlp/output_layer/Sigmoid:0) =
+- removing the regularization layers but kept dropout resumed the process without code error but lower results.
 
-- removing the regularization layers but kept dropout resumed the process without code error but lower results. 
+# -- -- RETRACING A MODEL (GOOD TO HAVE ANALYSIS)
+WARNING:tensorflow:5 out of the last 13 calls to <function Model.make_predict_function.<locals>.predict_function at 0x7fbb5961fc10> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has experimental_relax_shapes=True option that relaxes argument shapes that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
 
-- neural net minimizes logloss but with genetic algorithms the fitness function can be another one.
-I that reggard, the goal is to have the "best weights that classifies with least errros in order to maximices the
- accuracy out of sample"
+# -- NOTES ON DESIGN:
+- for ANN-MLP in particular, it minimizes logloss (model cost function addressed by the model learning algorithm) but with genetic algorithms the fitness function is another one (global cost function).
+In that reggard, the goal is to have a metric for the "best weights" to produce several best adjusted models that will be selected according to the global cost function, but also, a nested cost function
+that implies having "the best model which when implemented produces the best results", i.e. the global cost functions is defined with parameters different from the model's hyperparameters, like the 
+data preprocessing (data transforming functions).
 
-
-# 
+# -- On the acc-diff , auc-diff, logloss-diff
+One important remark is underfitting and overfitting, to address this, it was included a fitness metric that take de difference between a metric in train set and the same metric in the validation set, naturally
+, in order to use this it has to be specified a valid set in the training process. This diff metric therefore will be used as fitness for the GA which will try to find the parameters that minimices this metric, 
+and in consequence, to favor configurations that have the least difference between using the training set and validation set. When Training set performance metric is higher than validation it is interpreted 
+as underfitting, and when performance metric is higher in validation set than in training set it is interpreted as overfitting, so the goal is to find such hyperparameters values to have in both a lower absolute 
+value and a lower difference among them.
