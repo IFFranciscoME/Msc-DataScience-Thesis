@@ -249,6 +249,9 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 # -- 26.02.2021
 - Addition: Implement embargo criteria for t-fold variation
 
+# -- 27.02.2021
+- (pending) Perform a general revision of fold_process to document steps and check for bugs in code
+
 # ---------------------------------------------------------------------------------------------- BACKLOG -- # 
 # ---------------------------------------------------------------------------------------------- ------- -- #
 

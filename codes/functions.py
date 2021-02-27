@@ -1369,7 +1369,7 @@ def ann_mlp(p_data, p_params):
 
     # fit model with corresponding training scheme
     history = keras_class.fit(p_data['train_x'], p_data['train_y'],
-                              epochs=200, batch_size=16, verbose=0, shuffle=False,
+                              epochs=200, batch_size=8, verbose=0, shuffle=False,
                               callbacks=[tf.keras.callbacks.TerminateOnNaN(),
 
                               tf.keras.callbacks.ReduceLROnPlateau(monitor='kullback_leibler_divergence', 
@@ -1377,7 +1377,7 @@ def ann_mlp(p_data, p_params):
                               cooldown=0, min_lr=0.00001),
                               
                               tf.keras.callbacks.EarlyStopping(monitor='accuracy',
-                              min_delta=0.001, patience=20, verbose=2, mode='max', baseline=0.40, restore_best_weights=False)])
+                              min_delta=0.01, patience=20, verbose=0, mode='max', baseline=0.40, restore_best_weights=False)])
    
     # preparation of metrics history data to analyze later
     metrics_history = {str(i): history.history[i]
@@ -2226,8 +2226,8 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
         # model = p_models[1]
 
         # dummy initializations
-        met_min = 1
-        met_max = 0
+        met_min = float('inf')
+        met_max = -float('inf')
         met_max_params = {}
         met_min_params = {}
         met_mode[model] = {}
@@ -2238,11 +2238,14 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
             # debugging
             # period = list(p_data_folds.keys())[0]
 
+            if p_cases_type not in list(p_global_cases[period][model]['e_hof'][0]['pro-metrics'].keys()):
+                print('error: selected p_cases_type is not in pro-metrics')
+                return 0
+
+            # add period key to data info
             met_cases[model]['hof_metrics']['data'][period] = {}
-            # Dummy initialization
-            met_s = []
-            
-            # -- Case 0 (MODE INDIVIDUAL)
+           
+            # -- CASE 0 (MODE)
             # get the number of repeated individuals in the whole HoF
             for p in p_global_cases[period][model]['p_hof']['hof']:
                 # p = p_global_cases[period][model]['p_hof']['hof'][1]
@@ -2255,50 +2258,52 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
                 # no repeated parameter set is found
                 else:
                     # base dict to store findings
-                    met_mode[model].update({str(tuple(p)): {'params': tuple(p),
-                                                            'repetitions': 0,
-                                                            'periods': [period]}})
+                    met_mode[model].update({str(tuple(p)): {'params': tuple(p), 'repetitions': 0,
+                                                                                'periods': [period]}})
 
-            # search for every individual in hall of fame
-            for i in range(0, len(p_global_cases[period][model]['e_hof'])):
-                # i = 1
-                
-                if p_cases_type in list(p_global_cases[period][model]['e_hof'][i]['pro-metrics'].keys()):
-                
-                    # initialize value in 0 (in case of error)
-                    c_met = p_global_cases[period][model]['e_hof'][i]['pro-metrics'][p_cases_type]
+            # Values for all metrics for all evaluated HoF
+            hof = [metric['pro-metrics'][p_cases_type] for metric in p_global_cases[period][model]['e_hof']]
+            
+            # -- CASE 1 (MIN)
+            # min metric in evaluated HoF
+            fold_i_met_min = hof.index(min(hof))
+            fold_v_met_min = hof[fold_i_met_min]
+            fold_p_met_min = period
+            
+            if fold_v_met_min < met_min:
+                met_min = fold_v_met_min
+                period_min = fold_p_met_min
+                i_min = fold_i_met_min
 
-                else:
-                    print('error: selected p_cases_type is not in pro-metrics')
-                    return 0
+            # -- CASE 2 (MAX)
+            # max metric in evaluated HoF
+            fold_i_met_max = hof.index(max(hof))
+            fold_v_met_max = hof[fold_i_met_max]
+            fold_p_met_max = period
 
-                # save current auc data for later use
-                met_s.append(c_met)
-
-                # -- Case 1 (MIN INDIVIDUAL)
-                # get the individual of all of the HoF that produced the minimum metrics
-                if c_met < met_min:
-                    met_min = c_met
-                    met_cases[model]['met_min']['data'] = p_global_cases[period][model]['e_hof'][i]
-                    met_cases[model]['met_min']['period'] = period
-                    met_min_params = p_global_cases[period][model]['p_hof']['hof'][i]
-                    met_cases[model]['met_min']['params'] = met_min_params
-                    met_cases[model]['met_min'][p_cases_type] = met_min
-
-                # -- Case 2 (MAX INDIVIDUAL)
-                # get the individual of all of the HoF that produced the maximum metrics
-                elif c_met > met_max:
-                    met_max = c_met
-                    met_cases[model]['met_max']['data'] = p_global_cases[period][model]['e_hof'][i]
-                    met_cases[model]['met_max']['period'] = period
-                    met_max_params = p_global_cases[period][model]['p_hof']['hof'][i]
-                    met_cases[model]['met_max']['params'] = met_max_params
-                    met_cases[model]['met_max'][p_cases_type] = met_max
+            if fold_v_met_max > met_max:
+                met_max = fold_v_met_max
+                period_max = fold_p_met_max
+                i_max = fold_i_met_max
 
             # Get features used for every case, therefore, for min and max metric cases
             features = {'features': p_global_cases[period]['features'],
                         'sym_features': p_global_cases[period]['sym_features']}
             met_cases[model]['hof_metrics']['data'][period]['features'] = features
+        
+        # update data with min case
+        met_cases[model]['met_min']['data'] = p_global_cases[period_min][model]['e_hof'][i_min]
+        met_cases[model]['met_min']['period'] = period_min
+        met_min_params = p_global_cases[period][model]['p_hof']['hof'][i_min]
+        met_cases[model]['met_min']['params'] = met_min_params
+        met_cases[model]['met_min'][p_cases_type] = met_min
+        
+        # update data with max case
+        met_cases[model]['met_max']['data'] = p_global_cases[period_max][model]['e_hof'][i_max]
+        met_cases[model]['met_max']['period'] = period_max
+        met_max_params = p_global_cases[period][model]['p_hof']['hof'][i_max]
+        met_cases[model]['met_max']['params'] = met_max_params
+        met_cases[model]['met_max'][p_cases_type] = met_max
         
         # mode(s) data and metrics
         met_cases[model]['met_mode']['data'] = met_mode[model]
@@ -2312,10 +2317,7 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
         
         # at least 1 repetition existed
         if mode_value > 0:
-            
             for i in all_tuples:
-                # i = all_tupples[0]
-
                 # all repeated tupples 
                 if met_mode[model][i]['repetitions'] == mode_value:
                     # transfer key values (tupple with parameters)
@@ -2327,5 +2329,3 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
                     met_cases[model]['met_mode']['period'].update({key_period: met_mode[model][i]['periods']})
 
     return met_cases
-
-# %%

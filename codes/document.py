@@ -17,7 +17,7 @@ import pandas as pd
 import numpy as np
 
 from data import ohlc_data as data
-from main import embargo_dates
+# from main import embargo_dates
 
 import functions as fn
 import visualizations as vs
@@ -43,7 +43,7 @@ plot_1 =vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_1, p_vlines=None)
 # ------------------------------------------------------------------------------------ ----------------- -- #
 
 # Fold size
-fold_case = '80-20'
+fold_case = 'semester'
 
 # Timeseries data division in t-folds
 folds = fn.t_folds(p_data=data, p_period=fold_case)
@@ -53,7 +53,7 @@ folds = fn.t_folds(p_data=data, p_period=fold_case)
 ml_models = ['ann-mlp']
 
 # File name to save the data
-file_name = 'files/pickle_rick/h_logloss-inv-weighted_scale_pre-features_20.dat'
+file_name = 'files/pickle_rick/respaldo_2702/s_logloss-inv-weighted_robust_post-features_20.dat'
 
 # Load previously generated data
 memory_palace = dt.data_pickle(p_data_objects=None, p_data_action='load', p_data_file=file_name)
@@ -139,14 +139,14 @@ met_cases = fn.model_cases(p_models=ml_models, p_global_cases=memory_palace, p_d
                            p_cases_type=metric_case)
  
 # period of the best of HoF: according to model_case and metric_case 
-best_period = met_cases[model_case]['met_max']['period']
-best_params = met_cases[model_case]['met_max']['params']
-best_metric = met_cases[model_case]['met_max'][metric_case]
+maxcase_period = met_cases[model_case]['met_max']['period']
+maxcase_params = met_cases[model_case]['met_max']['params']
+maxcase_metric = met_cases[model_case]['met_max'][metric_case]
 
 # period of the worst of HoF: according to model_case and metric_case 
-worst_period = met_cases[model_case]['met_min']['period']
-worst_params = met_cases[model_case]['met_min']['params']
-worst_metric = met_cases[model_case]['met_min'][metric_case]
+mincase_period = met_cases[model_case]['met_min']['period']
+mincase_params = met_cases[model_case]['met_min']['params']
+mincase_metric = met_cases[model_case]['met_min'][metric_case]
 
 # Modes and their params, no. of repetitions and periods.
 mode_repetitions = pd.DataFrame(met_cases[model_case]['met_mode']['data']).T
@@ -155,7 +155,7 @@ mode_repetitions = pd.DataFrame(met_cases[model_case]['met_mode']['data']).T
 # -- ------------------------------------------------------------------------ -------------------------- -- #
 
 # period to explore results
-period_case = 's_01_2009'
+period_case = 's_02_2009'
 
 # models to explore results
 model_case = 'ann-mlp'
@@ -189,15 +189,15 @@ plot_title = 'inFold ' + case + ' for: ' + model_case + ' ' + met_cases[model_ca
 dt.theme_plot_3['p_labels']['title'] = plot_title
 
 # Get data from met_cases
-train_y = met_cases[model_case][case]['data']['results']['data']['train']
+val_y = met_cases[model_case][case]['data']['results']['data']['val']
 
 # Get data for prices and predictions
 ohlc_prices = folds[met_cases[model_case][case]['period']]
 
-ohlc_class = {'train_y': train_y['train_y'], 'train_y_pred': train_y['train_pred_y']}
+ohlc_class = {'val_y': val_y['val_y'], 'val_y_pred': val_y['val_pred_y']}
 
 # Dates for vertical lines in the T-Folds plot
-date_vlines = [ohlc_class['train_y'].index[-1]]
+date_vlines = [ohlc_class['val_y'].index[-1]]
 
 # Make plot
 plot_3 = vs.g_ohlc_class(p_ohlc=ohlc_prices, p_theme=dt.theme_plot_3, p_data_class=ohlc_class, 

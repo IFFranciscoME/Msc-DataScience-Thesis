@@ -71,8 +71,8 @@
 |   Coding         | data verification/train-val scheme | 11:00 25.Feb.2021  | 1.0          |                  |
 |   Content        | Define diagrams of t-folds         | 12:00 25.Feb.2021  | 2.0          |                  |
 |   Coding         | implement embargo in codes         | 14:00 25.Feb.2021  | 3.0          |                  |
-
 |   Coding         | debug current version              | 09:00 26.Feb.2021  | 2.0          |                  |
 |   Meeting        | With thesis director               | 12:00 26.Feb.2021  | 1.0          |                  |
-
 |   Coding         | improve ann-mlp training scheme    | 19:00 26.Feb.2021  | 1.0          |                  |
+
+|   Coding         | min-max cases search fix           | 19:00 26.Feb.2021  | 1.0          |                  |
