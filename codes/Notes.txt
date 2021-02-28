@@ -56,6 +56,22 @@ in-a-feedforward-neural-netw
 Perhaps those previous errors are due to the fact of numnber of samples, number of input variables and regularization
 https://www.machinecurve.com/index.php/2020/01/21/what-are-l1-l2-and-elastic-net-regularization-in-neural-networks/
 
+# -- Saturation in the activation function values at the output layer
+https://datascience.stackexchange.com/questions/16911/how-does-sigmoid-saturate-with-large-weights
+
+# -- How to determine Threshold for sigmoid function output and its relation with unbalaced class
+https://datascience.stackexchange.com/questions/22639/how-to-determine-threshold-in-sigmoid-function
+https://www.cs.bham.ac.uk/~jlw/sem2a2/Web/LearningSigmoid.htm
+
+One alternative is weights on the classes (more to the less frequent class), this appears to be restrictive to
+the observed classes in the dataset but not necessarly of the underlying process that produces such observations, and
+therefore it could be prone to increasing the generalization error. Another alternative is that dynamically update
+the probability threshold to classify the predicted outpus, but this requires a 100% certainty in the ground truth
+labels, whether are binary discrete classes or a high level of certainty in how a continuous value is classified as 
+1 or 0. The proposition for the dynamic threshold is considering using bayes, the proportion of classes is calculated
+with the onhand data as an intial expected class balance and update that numbner with new evidence of class balance within each new fold, with the option of including a divergence factor fiven by the KLDivergence of the previous data and the
+present data. 
+
 # -- RandomForest
 https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html
 
@@ -254,6 +270,14 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 - Enhacement: Include polynomial kernel and some values for the degree hyperparameter for SVC
 - Testing: Optimization - genetic_algo_optimization
 
+# -- 28.02.2021
+- fix: Error in data_scaler, it was scaling 1: cols, leaving out the 1st, probably the cause of saturation
+       in ann-mlp model since the 1st has a big scale.
+- fix: Erros in predicted probabilities type of data and code refactor in tf_metrics
+
+- (goal) the input features for global evaluation and test evaluation has to be pre-processes exactly
+			as were the features used in the optimization 
+- (goal) steps and instructions to run project on cluster  
 
 # ---------------------------------------------------------------------------------------------- BACKLOG -- # 
 # ---------------------------------------------------------------------------------------------- ------- -- #
@@ -266,7 +290,7 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 - (pending) Testing: Evaluation - model_evaluation, global_evaluation
 - (pending) Results - model_cases
 
-- (pending) steps and instructions to run project on cluster
+- (pending) Add the forecasting benchmark of y_t+1 = y_t
 
 - (pending) write content and code to define and search for data to test 1 clear hypothesis for the project
 

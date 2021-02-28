@@ -118,28 +118,28 @@ def data_scaler(p_data, p_trans):
     data = p_data.copy()
     
     # list with columns to transform
-    lista = data[list(data.columns[1:])]
+    lista = data[list(data.columns)]
 
     if p_trans == 'standard':
         
         # removes the mean and scales the data to unit variance
-        data[list(data.columns[1:])] = StandardScaler().fit_transform(lista)
+        data[list(data.columns)] = StandardScaler().fit_transform(lista)
         return data
 
     elif p_trans == 'robust':
 
         # armar objeto de salida
-        data[list(data.columns[1:])] = RobustScaler().fit_transform(lista)
+        data[list(data.columns)] = RobustScaler().fit_transform(lista)
         return data
 
     elif p_trans == 'scale':
 
         # armar objeto de salida
-        data[list(data.columns[1:])] = MaxAbsScaler().fit_transform(lista)
+        data[list(data.columns)] = MaxAbsScaler().fit_transform(lista)
         return data
     
     else:
-        print('error, p_trans not valid')
+        print('Error in data_scaler, p_trans value is not valid')
 
 
 # --------------------------------------------------------- EXPLORATORY DATA ANALYSIS & FEATURES METRICS -- #
@@ -682,7 +682,7 @@ def genetic_programed_features(p_data, p_split):
     """
    
     # separacion de variable dependiente
-    datos_y = p_data['co_d'].copy()
+    datos_y = p_data['co_d'].copy().astype(int)
 
     # separacion de variables independientes
     datos_had = p_data.copy().drop(['co_d'], axis=1, inplace=False)
@@ -732,7 +732,7 @@ def genetic_programed_features(p_data, p_split):
 # -- ---------------------------------------------------- DATA PROCESSING: Metrics for Model Performance -- # 
 # -- ---------------------------------------------------- ---------------------------------- TENSOR FLOW -- #
 
-def tf_model_metrics(p_model, p_model_data, p_history):
+def model_metrics(p_model, p_model_data, p_history=None, p_tf=False):
     """
     Tensorflow ready model metrics
     
@@ -754,56 +754,57 @@ def tf_model_metrics(p_model, p_model_data, p_history):
 
     """
 
+    # value for future expansion of calculations
+    tf_threshold = 0.5
+
+    # support value for numerical stability in calculations of extreme cases
+    stabilizer = 1e-6
+
      # Data keys, could be ['x_train', 'y_train'] or ['x_train', 'y_train', 'x_val', 'y_val']
     data_keys = list(p_model_data.keys())
 
     if 'train_x' in data_keys and 'train_y' in data_keys:
     
-        # Fitted train values
-        p_y_train_d = p_model.predict(p_model_data['train_x'])
-        p_y_train_d = np.nan_to_num(p_y_train_d)
+        # Fitted model used to make prediction with train values
+        probs_train = p_model.predict_proba(p_model_data['train_x'])[:, 1]
+        # Replace NaN with zero, -infinity with 0 and +infinity with 1
+        probs_train = np.nan_to_num(x=probs_train, nan=0, posinf=1, neginf=0)
 
-        # tensorflow output
-        # reshape array as a 1d array (list)
-        p_y_train_d = p_y_train_d.reshape(len(p_y_train_d),)
-        # p_y_train_d[p_y_train_d.reshape(len(p_y_train_d),) > 0.5] = 1
-        # p_y_train_d[p_y_train_d.reshape(len(p_y_train_d),) <= 0.5] = 0
-
-        # **** hardcode at least 1 case for each class in order to avoid loss function error
-        # p_y_train_d[0] = 1
-        # p_y_train_d[1] = 0
-
+        # tensorflow probabilistic output converted to class according threshold
+        p_y_train_d = np.array(tf.greater(probs_train, tf_threshold)).astype(int)
+        # dataframe with ground truth and prediction
         p_y_result_train = pd.DataFrame({'train_y': p_model_data['train_y'], 'train_pred_y': p_y_train_d})
-        # Confussion matrix
+        
+        # -- METRIC: Confusion matrix
         cm_train = confusion_matrix(p_y_result_train['train_y'], p_y_result_train['train_pred_y'])
 
-        # Probabilities of class in train data
-        probs_train = p_model.predict(p_model_data['train_x']).reshape(len(p_model_data['train_x']),)
-        # In case of a nan, replace it with zero (to prevent errors)
-        probs_train = np.nan_to_num(probs_train)
+        # -- METRIC: Accuracy rate      
+        if p_tf:
+            # Historical info from tensorflow
+            acc_h_train = p_history['accuracy']
+            # last configuration
+            acc_train = acc_h_train[-1]
+        else: 
+            # sklearn calculation
+            acc_train = accuracy_score(list(p_model_data['train_y']), p_y_train_d)
 
-        # -- Accuracy rate
-        
-        # historical info
-        acc_h_train = p_history['accuracy']
-        # last configuration
-        acc_train = acc_h_train[-1]
-        # verification
-        acc_train_sk = accuracy_score(list(p_model_data['train_y']), p_y_train_d)
-
-        # False Positive Rate, True Positive Rate, Thresholds
+        # -- METRIC: False Positives Rate, True Positives Rate, Thresholds
         fpr_train, tpr_train, thresholds = roc_curve(list(p_model_data['train_y']), probs_train, pos_label=1)
-        # Area Under the Curve (ROC) for train data
-        # historical info
-        # auc_h_train = p_history['auc']
-        # last configuration
-        auc_train = roc_auc_score(list(p_model_data['train_y']), probs_train) + 1e-5
-        # Logloss (Binary cross-entropy function)
-        # `historic`al info
-        logloss_h_train = p_history['loss']
-        # last configuration
-        logloss_train = logloss_h_train[-1] + 1e-5
+        
+        # -- METRIC: AUC
+        auc_train = roc_auc_score(list(p_model_data['train_y']), probs_train) + stabilizer
+        
+        # -- METRIC: Logloss (Binary cross-entropy) (historical by tf)
+        if p_tf:
+            # historical info provided by tensorflow
+            logloss_h_train = p_history['loss']
+            # last value
+            logloss_train = logloss_h_train[-1] + stabilizer
+        else:
+            # calculated with sklearn
+            logloss_train = log_loss(p_model_data['train_y'], p_y_train_d, normalize=True) + stabilizer
 
+        # fill values for val if not present
         if 'val_x' not in data_keys and 'val_y' not in data_keys:
             cm_val = cm_train
             probs_val = probs_train
@@ -817,49 +818,34 @@ def tf_model_metrics(p_model, p_model_data, p_history):
      # -- val SET ALSO: In the case of the presence of a val set, do calculations accordingly
     if 'val_x' in data_keys and 'val_y' in data_keys:
 
-        # Fitted val values
-        p_y_val_d = p_model.predict(p_model_data['val_x'])
-        p_y_val_d = np.nan_to_num(p_y_val_d)
-
-        # tensorflow output
-        # reshape array as a 1d array (list)
-        p_y_val_d = p_y_val_d.reshape(len(p_y_val_d),)
-        # trigger for class is 1 if > 0.5
-        # p_y_val_d[p_y_val_d.reshape(len(p_y_val_d),) >= 0.5] = 1
-        # p_y_val_d[p_y_val_d.reshape(len(p_y_val_d),) < 0.5] = 0
-
-        # **** hardcode at least 1 case for each class in order to avoid loss function error
-        # p_y_val_d[0] = 1
-        # p_y_val_d[1] = 0
+        # Fitted model used to make prediction with validation values
+        probs_val = p_model.predict_proba(p_model_data['val_x'])[:, 1]
+        # Replace NaN with zero, -infinity with 0 and +infinity with 1
+        probs_val = np.nan_to_num(x=probs_val, nan=0, posinf=1, neginf=0)
         
+        # tensorflow probabilistic output converted to class according threshold
+        p_y_val_d = np.array(tf.greater(probs_val, tf_threshold)).astype(int)
+        # dataframe with ground truth and prediction
         p_y_result_val = pd.DataFrame({'val_y': p_model_data['val_y'], 'val_pred_y': p_y_val_d})
+        
+        # -- METRIC: Confusion matrix
         cm_val = confusion_matrix(p_y_result_val['val_y'], p_y_result_val['val_pred_y'])
-        # Probabilities of class in val data
-        probs_val = p_model.predict(p_model_data['val_x']).reshape(len(p_model_data['val_x']),)
-        # In case of a nan, replace it with zero (to prevent errors)
-        probs_val = np.nan_to_num(probs_val)
 
-        # Accuracy rate
-        # historical info
-        # acc_h_val = p_history['accuracy']
-        # last configuration
-        # acc_val = acc_h_val[-1]
+        # -- METRIC: Accuracy rate
+        # verification with sklearn calculation
         acc_val = accuracy_score(list(p_model_data['val_y']), p_y_val_d)
 
-        # False Positive Rate, True Positive Rate, Thresholds
+        # -- METRIC: False Positives Rate, True Positives Rate, Thresholds
         fpr_val, tpr_val, thresholds = roc_curve(list(p_model_data['val_y']), probs_val, pos_label=1)
-        # Area Under the Curve (ROC) for train data
-        # historical info
-        # auc_h_val = p_history['auc']
-        # last configuration
-        auc_val = roc_auc_score(list(p_model_data['val_y']), probs_val) + 1e-5
+        
+        # -- METRIC: AUC
+        auc_val = roc_auc_score(list(p_model_data['val_y']), probs_val) + stabilizer
 
-        # Logloss (Binary cross-entropy function)
-        # historical info
-        logloss_h_val = p_history['loss']
-        # last configuration
-        logloss_val = logloss_h_val[-1] + 1e-5
+        # -- METRIC: Logloss (Binary cross-entropy) (historical by tf)
+        # calculated with sklearn
+        logloss_val = log_loss(p_model_data['val_y'], p_y_val_d, normalize=True) + stabilizer
 
+        # fill values for train if not present
         if 'train_x' not in data_keys and 'train_y' not in data_keys:
             cm_train = cm_val
             probs_train = probs_val
@@ -875,31 +861,37 @@ def tf_model_metrics(p_model, p_model_data, p_history):
     # calculate relevant metrics
     pro_metrics = {'acc-train': acc_train,
                    'acc-val': acc_val, 
-                   'acc-mean': (acc_train + acc_val)/2 + 1e-5, 
+                   'acc-mean': (acc_train + acc_val)/2 + stabilizer, 
                    'acc-diff': abs(acc_train - acc_val), 
-                   'acc-weighted': (acc_train*0.80 + acc_val*0.20)/2 + 1e-5,
-                   'acc-inv-weighted': (acc_train*0.20 + acc_val*0.80)/2 + 1e-5,
+                   'acc-weighted': (acc_train*0.80 + acc_val*0.20)/2 + stabilizer,
+                   'acc-inv-weighted': (acc_train*0.20 + acc_val*0.80)/2 + stabilizer,
 
                    'auc-train': auc_train,
                    'auc-val': auc_val,
                    'auc-diff': abs(auc_train - auc_val), 
-                   'auc-mean': (auc_train + auc_val)/2 + 1e-5, 
-                   'auc-weighted': (auc_train*0.80 + auc_val*0.20)/2 + 1e-5,
-                   'auc-inv-weighted': (auc_train*0.20 + auc_val*0.80)/2 + 1e-5,
+                   'auc-mean': (auc_train + auc_val)/2 + stabilizer, 
+                   'auc-weighted': (auc_train*0.80 + auc_val*0.20)/2 + stabilizer,
+                   'auc-inv-weighted': (auc_train*0.20 + auc_val*0.80)/2 + stabilizer,
 
                    'logloss-train': logloss_train,
                    'logloss-val': logloss_val,
                    'logloss-diff': abs(logloss_train - logloss_val),
-                   'logloss-mean': (logloss_train + logloss_val)/2 + 1e-5,
-                   'logloss-weighted': (logloss_train*0.80 + logloss_val*0.20)/2 + 1e-5,
-                   'logloss-inv-weighted': (logloss_train*0.20 + logloss_val*0.80)/2 + 1e-5}
+                   'logloss-mean': (logloss_train + logloss_val)/2 + stabilizer,
+                   'logloss-weighted': (logloss_train*0.80 + logloss_val*0.20)/2 + stabilizer,
+                   'logloss-inv-weighted': (logloss_train*0.20 + logloss_val*0.80)/2 + stabilizer}
 
     # -- -------------------------------------------------------------------------------------------------- #
     # weights = p_model.model.weights
     # layers = p_model.model.layers
 
+    # if tensorflow model, execute an extra step to extract info to serialize it
+    if p_tf:
+        log_model = p_model.model.to_json()
+    else: 
+        log_model = p_model
+
     # Return all the results for the model
-    r_model_metrics = {'model': p_model.model.to_json(), 'pro-metrics': pro_metrics, 
+    r_model_metrics = {'model': log_model, 'pro-metrics': pro_metrics, 
                        'results': {'data': {'train': p_y_result_train, 'val': p_y_result_val},
                                    'matrix': {'train': cm_train, 'val': cm_val}},
                        'metrics': {'train': {'tpr': tpr_train, 'fpr': fpr_train, 'probs': probs_train},
@@ -907,140 +899,6 @@ def tf_model_metrics(p_model, p_model_data, p_history):
                                    'history': {i: p_history[i] for i in list(p_history.keys())}}}
 
     return r_model_metrics
-
-
-# -- ---------------------------------------------------- DATA PROCESSING: Metrics for Model Performance -- # 
-# -- -------------------------------------------------------- ---------------------------------- SKLEARN -- #
-
-def sk_model_metrics(p_model, p_model_data):
-    """
-    Scikit learn ready model metrics
-
-    Parameters
-    ----------
-    p_model: str
-        string with the name of the model
-    
-    p_data: dict
-        With x_train, x_val, y_train, y_val keys of its respective pd.DataFrames
-   
-    Returns
-    -------
-    r_model_metrics
-
-    References
-    ----------
-    https://scikit-learn.org/stable/modules/model_evaluation.html#model-evaluation
-
-    """
-
-    # Data keys, could be ['x_train', 'y_train'] or ['x_train', 'y_train', 'x_val', 'y_val']
-    data_keys = list(p_model_data.keys())
-
-    if 'train_x' in data_keys and 'train_y' in data_keys:
-
-        # Fitted train values
-        p_y_train_d = p_model.predict(p_model_data['train_x'])
-        p_y_result_train = pd.DataFrame({'train_y': p_model_data['train_y'], 'train_pred_y': p_y_train_d})
-        # Confussion matrix
-        cm_train = confusion_matrix(p_y_result_train['train_y'], p_y_result_train['train_pred_y'])
-        # Probabilities of class in val data
-        probs_train = p_model.predict_proba(p_model_data['train_x'])
-        # In case of a nan, replace it with zero (to prevent errors)
-        probs_train = np.nan_to_num(probs_train)
-
-        # Accuracy rate
-        acc_train = accuracy_score(list(p_model_data['train_y']), p_y_train_d)
-        # False Positive Rate, True Positive Rate, Thresholds
-        fpr_train, tpr_train, thresholds = roc_curve(list(p_model_data['train_y']),
-                                                            probs_train[:, 1], pos_label=1)
-        # Area Under the Curve (ROC) for train data
-        auc_train = roc_auc_score(list(p_model_data['train_y']), probs_train[:, 1]) + 1e-5
-
-        # Logloss (Binary cross-entropy function)
-        logloss_train = log_loss(p_model_data['train_y'], p_y_train_d) + 1e-5
-    
-        if 'val_x' not in data_keys and 'val_y' not in data_keys:
-            cm_val = cm_train
-            probs_val = probs_train
-            acc_val = acc_train
-            fpr_val = fpr_train
-            tpr_val = tpr_train
-            auc_val = auc_train
-            logloss_val = logloss_train
-            p_y_result_val = p_y_result_train
-
-    # -- val SET ALSO: In the case of the presence of a val set, do calculations accordingly
-    if 'val_x' in data_keys and 'val_y' in data_keys:
-
-        # Fitted val values
-        p_y_val_d = p_model.predict(p_model_data['val_x'])
-        p_y_result_val = pd.DataFrame({'val_y': p_model_data['val_y'], 'val_pred_y': p_y_val_d})
-        cm_val = confusion_matrix(p_y_result_val['val_y'], p_y_result_val['val_pred_y'])
-        # Probabilities of class in val data
-        probs_val = p_model.predict_proba(p_model_data['val_x'])
-        # In case of a nan, replace it with zero (to prevent errors)
-        probs_val = np.nan_to_num(probs_val)
-
-        # Accuracy rate
-        acc_val = accuracy_score(list(p_model_data['val_y']), p_y_val_d)
-        # False Positive Rate, True Positive Rate, Thresholds
-        fpr_val, tpr_val, thresholds_val = roc_curve(list(p_model_data['val_y']),
-                                                             probs_val[:, 1], pos_label=1)
-        # Area Under the Curve (ROC) for train data
-        auc_val = roc_auc_score(list(p_model_data['val_y']), probs_val[:, 1]) + 1e-5
-
-        # Logloss (Binary cross-entropy function)
-        logloss_val = log_loss(p_model_data['val_y'], p_y_val_d) + 1e-5
-
-        if 'train_x' not in data_keys and 'train_y' not in data_keys:
-            cm_train = cm_val
-            probs_train = probs_val
-            acc_train = acc_val
-            fpr_train = fpr_val
-            tpr_train = tpr_val
-            auc_train = auc_val
-            logloss_train = logloss_val
-            p_y_result_train = p_y_result_val
-    
-    else:
-        print('error in sk_model_metrics, keys in p_model_data not valid')
-
-    # -- ----------------------------------------------------------------------------------------------------
-
-    # calculate relevant metrics
-    pro_metrics = {'acc-train': acc_train,
-                   'acc-val': acc_val,
-                   'acc-diff': abs(acc_train - acc_val), 
-                   'acc-mean': (acc_train + acc_val)/2 + 1e-5, 
-                   'acc-weighted': (acc_train*0.80 + acc_val*0.20)/2 + 1e-5, 
-                   'acc-inv-weighted': (acc_train*0.20 + acc_val*0.80)/2 + 1e-5,
-
-                   'auc-train': auc_train,
-                   'auc-val': auc_val,
-                   'auc-diff': abs(auc_train - auc_val), 
-                   'auc-mean': (auc_train + auc_val)/2 + 1e-5,
-                   'auc-weighted': (auc_train*0.80 + auc_val*0.20)/2 + 1e-5,
-                   'auc-inv-weighted': (auc_train*0.20 + auc_val*0.80)/2 + 1e-5,
-
-                   'logloss-train': auc_train,
-                   'logloss-val': auc_val,
-                   'logloss-diff': abs(logloss_train - logloss_val), 
-                   'logloss-mean': (logloss_train + logloss_val)/2 + 1e-5,
-                   'logloss-weighted': (logloss_train*0.80 + logloss_val*0.20)/2 + 1e-5,
-                   'logloss-inv-weighted': (logloss_train*0.20 + logloss_val*0.80)/2 + 1e-5}
-
-    # -- ----------------------------------------------------------------------------------------------------
-
-    # Return all the results for the model
-    r_model_metrics = {'model': p_model, 'pro-metrics': pro_metrics, 
-                       'results': {'data': {'train': p_y_result_train, 'val': p_y_result_val},
-                                   'matrix': {'train': cm_train, 'val': cm_val}},
-                       'metrics': {'train': {'tpr': tpr_train, 'fpr': fpr_train, 'probs': probs_train},
-                                   'val': {'tpr': tpr_val, 'fpr': fpr_val, 'probs': probs_val}}}
-
-    return r_model_metrics
-
 
 # -------------------------- MODEL: Multivariate Linear Regression Model with ELASTIC NET regularization -- #
 # --------------------------------------------------------------------------------------------------------- #
@@ -1105,7 +963,7 @@ def logistic_net(p_data, p_params):
     en_model.fit(p_data['train_x'].copy(), p_data['train_y'].copy())
 
    # performance metrics of the model
-    metrics_en_model = sk_model_metrics(p_model=en_model, p_model_data=p_data.copy())
+    metrics_en_model = model_metrics(p_model=en_model, p_model_data=p_data.copy())
 
     return metrics_en_model
 
@@ -1165,9 +1023,6 @@ def l1_svm(p_data, p_params):
     # shrinking, probability, tol, cache_size, class_weight, verbose, max_iter, decision_function_shape,
     # break_ties, random_state
 
-    print(int(p_params['degree']))
-    print(p_params['kernel'])
-
     # model function
     svm_model = SVC(C=p_params['c'], kernel=p_params['kernel'], gamma=p_params['gamma'],
                     degree=int(p_params['degree']),
@@ -1180,7 +1035,7 @@ def l1_svm(p_data, p_params):
     svm_model.fit(p_data['train_x'].copy(), p_data['train_y'].copy())
 
     # performance metrics of the model
-    metrics_svm_model = sk_model_metrics(p_model=svm_model, p_model_data=p_data.copy())
+    metrics_svm_model = model_metrics(p_model=svm_model, p_model_data=p_data.copy())
 
     return metrics_svm_model
 
@@ -1325,8 +1180,8 @@ def ann_mlp(p_data, p_params):
                        for i in ['loss', 'accuracy', 'kullback_leibler_divergence']}
 
     # output of the function is sent to the model metrics calculations for tensorflow
-    metrics_mlp_model = tf_model_metrics(p_model=keras_class, p_model_data=p_data.copy(),
-                                         p_history=metrics_history)
+    metrics_mlp_model = model_metrics(p_model=keras_class, p_model_data=p_data.copy(),
+                                         p_history=metrics_history, p_tf=True)
 
     return metrics_mlp_model
 
@@ -2076,16 +1931,16 @@ def global_evaluation(p_global_data, p_case, p_features, p_trans_function, p_tra
         if p_model == 'logistic-elasticnet':
             parameters = {'ratio': individual_params[0], 'c': individual_params[1]}
             global_results.append({'global_data': global_data, 'global_parameters': parameters,
-                                   'model': sk_model_metrics(p_model=individual_model['model'],
-                                                             p_model_data=global_data)})
+                                   'model': model_metrics(p_model=individual_model['model'],
+                                                          p_model_data=global_data)})
 
         elif p_model == 'l1-svm':
             parameters = {'c': individual_params[0], 'kernel': individual_params[1],
                           'gamma': individual_params[2], 'degree': individual_params[3]}
 
             global_results.append({'global_data': global_data, 'global_parameters': parameters,
-                                   'model': sk_model_metrics(p_model=individual_model['model'], 
-                                                             p_model_data=global_data)})
+                                   'model': model_metrics(p_model=individual_model['model'], 
+                                                          p_model_data=global_data)})
 
         elif p_model == 'ann-mlp':
             parameters = {'hidden_layers': individual_params[0], 'hidden_neurons': individual_params[1],
@@ -2096,9 +1951,9 @@ def global_evaluation(p_global_data, p_case, p_features, p_trans_function, p_tra
             tf_model = tf.keras.models.model_from_json(individual_model['model'])
 
             global_results.append({'global_data': global_data, 'global_parameters': parameters,
-                                   'model': tf_model_metrics(p_model=tf_model, 
-                                                             p_model_data=global_data,
-                                                             p_history=tf_history)})
+                                   'model': model_metrics(p_model=tf_model, 
+                                                          p_model_data=global_data,
+                                                          p_history=tf_history, p_tf=True)})
 
         else: 
             print('error in model selection during (global_evaluation)')

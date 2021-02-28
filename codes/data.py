@@ -29,11 +29,11 @@ from os.path import isfile, join
 iter_fold = ['semester']
 
 # experiment parameters
-iter_opt = {'embargo': ['fix'],
-            'inner-split': ['20'],
-            'trans_function': ['robust'],
-            'trans_order': ['post-features'],
-            'fitness': ['logloss-inv-weighted']}
+iter_opt = {'embargo': ['fix', 'memory'],
+            'inner-split': ['20', '0'],
+            'trans_function': ['scale', 'robust'],
+            'trans_order': ['pre-features', 'post-features'],
+            'fitness': ['logloss-train', 'logloss-inv-weighted']}
 
 # -- Long Version (Complete list)
 
@@ -217,10 +217,10 @@ for file_f in files_f:
         price_data[file_nom + year_f] = data_f
 
 # One period
-ohlc_data = pd.concat([price_data[list(price_data.keys())[0]]])
+# ohlc_data = pd.concat([price_data[list(price_data.keys())[0]]])
 
 # Two periods
-# ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]]])
+ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]]])
 
 # Six periods
 # ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],

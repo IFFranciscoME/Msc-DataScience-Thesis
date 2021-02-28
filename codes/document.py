@@ -49,8 +49,8 @@ fold_case = 'semester'
 folds = fn.t_folds(p_data=data, p_period=fold_case)
 
 # List with the names of the models
-ml_models = list(dt.models.keys())
-# ml_models = ['logistic-elasticnet']
+# ml_models = list(dt.models.keys())
+ml_models = ['ann-mlp']
 
 # File name to save the data
 file_name = 'files/pickle_rick/s_logloss-inv-weighted_robust_post-features_20.dat'
@@ -129,7 +129,7 @@ tgv_corr_train = pd.concat([memory_palace[period]['features']['train_y'],
 # -- ------------------------------------------------------------------------------- ------------------- -- #
 
 # metric type (all the available in iter_opt['fitness'])
-metric_case = 'acc-train'
+metric_case = 'acc-inv-weighted'
 
 # models to explore results
 model_case = 'ann-mlp'
@@ -177,7 +177,7 @@ sym_fitness = sym_data['best_programs']['fitness']
 # -- ----------------------------------------------------------------------------- --------------------- -- #
 
 # Pick case
-case = 'met_max'
+case = 'met_min'
 
 # Pick model to generate the plot
 model_case = 'ann-mlp'
@@ -189,15 +189,15 @@ plot_title = 'inFold ' + case + ' for: ' + model_case + ' ' + met_cases[model_ca
 dt.theme_plot_3['p_labels']['title'] = plot_title
 
 # Get data from met_cases
-val_y = met_cases[model_case][case]['data']['results']['data']['val']
+train_y = met_cases[model_case][case]['data']['results']['data']['train']
 
 # Get data for prices and predictions
 ohlc_prices = folds[met_cases[model_case][case]['period']]
 
-ohlc_class = {'val_y': val_y['val_y'], 'val_y_pred': val_y['val_pred_y']}
+ohlc_class = {'train_y': train_y['train_y'], 'train_y_pred': train_y['train_pred_y']}
 
 # Dates for vertical lines in the T-Folds plot
-date_vlines = [ohlc_class['val_y'].index[-1]]
+date_vlines = [ohlc_class['train_y'].index[-1]]
 
 # Make plot
 plot_3 = vs.g_ohlc_class(p_ohlc=ohlc_prices, p_theme=dt.theme_plot_3, p_data_class=ohlc_class, 
@@ -216,10 +216,10 @@ plot_3 = vs.g_ohlc_class(p_ohlc=ohlc_prices, p_theme=dt.theme_plot_3, p_data_cla
 case = 'met_max'
 
 # data subset to use
-subset = 'train'
+subset = 'val'
 
 # metric to use
-metric_case = 'acc-train'
+metric_case = 'acc-val'
 
 # Model to evaluate
 model_case = 'ann-mlp'
