@@ -24,7 +24,7 @@ from os.path import isfile, join
 # ---------------------------------------------------------------------------------- ------------------- -- #
 
 # Short Version for Testing
-iter_fold = ['semester']
+iter_fold = ['quarter']
 iter_opt = {'embargo': ['fix'],
             'inner-split': ['20'],
             'trans_function': ['robust'],
@@ -58,12 +58,12 @@ features_params = {'lags_diffs': 15}
 
 # paremeters for symbolic features generation process
 symbolic_params = {'functions': ['sub', 'add', 'inv', 'mul', 'div', 'abs', 'log', 'sqrt'],
-                   'population': 2000, 'tournament': 20, 'hof': 20, 'generations': 10, 'n_features': 15,
-                   'init_depth': (6, 22), 'init_method': 'half and half', 'parsimony': 0.05,
+                   'population': 5000, 'tournament': 50, 'hof': 30, 'generations': 10, 'n_features': 20,
+                   'init_depth': (6, 22), 'init_method': 'half and half', 'parsimony': 0.01,
                    'constants': None,
                    'metric': 'pearson', 'metric_goal': 0.70, 
-                   'prob_cross': 0.5, 'prob_mutation_subtree': 0.3,
-                   'prob_mutation_hoist': 0.1, 'prob_mutation_point': 0.1,
+                   'prob_cross': 0.5, 'prob_mutation_subtree': 0.4,
+                   'prob_mutation_hoist': 0.05, 'prob_mutation_point': 0.05,
                    'verbose': True, 'parallelization': True, 'warm_start': True}
 
 # ----------------------------------------------------------------------- Hyperparameters for the Models -- #
@@ -248,11 +248,11 @@ for file_f in files_f:
         price_data[file_nom + year_f] = data_f
 
 # One period data concatenation (Fast run of main.py)
-# ohlc_data = pd.concat([price_data[list(price_data.keys())[0]]])
+ohlc_data = pd.concat([price_data[list(price_data.keys())[0]]])
 
-ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
-                       price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
-                       price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]]])
+# ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
+                       # price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
+                       # price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]]])
 
 # All periods data concatenation (Slow run of main.py)
 # ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],

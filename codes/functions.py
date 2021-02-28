@@ -356,50 +356,41 @@ def autoregressive_features(p_data, p_nmax):
 
     """
 
-    # reasignar datos
+    # work with a copy
     data = p_data.copy()
 
     # pips descontados al cierre
     data['co'] = (data['close'] - data['open']) * 10000
-
     # pips descontados alcistas
     data['ho'] = (data['high'] - data['open']) * 10000
-
     # pips descontados bajistas
     data['ol'] = (data['open'] - data['low']) * 10000
-
     # pips descontados en total (medida de volatilidad)
     data['hl'] = (data['high'] - data['low']) * 10000
-
-    # clase a predecir
+    # Target variable
     data['co_d'] = [1 if i > 0 else 0 for i in list(data['co'])]
+
+    # exponential moving average of open-high 
+    data['ewma_vol'] = data['volume'].ewm(alpha=0.4).mean()
+    # exponential moving average of
+    data['ewma_ol'] = data['ol'].ewm(alpha=0.4).mean()
+    # exponential moving average of
+    data['ewma_ho'] = data['ho'].ewm(alpha=0.4).mean()
+    # exponential moving average of
+    data['ewma_hl'] = data['hl'].ewm(alpha=0.4).mean()
 
     # ciclo para calcular N features con logica de "Ventanas de tamaño n"
     for n in range(0, p_nmax):
-
         # rezago n de Open Interest
         data['lag_vol_' + str(n + 1)] = data['volume'].shift(n + 1)
-
         # rezago n de Open - Low
         data['lag_ol_' + str(n + 1)] = data['ol'].shift(n + 1)
-
         # rezago n de High - Open
         data['lag_ho_' + str(n + 1)] = data['ho'].shift(n + 1)
-
         # rezago n de High - Low
         data['lag_hl_' + str(n + 1)] = data['hl'].shift(n + 1)
-
         # promedio movil de open-high de ventana n
-        data['ma_vol_' + str(n + 1)] = data['volume'].rolling(n + 1).mean()
-
-        # promedio movil de open-high de ventana n
-        data['ma_ol_' + str(n + 1)] = data['ol'].rolling(n + 1).mean()
-
-        # promedio movil de ventana n
-        data['ma_ho_' + str(n + 1)] = data['ho'].rolling(n + 1).mean()
-
-        # promedio movil de ventana n
-        data['ma_hl_' + str(n + 1)] = data['hl'].rolling(n + 1).mean()
+        data['sum_vol_' + str(n + 1)] = data['volume'].rolling(n + 1).sum()
 
     # asignar timestamp como index
     data.index = pd.to_datetime(data.index)
@@ -411,8 +402,6 @@ def autoregressive_features(p_data, p_nmax):
     r_features = r_features.dropna(axis='rows')
     # convertir a numeros tipo float las columnas
     r_features.iloc[:, 2:] = r_features.iloc[:, 2:].astype(float)
-    # reformatear columna de variable binaria a 0 y 1
-    r_features['co_d'] = [0 if i <= 0 else 1 for i in r_features['co_d']]
     # resetear index
     r_features.reset_index(inplace=True, drop=True)
 
@@ -450,6 +439,12 @@ def linear_features(p_data, p_memory):
 
     # funcion para generar variables autoregresivas
     data_ar = autoregressive_features(p_data=data, p_nmax=p_memory)
+
+    # y_t = y_t+1 in order to prevent filtration, that is, at time t, the target variable y_t
+    # with the label {co_d}_t will be representing the direction of the price movement (0: down, 1: high) 
+    # that was observed at time t+1, and so on applies to t [0, n-1]. the last value is droped
+    data_ar['co_d'] = data_ar['co_d'].shift(-1, fill_value=999)
+    data_ar = data_ar.drop(data_ar['co_d'].index[[-1]])
 
     # separacion de variable dependiente
     data_y = data_ar['co_d'].copy()

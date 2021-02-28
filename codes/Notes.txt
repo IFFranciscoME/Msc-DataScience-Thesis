@@ -243,12 +243,14 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 - Addition: Implement embargo criteria for t-fold variation
 
 # -- 27.02.2021
+- Modification: Erase hada
 - Testing: Data - t_folds, folds_embargo, data_profile, data_scaler
 - Testing: Features Engineering - linear_features, genetic_programed_features
 - Testing: Models - logistic-elasticnet, l1-svm, ann-mlp
 - Testing: Optimization - genetic_algo_optimization
 - Testing: Evaluation - model_evaluation, global_evaluation
 - Testing: Results - model_cases
+
 
 # ---------------------------------------------------------------------------------------------- BACKLOG -- # 
 # ---------------------------------------------------------------------------------------------- ------- -- #

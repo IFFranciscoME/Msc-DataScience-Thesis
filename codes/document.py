@@ -43,17 +43,17 @@ plot_1 =vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_1, p_vlines=None)
 # ------------------------------------------------------------------------------------ ----------------- -- #
 
 # Fold size
-fold_case = 'semester'
+fold_case = 'quarter'
 
 # Timeseries data division in t-folds
 folds = fn.t_folds(p_data=data, p_period=fold_case)
 
 # List with the names of the models
 # ml_models = list(dt.models.keys())
-ml_models = ['ann-mlp']
+ml_models = ['logistic-elasticnet']
 
 # File name to save the data
-file_name = 'files/pickle_rick/respaldo_2702/s_logloss-inv-weighted_robust_post-features_20.dat'
+file_name = 'files/pickle_rick/respaldo_2702/q_logloss-inv-weighted_robust_post-features_20.dat'
 
 # Load previously generated data
 memory_palace = dt.data_pickle(p_data_objects=None, p_data_action='load', p_data_file=file_name)
@@ -129,10 +129,10 @@ tgv_corr_train = pd.concat([memory_palace[period]['features']['train_y'],
 # -- ------------------------------------------------------------------------------- ------------------- -- #
 
 # metric type (all the available in iter_opt['fitness'])
-metric_case = 'acc-inv-weighted'
+metric_case = 'acc-train'
 
 # models to explore results
-model_case = 'ann-mlp'
+model_case = 'logistic-elasticnet'
 
 # -- Min, max and mode cases
 met_cases = fn.model_cases(p_models=ml_models, p_global_cases=memory_palace, p_data_folds=folds,
