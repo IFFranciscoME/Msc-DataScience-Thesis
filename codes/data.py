@@ -26,7 +26,7 @@ from os.path import isfile, join
 # -- Short Version for Testing
 
 # fold size
-iter_fold = ['semester']
+iter_fold = ['quarter', 'semester']
 
 # experiment parameters
 iter_opt = {'embargo': ['fix', 'memory'],
@@ -60,11 +60,11 @@ iter_exp = list(itertools.product(*[iter_opt['embargo'], iter_opt['inner-split']
 # --------------------------------------------------------------------- -------------------------------- -- #
 
 # parameters for features formation
-features_params = {'lags_diffs': 5}
+features_params = {'lags_diffs': 15}
 
 # paremeters for symbolic features generation process
 symbolic_params = {'functions': ['sub', 'add', 'inv', 'mul', 'div', 'abs', 'log', 'sqrt'],
-                   'population': 1000, 'tournament': 20, 'hof': 20, 'generations': 4, 'n_features': 15,
+                   'population': 2000, 'tournament': 20, 'hof': 20, 'generations': 9, 'n_features': 15,
                    'init_depth': (6, 18), 'init_method': 'half and half', 'parsimony': 0.05,
                    'constants': None,
                    'metric': 'pearson', 'metric_goal': 0.70, 
@@ -75,7 +75,7 @@ symbolic_params = {'functions': ['sub', 'add', 'inv', 'mul', 'div', 'abs', 'log'
 # ------------------------------------------------------------------ Parameters for Genetic Optimization -- #
 # ------------------------------------------------------------------ ----------------------------------- -- #
 
-optimization_params = {'halloffame': 10, 'tournament': 15, 'population': 20, 'generations': 1,
+optimization_params = {'halloffame': 10, 'tournament': 15, 'population': 50, 'generations': 9,
                        'mutation': 0.7, 'crossover': 0.7}
 
 # ----------------------------------------------------------------------- Hyperparameters for the Models -- #
@@ -220,12 +220,12 @@ for file_f in files_f:
 # ohlc_data = pd.concat([price_data[list(price_data.keys())[0]]])
 
 # Two periods
-ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]]])
+# ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]]])
 
 # Six periods
-# ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
-                       # price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
-                       # price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]]])
+ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
+                       price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
+                       price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]]])
 
 # All periods
 # ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],

@@ -116,26 +116,27 @@ def data_scaler(p_data, p_trans):
 
     # hardcopy of the data
     data = p_data.copy()
-    
     # list with columns to transform
     lista = data[list(data.columns)]
-
+    # choose to scale from 1 in case timestamp is present
+    scale_ind = 1 if 'timestamp' in list(data.columns) else 0
+    
     if p_trans == 'standard':
         
         # removes the mean and scales the data to unit variance
-        data[list(data.columns)] = StandardScaler().fit_transform(lista)
+        data[list(data.columns[scale_ind:])] = StandardScaler().fit_transform(lista.iloc[:, scale_ind:])
         return data
 
     elif p_trans == 'robust':
 
-        # armar objeto de salida
-        data[list(data.columns)] = RobustScaler().fit_transform(lista)
+        # removes the meadian and scales the data to inter-quantile range
+        data[list(data.columns[scale_ind:])] = RobustScaler().fit_transform(lista.iloc[:, scale_ind:])
         return data
 
     elif p_trans == 'scale':
 
-        # armar objeto de salida
-        data[list(data.columns)] = MaxAbsScaler().fit_transform(lista)
+        # scales to max value
+        data[list(data.columns[scale_ind:])] = MaxAbsScaler().fit_transform(lista.iloc[:, scale_ind:])
         return data
     
     else:
@@ -282,9 +283,9 @@ def folds_embargo(p_folds, p_mode, p_memory):
         elif p_mode == 'memory':
             pacf_values = []
             # autocorrelation and partial autocorrelation functions for every price column
-            for column in embargo_data[['open', 'high', 'low', 'close', 'volume']]:
-                data_pacf = sm.tsa.pacf(embargo_data[column].diff()[1:])
-                data_acf = sm.tsa.acf(embargo_data[column].diff()[1:])
+            for column in embargo_data[period][['open', 'high', 'low', 'close', 'volume']]:
+                data_pacf = sm.tsa.pacf(embargo_data[period][column].diff()[1:])
+                data_acf = sm.tsa.acf(embargo_data[period][column].diff()[1:])
                 pacf_values.append(np.amax(data_acf))
                 pacf_values.append(np.amax(data_pacf))
 
@@ -887,8 +888,10 @@ def model_metrics(p_model, p_model_data, p_history=None, p_tf=False):
     # if tensorflow model, execute an extra step to extract info to serialize it
     if p_tf:
         log_model = p_model.model.to_json()
+        log_history = {i: p_history[i] for i in list(p_history.keys())}
     else: 
         log_model = p_model
+        log_history = None
 
     # Return all the results for the model
     r_model_metrics = {'model': log_model, 'pro-metrics': pro_metrics, 
@@ -896,7 +899,7 @@ def model_metrics(p_model, p_model_data, p_history=None, p_tf=False):
                                    'matrix': {'train': cm_train, 'val': cm_val}},
                        'metrics': {'train': {'tpr': tpr_train, 'fpr': fpr_train, 'probs': probs_train},
                                    'val': {'tpr': tpr_val, 'fpr': fpr_val, 'probs': probs_val},
-                                   'history': {i: p_history[i] for i in list(p_history.keys())}}}
+                                   'history': log_history}}
 
     return r_model_metrics
 
@@ -1730,7 +1733,7 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
         # OPTION 1: Scaling original data before feature engineering
         if p_trans_order == 'pre-features':
             
-            # Original data
+            # Original data to scale without the timestamp column
             data_folds = data_scaler(p_data=p_data_folds[period], p_trans=p_trans_function)
         
             # Feature engineering (Autoregressive)
