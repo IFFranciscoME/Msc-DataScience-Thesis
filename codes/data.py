@@ -23,28 +23,34 @@ from os.path import isfile, join
 # ---------------------------------------------------------------------------------- PARALLEL EXPERIMENT -- #
 # ---------------------------------------------------------------------------------- ------------------- -- #
 
-# Short Version for Testing
-iter_fold = ['quarter']
+# -- Short Version for Testing
+
+# fold size
+iter_fold = ['semester']
+
+# experiment parameters
 iter_opt = {'embargo': ['fix'],
             'inner-split': ['20'],
             'trans_function': ['robust'],
             'trans_order': ['post-features'],
             'fitness': ['logloss-inv-weighted']}
 
-# ---------------------------------------------------------------- Complete list of available parameters -- #
+# -- Long Version (Complete list)
 
+# fold size
 # iter_fold = ['quarter', 'semester', 'year', 'bi-year', '80-20']
 
+# experiment parameters
 # iter_opt = {'embargo': ['fix', 'memory', 'False'],
-#             'inner-split': ['30', '10', '0'],
-#             'transform': ['scale', 'normalize', 'robust'],
-#             'scaling': ['post-features', 'pre-features'],
-#             'fitness': ['auc-train', 'auc-val', 'auc-diff',
-#                         'auc-mean', 'auc-weighted', 'auc-inv-weighted',
-#                         'acc-train', 'acc-val', 'acc-diff',
-#                         'acc-mean', 'acc-weighted', 'acc-inv-weighted',
-#                         'logloss-train', 'logloss-val', 'logloss-diff',
-#                         'logloss-mean', 'logloss-weighted', 'logloss-inv-weighted']}
+            # 'inner-split': ['30', '10', '0'],
+            # 'transform': ['scale', 'normalize', 'robust'],
+            # 'scaling': ['post-features', 'pre-features'],
+            # 'fitness': ['auc-train', 'auc-val', 'auc-diff',
+                        # 'auc-mean', 'auc-weighted', 'auc-inv-weighted',
+                        #  'acc-train', 'acc-val', 'acc-diff',
+                        #  'acc-mean', 'acc-weighted', 'acc-inv-weighted',
+                        #  'logloss-train', 'logloss-val', 'logloss-diff',
+                        #  'logloss-mean', 'logloss-weighted', 'logloss-inv-weighted']}
 
 # Iterative/Parallel Experiment Data
 iter_exp = list(itertools.product(*[iter_opt['embargo'], iter_opt['inner-split'], iter_opt['trans_function'],
@@ -54,22 +60,27 @@ iter_exp = list(itertools.product(*[iter_opt['embargo'], iter_opt['inner-split']
 # --------------------------------------------------------------------- -------------------------------- -- #
 
 # parameters for features formation
-features_params = {'lags_diffs': 15}
+features_params = {'lags_diffs': 5}
 
 # paremeters for symbolic features generation process
 symbolic_params = {'functions': ['sub', 'add', 'inv', 'mul', 'div', 'abs', 'log', 'sqrt'],
-                   'population': 5000, 'tournament': 50, 'hof': 30, 'generations': 10, 'n_features': 20,
-                   'init_depth': (6, 22), 'init_method': 'half and half', 'parsimony': 0.01,
+                   'population': 1000, 'tournament': 20, 'hof': 20, 'generations': 4, 'n_features': 15,
+                   'init_depth': (6, 18), 'init_method': 'half and half', 'parsimony': 0.05,
                    'constants': None,
                    'metric': 'pearson', 'metric_goal': 0.70, 
-                   'prob_cross': 0.5, 'prob_mutation_subtree': 0.4,
-                   'prob_mutation_hoist': 0.05, 'prob_mutation_point': 0.05,
+                   'prob_cross': 0.4, 'prob_mutation_subtree': 0.4,
+                   'prob_mutation_hoist': 0.1, 'prob_mutation_point': 0.1,
                    'verbose': True, 'parallelization': True, 'warm_start': True}
+
+# ------------------------------------------------------------------ Parameters for Genetic Optimization -- #
+# ------------------------------------------------------------------ ----------------------------------- -- #
+
+optimization_params = {'halloffame': 10, 'tournament': 15, 'population': 20, 'generations': 1,
+                       'mutation': 0.7, 'crossover': 0.7}
 
 # ----------------------------------------------------------------------- Hyperparameters for the Models -- #
 # ----------------------------------------------------------------------- ------------------------------ -- #
 
-# data dictionary for models and their respective hyperparameter value candidates
 models = {
 
     'logistic-elasticnet': {
@@ -87,17 +98,20 @@ models = {
         'params': {'c': [1.5, 1.1, 1, 0.8, 0.5, 1.5, 1.1, 1, 0.8, 0.5,
                          1.5, 1.1, 1, 0.8, 0.5, 1.5, 1.1, 1, 0.8, 0.5],
 
-                   'kernel': ['linear', 'linear', 'linear', 'linear', 'linear',
-                              'linear', 'linear', 'linear', 'linear', 'linear',
+                   'kernel': ['poly', 'linear', 'linear', 'linear', 'poly',
+                              'poly', 'linear', 'linear', 'linear', 'poly',
 
-                              'rbf', 'rbf', 'rbf', 'rbf', 'rbf',
-                              'rbf', 'rbf', 'rbf', 'rbf', 'rbf'],
+                              'poly', 'rbf', 'rbf', 'rbf', 'poly',
+                              'poly', 'rbf', 'rbf', 'rbf', 'poly'],
 
                    'gamma': ['scale', 'scale', 'scale', 'scale', 'scale',
                              'auto', 'auto', 'auto', 'auto', 'auto',
 
                              'scale', 'scale', 'scale', 'scale', 'scale',
-                             'auto', 'auto', 'auto', 'auto', 'auto']}},
+                             'auto', 'auto', 'auto', 'auto', 'auto'],
+                             
+                   'degree': [2, 2, 2, 2, 2, 4, 4, 4, 4, 4,
+                              6, 6, 6, 6, 6, 9, 9, 9, 9, 9] }},
 
     'ann-mlp': {
         'label': 'ann-mlp',
@@ -127,51 +141,6 @@ models = {
 
                    'momentum': [0.4, 0.2, 0.1, 0.07, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001,
                                 0.4, 0.2, 0.1, 0.07, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001]}}}
-
-# ------------------------------------------------------------------ Parameters for Genetic Optimization -- #
-# ------------------------------------------------------------------ ----------------------------------- -- #
-
-optimization_params = {'halloffame': 10, 'tournament': 15, 'population': 20, 'generations': 10,
-                       'mutation': 0.7, 'crossover': 0.7}
-
-# ------------------------------------------------------------------------------------- Themes for plots -- #
-# ------------------------------------------------------------------------------------- ---------------- -- #
-
-# Plot_1 : Original Historical OHLC prices
-theme_plot_1 = dict(p_colors={'color_1': '#6b6b6b', 'color_2': '#ABABAB', 'color_3': '#ABABAB'},
-                    p_fonts={'font_title': 18, 'font_axis': 10, 'font_ticks': 10},
-                    p_dims={'width': 900, 'height': 400},
-                    p_labels={'title': 'Precios OHLC',
-                              'x_title': 'Dates', 'y_title': 'Continuous Future Prices USD/MXN'})
-
-# Plot_2 : Timeseries T-Folds blocks without filtration
-theme_plot_2 = dict(p_colors={'color_1': '#6b6b6b', 'color_2': '#ABABAB', 'color_3': '#ABABAB'},
-                    p_fonts={'font_title': 18, 'font_axis': 10, 'font_ticks': 10},
-                    p_dims={'width': 900, 'height': 500},
-                    p_labels={'title': 'T-Folds por Bloques Sin Filtraciones',
-                              'x_title': 'Fechas', 'y_title': 'Continuous Future Prices USD/MXN'})
-
-# Plot_3 Observed Class vs Predicted Class
-theme_plot_3 = dict(p_colors={'color_1': '#6b6b6b', 'color_2': '#ABABAB', 'color_3': '#ABABAB'},
-                    p_fonts={'font_title': 18, 'font_axis': 10, 'font_ticks': 10},
-                    p_dims={'width': 900, 'height': 500},
-                    p_labels={'title': 'Clasifications',
-                              'x_title': 'Dates', 'y_title': 'Continuous Future Price USD/MXN'})
-
-# Plot_4 ROC of models
-theme_plot_4 = dict(p_colors={'color_1': '#6b6b6b', 'color_2': '#ABABAB', 'color_3': '#ABABAB'},
-                    p_fonts={'font_title': 18, 'font_axis': 10, 'font_ticks': 10},
-                    p_dims={'width': 900, 'height': 500},
-                    p_labels={'title': 'ROC',
-                              'x_title': 'FPR', 'y_title': 'TPR'})
-
-# Plot_5 AUC Timeseries of models
-theme_plot_5 = dict(p_colors={'color_1': '#6b6b6b', 'color_2': '#ABABAB', 'color_3': '#ABABAB'},
-                    p_fonts={'font_title': 18, 'font_axis': 10, 'font_ticks': 10},
-                    p_dims={'width': 900, 'height': 500},
-                    p_labels={'title': 'AUC por periodo (val Data)',
-                              'x_title': 'Periodos', 'y_title': 'AUC'})
-
 
 # -------------------------------------------------------------------- Historical Minute Prices Grouping -- #
 # -------------------------------------------------------------------- --------------------------------- -- #
@@ -247,21 +216,27 @@ for file_f in files_f:
     for year_f in years_f:
         price_data[file_nom + year_f] = data_f
 
-# One period data concatenation (Fast run of main.py)
+# One period
 ohlc_data = pd.concat([price_data[list(price_data.keys())[0]]])
 
+# Two periods
+# ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]]])
+
+# Six periods
 # ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
                        # price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
                        # price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]]])
 
-# All periods data concatenation (Slow run of main.py)
+# All periods
 # ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
-#                        price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
-#                        price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]],
-#                        price_data[list(price_data.keys())[6]], price_data[list(price_data.keys())[7]],
-#                        price_data[list(price_data.keys())[8]], price_data[list(price_data.keys())[9]],
-#                        price_data[list(price_data.keys())[10]], price_data[list(price_data.keys())[11]],
-#                        price_data[list(price_data.keys())[12]]])
+                       # price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
+                       # price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]],
+                       # price_data[list(price_data.keys())[6]], price_data[list(price_data.keys())[7]],
+                       # price_data[list(price_data.keys())[8]], price_data[list(price_data.keys())[9]],
+                       # price_data[list(price_data.keys())[10]], price_data[list(price_data.keys())[11]]])
+
+# Test data
+# test_data = pd.concat([price_data[list(price_data.keys())[12]]])
 
 # ------------------------------------------------------------------------ SAVE/LOAD DATA: PICKLE FORMAT -- #
 # ----------------------------------------------------------------------------- ------------------------ -- #
@@ -302,3 +277,41 @@ def data_pickle(p_data_objects, p_data_action, p_data_file):
 
         # return loaded data
         return loaded_data
+
+# ------------------------------------------------------------------------------------- Themes for plots -- #
+# ------------------------------------------------------------------------------------- ---------------- -- #
+
+# Plot_1 : Original Historical OHLC prices
+theme_plot_1 = dict(p_colors={'color_1': '#6b6b6b', 'color_2': '#ABABAB', 'color_3': '#ABABAB'},
+                    p_fonts={'font_title': 18, 'font_axis': 10, 'font_ticks': 10},
+                    p_dims={'width': 900, 'height': 400},
+                    p_labels={'title': 'Precios OHLC',
+                              'x_title': 'Dates', 'y_title': 'Continuous Future Prices USD/MXN'})
+
+# Plot_2 : Timeseries T-Folds blocks without filtration
+theme_plot_2 = dict(p_colors={'color_1': '#6b6b6b', 'color_2': '#ABABAB', 'color_3': '#ABABAB'},
+                    p_fonts={'font_title': 18, 'font_axis': 10, 'font_ticks': 10},
+                    p_dims={'width': 900, 'height': 500},
+                    p_labels={'title': 'T-Folds por Bloques Sin Filtraciones',
+                              'x_title': 'Fechas', 'y_title': 'Continuous Future Prices USD/MXN'})
+
+# Plot_3 Observed Class vs Predicted Class
+theme_plot_3 = dict(p_colors={'color_1': '#6b6b6b', 'color_2': '#ABABAB', 'color_3': '#ABABAB'},
+                    p_fonts={'font_title': 18, 'font_axis': 10, 'font_ticks': 10},
+                    p_dims={'width': 900, 'height': 500},
+                    p_labels={'title': 'Clasifications',
+                              'x_title': 'Dates', 'y_title': 'Continuous Future Price USD/MXN'})
+
+# Plot_4 ROC of models
+theme_plot_4 = dict(p_colors={'color_1': '#6b6b6b', 'color_2': '#ABABAB', 'color_3': '#ABABAB'},
+                    p_fonts={'font_title': 18, 'font_axis': 10, 'font_ticks': 10},
+                    p_dims={'width': 900, 'height': 500},
+                    p_labels={'title': 'ROC',
+                              'x_title': 'FPR', 'y_title': 'TPR'})
+
+# Plot_5 AUC Timeseries of models
+theme_plot_5 = dict(p_colors={'color_1': '#6b6b6b', 'color_2': '#ABABAB', 'color_3': '#ABABAB'},
+                    p_fonts={'font_title': 18, 'font_axis': 10, 'font_ticks': 10},
+                    p_dims={'width': 900, 'height': 500},
+                    p_labels={'title': 'AUC por periodo (val Data)',
+                              'x_title': 'Periodos', 'y_title': 'AUC'})

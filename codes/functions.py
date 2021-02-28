@@ -122,7 +122,7 @@ def data_scaler(p_data, p_trans):
 
     if p_trans == 'standard':
         
-        # armar objeto de salida
+        # removes the mean and scales the data to unit variance
         data[list(data.columns[1:])] = StandardScaler().fit_transform(lista)
         return data
 
@@ -140,6 +140,104 @@ def data_scaler(p_data, p_trans):
     
     else:
         print('error, p_trans not valid')
+
+
+# --------------------------------------------------------- EXPLORATORY DATA ANALYSIS & FEATURES METRICS -- #
+# --------------------------------------------------------- ----------------------------------------------- #
+
+def data_profile(p_data, p_type, p_mult):
+    """
+    OHLC Prices Profiling (Inspired in the pandas-profiling existing library)
+
+    Parameters
+    ----------
+
+    p_data: pd.DataFrame
+        A data frame with columns of data to be processed
+
+    p_type: str
+        indication of the data type: 
+            'ohlc': dataframe with TimeStamp-Open-High-Low-Close columns names
+            'ts': dataframe with unknown quantity, meaning and name of the columns
+    
+    p_mult: int
+        multiplier to re-express calculation with prices,
+        from 100 to 10000 in forex, units multiplication in cryptos, 1 for fiat money based assets
+        p_mult = 10000
+
+    Return
+    ------
+    r_data_profile: dict
+        {}
+    
+    References
+    ----------
+    https://github.com/pandas-profiling/pandas-profiling
+
+
+    """
+
+    # copy of input data
+    f_data = p_data.copy()
+
+    # interquantile range
+    def f_iqr(param_data):
+        q1 = np.percentile(param_data, 75, interpolation = 'midpoint')
+        q3 = np.percentile(param_data, 25, interpolation = 'midpoint')
+        return  q1 - q3
+    
+    # outliers function (returns how many were detected, not which ones or indexes)
+    def f_out(param_data):
+        q1 = np.percentile(param_data, 75, interpolation = 'midpoint')
+        q3 = np.percentile(param_data, 25, interpolation = 'midpoint')
+        lower_out = len(np.where(param_data < q1 - 1.5*f_iqr(param_data))[0])
+        upper_out = len(np.where(param_data > q3 + 1.5*f_iqr(param_data))[0])
+        return [lower_out, upper_out]
+
+    # in the case of a binary target variable just print the ocurrences of each value (for imbalace)
+    if p_type == 'target':
+        return p_data.value_counts()
+
+    # -- OHLCV PROFILING -- #
+    elif p_type == 'ohlc':
+
+        # initial data
+        ohlc_data = p_data[['open', 'high', 'low', 'close', 'volume']].copy()
+
+        # data calculations
+        ohlc_data['co'] = round((ohlc_data['close'] - ohlc_data['open'])*p_mult, 2)
+        ohlc_data['hl'] = round((ohlc_data['high'] - ohlc_data['low'])*p_mult, 2)
+        ohlc_data['ol'] = round((ohlc_data['open'] - ohlc_data['low'])*p_mult, 2)
+        ohlc_data['ho'] = round((ohlc_data['high'] - ohlc_data['open'])*p_mult, 2)
+
+        # original data + co, hl, ol, ho columns
+        f_data = ohlc_data.copy()
+        
+    # basic data description
+    data_des = f_data.describe(percentiles=[0.25, 0.50, 0.75, 0.90])
+
+    # add skewness metric
+    skews = pd.DataFrame(m_skew(f_data)).T
+    skews.columns = list(f_data.columns)
+    data_des = data_des.append(skews, ignore_index=False)
+
+    # add kurtosis metric
+    kurts = pd.DataFrame(m_kurtosis(f_data)).T
+    kurts.columns = list(f_data.columns)
+    data_des = data_des.append(kurts, ignore_index=False)
+    
+    # add outliers count
+    outliers = [f_out(param_data=f_data[col]) for col in list(f_data.columns)]
+    negative_series = pd.Series([i[0] for i in outliers], index = data_des.columns)
+    positive_series = pd.Series([i[1] for i in outliers], index = data_des.columns)
+    data_des = data_des.append(negative_series, ignore_index=True)
+    data_des = data_des.append(positive_series, ignore_index=True)
+    
+    # index names
+    data_des.index = ['count', 'mean', 'std', 'min', 'q1', 'median', 'q3', 'p90',
+                      'max', 'skew', 'kurt', 'n_out', 'p_out']
+
+    return np.round(data_des, 2)
 
 
 # ------------------------------------------------------------------------ EMBARGO TECHNIQUE FOR T-FOLDS -- #
@@ -167,37 +265,37 @@ def folds_embargo(p_folds, p_mode, p_memory):
 
     embargo_data = p_folds.copy()
 
-    # select keys as periods, all but the first one
+    # select keys as periods, all but the first one (since the first train isnt exposed to leakage of info)
     embargo_periods = list(p_folds.keys())[1:]
-    embargo_data = pd.concat(embargo_data)
-    # embargo_data.reset_index(inplace=True, drop=True)
-    # embargo_data.index = list(embargo_data['timestamp'])
-    # embargo_data = embargo_data[['open', 'high', 'low', 'close', 'volume']].copy()
 
-    # -- check for criteria to calculate quantity of observations to drop
+    # initialize with 0 to prevent errors
+    n_embargo = 0
+
+    # process every fold
     for period in embargo_periods:
-        # period = embargo_periods[0] 
 
-        # memory output
+        # if fixed, then use the value used to create other features (data.py)
         if p_mode == 'fix':
             n_embargo = p_memory
         
-        # autocorrelation function
+        # if memory, use the max of ACF or PACF as representation of the "memory" in the data
         elif p_mode == 'memory':
             pacf_values = []
+            # autocorrelation and partial autocorrelation functions for every price column
             for column in embargo_data[['open', 'high', 'low', 'close', 'volume']]:
                 data_pacf = sm.tsa.pacf(embargo_data[column].diff()[1:])
                 data_acf = sm.tsa.acf(embargo_data[column].diff()[1:])
                 pacf_values.append(np.amax(data_acf))
                 pacf_values.append(np.amax(data_pacf))
 
-            # calculate autocorrelations
+            # find the max value of ACF or PACF 
             n_embargo = np.where(pacf_values == np.amax(pacf_values))[0][0] + 1
             
+        # to store values
         embargo_indexes = {}
+        # drop the corresponding observations in every fold and save the dates for the plots
         for period in embargo_periods:
-            # period = periods[0]
-            embargo_indexes[period] = list(embargo_data['timestamp'][p_folds[period].index[0:n_embargo]])
+            embargo_indexes[period] = list(p_folds[period]['timestamp'][p_folds[period].index[0:n_embargo]])
             p_folds[period] = p_folds[period].drop(p_folds[period].index[0:n_embargo]).copy()
     
     return p_folds, embargo_indexes
@@ -304,7 +402,7 @@ def t_folds(p_data, p_period):
                 b_y_data.update({'b_y_' + str(y):
                                 p_data[(pd.to_datetime(p_data['timestamp']).dt.year == years[y]) |
                                        (pd.to_datetime(p_data['timestamp']).dt.year == years[y+1])]})
-        # odd number of years (pending)
+        # odd number of years
         else:
             # fill years
             for y in np.arange(0, len(years), 2):
@@ -331,7 +429,7 @@ def t_folds(p_data, p_period):
         return y_80_20_data
 
     # In the case a different label has been receieved
-    return 'Error: verify parameters'
+    return 'Error in t_folds: verify p_period parameter'
 
 
 # ------------------------------------------------------------------------------ Autoregressive Features -- #
@@ -629,108 +727,6 @@ def genetic_programed_features(p_data, p_split):
         model_data['train_y'] = datos_y.copy()
 
         return {'model_data': model_data, 'sym_data': sym_data}
-
-
-# --------------------------------------------------------- EXPLORATORY DATA ANALYSIS & FEATURES METRICS -- #
-# --------------------------------------------------------- ----------------------------------------------- #
-
-def data_profile(p_data, p_type, p_mult):
-    """
-    OHLC Prices Profiling (Inspired in the pandas-profiling existing library)
-
-    Parameters
-    ----------
-
-    p_data: pd.DataFrame
-        A data frame with columns of data to be processed
-
-    p_type: str
-        indication of the data type: 
-            'ohlc': dataframe with TimeStamp-Open-High-Low-Close columns names
-            'ts': dataframe with unknown quantity, meaning and name of the columns
-    
-    p_mult: int
-        multiplier to re-express calculation with prices,
-        from 100 to 10000 in forex, units multiplication in cryptos, 1 for fiat money based assets
-        p_mult = 10000
-
-    Return
-    ------
-    r_data_profile: dict
-        {}
-    
-    References
-    ----------
-    https://github.com/pandas-profiling/pandas-profiling
-
-
-    """
-
-    # copy of input data
-    f_data = p_data.copy()
-
-    # interquantile range
-    def f_iqr(param_data):
-        q1 = np.percentile(param_data, 75, interpolation = 'midpoint')
-        q3 = np.percentile(param_data, 25, interpolation = 'midpoint')
-        return  q1 - q3
-    
-    # outliers function
-    def f_out(param_data):
-        q1 = np.percentile(param_data, 75, interpolation = 'midpoint')
-        q3 = np.percentile(param_data, 25, interpolation = 'midpoint')
-        lower_out = len(np.where(param_data < q1 - 1.5*f_iqr(param_data))[0])
-        upper_out = len(np.where(param_data > q3 + 1.5*f_iqr(param_data))[0])
-        return [lower_out, upper_out]
-
-    # in the case of a binary target variable
-    if p_type == 'target':
-        # print(type(p_data))
-        return p_data.value_counts()
-
-    # -- OHLCV PROFILING -- #
-    elif p_type == 'ohlc':
-
-        # -- init and end dates, amount of data, data type, range of values (all values)
-        # -- missing data (granularity vs calendar if data is based on timestamp labeling)
-
-        # initial data
-        ohlc_data = p_data[['open', 'high', 'low', 'close', 'volume']].copy()
-
-        # data calculations
-        ohlc_data['co'] = round((ohlc_data['close'] - ohlc_data['open'])*p_mult, 2)
-        ohlc_data['hl'] = round((ohlc_data['high'] - ohlc_data['low'])*p_mult, 2)
-        ohlc_data['ol'] = round((ohlc_data['open'] - ohlc_data['low'])*p_mult, 2)
-        ohlc_data['ho'] = round((ohlc_data['high'] - ohlc_data['open'])*p_mult, 2)
-
-        # original data + co, hl, ol, ho columns
-        f_data = ohlc_data.copy()
-        
-    # basic data description
-    data_des = f_data.describe(percentiles=[0.25, 0.50, 0.75, 0.90])
-
-    # add skewness metric
-    skews = pd.DataFrame(m_skew(f_data)).T
-    skews.columns = list(f_data.columns)
-    data_des = data_des.append(skews, ignore_index=False)
-
-    # add kurtosis metric
-    kurts = pd.DataFrame(m_kurtosis(f_data)).T
-    kurts.columns = list(f_data.columns)
-    data_des = data_des.append(kurts, ignore_index=False)
-    
-    # add outliers count
-    outliers = [f_out(param_data=f_data[col]) for col in list(f_data.columns)]
-    negative_series = pd.Series([i[0] for i in outliers], index = data_des.columns)
-    positive_series = pd.Series([i[1] for i in outliers], index = data_des.columns)
-    data_des = data_des.append(negative_series, ignore_index=True)
-    data_des = data_des.append(positive_series, ignore_index=True)
-    
-    # index names
-    data_des.index = ['count', 'mean', 'std', 'min', 'q1', 'median', 'q3', 'p90',
-                      'max', 'skew', 'kurt', 'n_out', 'p_out']
-
-    return np.round(data_des, 2)
 
 
 # -- ---------------------------------------------------- DATA PROCESSING: Metrics for Model Performance -- # 
@@ -1169,10 +1165,14 @@ def l1_svm(p_data, p_params):
     # shrinking, probability, tol, cache_size, class_weight, verbose, max_iter, decision_function_shape,
     # break_ties, random_state
 
+    print(int(p_params['degree']))
+    print(p_params['kernel'])
+
     # model function
     svm_model = SVC(C=p_params['c'], kernel=p_params['kernel'], gamma=p_params['gamma'],
+                    degree=int(p_params['degree']),
 
-                    shrinking=True, probability=True, tol=1e-3, cache_size=5000,
+                    shrinking=True, probability=True, tol=1e-3, cache_size=6000,
                     class_weight=None, verbose=False, max_iter=1e6, decision_function_shape='ovr',
                     break_ties=False, random_state=123)
 
@@ -1536,10 +1536,12 @@ def genetic_algo_optimization(p_gen_data, p_model, p_opt_params, p_fit_type, p_m
         toolbox_svm.register("attr_c", random.choice, p_model['params']['c'])
         toolbox_svm.register("attr_kernel", random.choice, p_model['params']['kernel'])
         toolbox_svm.register("attr_gamma", random.choice, p_model['params']['gamma'])
+        toolbox_svm.register("attr_degree", random.choice, p_model['params']['degree'])
 
         # This is the order in which genes will be combined to create a chromosome
         toolbox_svm.register("Individual_svm", tools.initCycle, creator.Individual_svm,
-                             (toolbox_svm.attr_c, toolbox_svm.attr_kernel, toolbox_svm.attr_gamma), n=1)
+                             (toolbox_svm.attr_c, toolbox_svm.attr_kernel,
+                              toolbox_svm.attr_gamma, toolbox_svm.attr_degree), n=1)
 
         # population definition
         toolbox_svm.register("population", tools.initRepeat, list, toolbox_svm.Individual_svm)
@@ -1553,15 +1555,11 @@ def genetic_algo_optimization(p_gen_data, p_model, p_opt_params, p_fit_type, p_m
             if gene == 0:
                 individual[0] = random.choice(p_model['params']['c'])
             elif gene == 1:
-                if individual[1] == 'linear':
-                    individual[1] = 'rbf'
-                else:
-                    individual[1] = 'linear'
+                individual[1] = random.choice(p_model['params']['kernel'])
             elif gene == 2:
-                if individual[2] == 'scale':
-                    individual[2] = 'auto'
-                else:
-                    individual[2] = 'scale'
+                individual[2] = random.choice(p_model['params']['gamma'])
+            elif gene == 3:
+                individual[3] = random.choice(p_model['params']['degree'])
             return individual,
 
         # ------------------------------------------------------------ funcion de evaluacion para LS SVM -- #
@@ -1712,7 +1710,8 @@ def model_evaluation(p_features, p_optim_data, p_model):
         return logistic_net(p_data=p_features, p_params=parameters)
 
     elif p_model == 'l1-svm':
-        parameters = {'c': p_optim_data[0], 'kernel': p_optim_data[1], 'gamma': p_optim_data[2]}
+        parameters = {'c': p_optim_data[0], 'kernel': p_optim_data[1], 'gamma': p_optim_data[2],
+                      'degree': p_optim_data[3]}
 
         return l1_svm(p_data=p_features, p_params=parameters)
 
@@ -1811,12 +1810,13 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
         # Without embargo
         p_data_folds, embargo_dates = p_data_folds, ['no embargo']
     else: 
-        print('error in p_embargo, invalid input')
+        print('Error in fold_process, invalid p_embargo parameter')
     
     # main data structure for calculations
     memory_palace = {j: {i: {'e_hof': [], 'p_hof': {}, 'time': [], 'features': {}}
                      for i in list(dt.models.keys())} for j in p_data_folds}
 
+    # iteration info
     iteration = list(p_data_folds.keys())[0][0]
 
     if iteration == 'q':
@@ -1896,7 +1896,7 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
             data_folds = p_data_folds[period].copy()
 
             # Feature engineering (Autoregressive)
-            linear_data = linear_features(p_data=data_folds, p_memory=4)
+            linear_data = linear_features(p_data=data_folds, p_memory=dt.features_params['lags_diffs'])
             
             # Symbolic features generation with genetic programming
             m_features = genetic_programed_features(p_data=linear_data, p_split=p_inner_split)
@@ -2031,33 +2031,20 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
 # ------------------------------------------------------------------------------ Model Global Evaluation -- #
 # --------------------------------------------------------------------------------------------------------- #
 
-def global_evaluation(p_case, p_global_data, p_features, p_model):
+def global_evaluation(p_global_data, p_case, p_features, p_trans_function, p_trans_order, p_model):
     """
-    Evaluation of models with global data and features for particular selected cases of parameters
-
-    Parameters
-    ----------
-
-    p_hof
-    p_data
-    p_features
-    p_model
-
-
-
-    Returns
-    -------
-    global_auc_cases: dict
-        with the evaluations
+    
 
     """
 
-    # entire hof parameters (orderer in descent order by value obtained of the optimization metric)
+    # entire hof parameters (in descent order by the obtained value of the fitness metric)
     hof_params = p_case['p_hof']['hof'].copy()
     hof_models = p_case['e_hof'].copy()
 
-    # -------------------------------------------------------------------------------------- GLOBAL DATA -- #
-    
+    # data was scaled orginally pre-features
+    if p_trans_order == 'pre-features':
+        p_global_data = data_scaler(p_data=p_global_data.copy(), p_trans=p_trans_function)
+   
     # get all the linear features 
     g_linear_data = linear_features(p_data=p_global_data, p_memory=dt.features_params['lags_diffs'])
     g_y_target = g_linear_data['co_d'].copy()
@@ -2066,6 +2053,10 @@ def global_evaluation(p_case, p_global_data, p_features, p_model):
     # use equations to generate symbolic features
     g_sym_data = p_features['sym_features']['model'].transform(g_linear_data)
     g_global_data = pd.DataFrame(np.hstack((g_linear_data, g_sym_data)))
+
+    # data was scaled orginally post-features
+    if p_trans_order == 'post-features':
+        g_global_data = data_scaler(p_data=g_global_data, p_trans=p_trans_function)
 
     # data format
     global_data = {}
@@ -2090,7 +2081,8 @@ def global_evaluation(p_case, p_global_data, p_features, p_model):
 
         elif p_model == 'l1-svm':
             parameters = {'c': individual_params[0], 'kernel': individual_params[1],
-                          'gamma': individual_params[2]}
+                          'gamma': individual_params[2], 'degree': individual_params[3]}
+
             global_results.append({'global_data': global_data, 'global_parameters': parameters,
                                    'model': sk_model_metrics(p_model=individual_model['model'], 
                                                              p_model_data=global_data)})

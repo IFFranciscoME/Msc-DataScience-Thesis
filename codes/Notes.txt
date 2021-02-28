@@ -9,6 +9,9 @@ https://en.wikipedia.org/wiki/Normalization_(statistics)
 Whereas the AUC is computed with regards to binary classification with a varying decision threshold,
 logloss actually takes "certainty" of classification into account.
 
+How to choose optimum probability threshold from ROC ?, since the ROC is calculated with variations
+of the threshold used to classify into one clase or the other an observation. 
+
 Therefore to my understanding, logloss conceptually goes beyond AUC and is especially relevant in cases
 with imbalanced data or in case of unequally distributed error cost 
 (for example detection of a deadly disease).
@@ -243,13 +246,13 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 - Addition: Implement embargo criteria for t-fold variation
 
 # -- 27.02.2021
-- Modification: Erase hada
+- Modification: Erase hadamard features, they add model complexity without being uniquely useful
+- fix: Filtration of explanatory variables in the target variable, fixed to have  [y_t+1 | X_t]
 - Testing: Data - t_folds, folds_embargo, data_profile, data_scaler
 - Testing: Features Engineering - linear_features, genetic_programed_features
 - Testing: Models - logistic-elasticnet, l1-svm, ann-mlp
+- Enhacement: Include polynomial kernel and some values for the degree hyperparameter for SVC
 - Testing: Optimization - genetic_algo_optimization
-- Testing: Evaluation - model_evaluation, global_evaluation
-- Testing: Results - model_cases
 
 
 # ---------------------------------------------------------------------------------------------- BACKLOG -- # 
@@ -257,6 +260,13 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 
 # -- NECESSARY
 
+- (pending) the input features for global evaluation and test evaluation has to be pre-processes exactly
+			as were the features used in the optimization 
+
+- (pending) Testing: Evaluation - model_evaluation, global_evaluation
+- (pending) Results - model_cases
+
+- (pending) steps and instructions to run project on cluster
 
 - (pending) write content and code to define and search for data to test 1 clear hypothesis for the project
 

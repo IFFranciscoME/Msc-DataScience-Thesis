@@ -55,10 +55,9 @@ if __name__ == "__main__":
         # -- ------------------------------------------------------------------- ----------------------- -- #
 
         # List with the names of the models
-        # ml_models = list(dt.models.keys())
+        ml_models = list(dt.models.keys())
         # ml_models = ['ann-mlp']
-        ml_models = ['logistic-elasticnet']
-
+        
         # Establish the number of workers with as many cores as the computer has
         workers = cpu_count()-1
         # workers = 1
