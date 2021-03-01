@@ -274,15 +274,17 @@ https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestC
 - fix: Error in data_scaler, it was scaling 1: cols, leaving out the 1st, probably the cause of saturation
        in ann-mlp model since the 1st has a big scale.
 - fix: Erros in predicted probabilities type of data and code refactor in tf_metrics
+- (pending): include embargo info in log file and picke file
 
-- (goal) the input features for global evaluation and test evaluation has to be pre-processes exactly
-			as were the features used in the optimization 
-- (goal) steps and instructions to run project on cluster  
 
 # ---------------------------------------------------------------------------------------------- BACKLOG -- # 
 # ---------------------------------------------------------------------------------------------- ------- -- #
 
 # -- NECESSARY
+
+- (goal) the input features for global evaluation and test evaluation has to be pre-processes exactly
+			as were the features used in the optimization 
+- (goal) steps and instructions to run project on cluster  
 
 - (pending) the input features for global evaluation and test evaluation has to be pre-processes exactly
 			as were the features used in the optimization 

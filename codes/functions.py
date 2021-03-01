@@ -277,7 +277,7 @@ def folds_embargo(p_folds, p_mode, p_memory):
 
         # if fixed, then use the value used to create other features (data.py)
         if p_mode == 'fix':
-            n_embargo = p_memory
+            n_embargo = p_memory + 1
         
         # if memory, use the max of ACF or PACF as representation of the "memory" in the data
         elif p_mode == 'memory':
@@ -299,7 +299,7 @@ def folds_embargo(p_folds, p_mode, p_memory):
             embargo_indexes[period] = list(p_folds[period]['timestamp'][p_folds[period].index[0:n_embargo]])
             p_folds[period] = p_folds[period].drop(p_folds[period].index[0:n_embargo]).copy()
     
-    return p_folds, embargo_indexes
+    return p_folds, embargo_indexes, n_embargo
 
 
 # --------------------------------------------------------------------------- Divide the data in T-Folds -- #
@@ -1168,15 +1168,15 @@ def ann_mlp(p_data, p_params):
 
     # fit model with corresponding training scheme
     history = keras_class.fit(p_data['train_x'], p_data['train_y'],
-                              epochs=200, batch_size=8, verbose=0, shuffle=False,
+                              epochs=200, batch_size=16, verbose=0, shuffle=False,
                               callbacks=[tf.keras.callbacks.TerminateOnNaN(),
 
                               tf.keras.callbacks.ReduceLROnPlateau(monitor='kullback_leibler_divergence', 
                               factor=0.2, patience=10, verbose=0, mode='min', min_delta=0.01, 
-                              cooldown=0, min_lr=0.00001),
+                              cooldown=0, min_lr=0.0001),
                               
                               tf.keras.callbacks.EarlyStopping(monitor='accuracy',
-                              min_delta=0.01, patience=20, verbose=0, mode='max', baseline=0.40, restore_best_weights=False)])
+                              min_delta=0.01, patience=16, verbose=0, mode='max', baseline=0.40, restore_best_weights=False)])
    
     # preparation of metrics history data to analyze later
     metrics_history = {str(i): history.history[i]
@@ -1660,10 +1660,12 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
     if p_embargo == 'fix':
         # Fixed memory derived from features calculations
         memory = dt.features_params['lags_diffs']
-        p_data_folds, embargo_dates = folds_embargo(p_folds=p_data_folds, p_mode='fix', p_memory=memory)
+        p_data_folds, embargo_dates, memory = folds_embargo(p_folds=p_data_folds, p_mode='fix',
+                                                            p_memory=memory)
     elif p_embargo == 'memory':
         # Derived from max value from both PACF and ACF functions applied to first difference of ts data
-        p_data_folds, embargo_dates = folds_embargo(p_folds=p_data_folds, p_mode='memory', p_memory=None)
+        p_data_folds, embargo_dates, memory = folds_embargo(p_folds=p_data_folds, p_mode='memory', 
+                                                            p_memory=None)
     elif p_embargo == 'False':
         # Without embargo
         p_data_folds, embargo_dates = p_data_folds, ['no embargo']
@@ -1692,7 +1694,7 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
 
     # Construct the file name for the logfile
     name_log = iteration + '_' + p_fit_type + '_' + p_trans_function + '_' + \
-               p_trans_order + '_' + p_inner_split
+               p_trans_order + '_' + p_inner_split + '_' + p_embargo
 
     # Base route to save file
     route = 'files/logs/'
@@ -1737,7 +1739,7 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
             data_folds = data_scaler(p_data=p_data_folds[period], p_trans=p_trans_function)
         
             # Feature engineering (Autoregressive)
-            linear_data = linear_features(p_data=data_folds, p_memory=dt.features_params['lags_diffs'])
+            linear_data = linear_features(p_data=data_folds, p_memory=memory)
             
             # Symbolic features generation with genetic programming
             m_features = genetic_programed_features(p_data=linear_data, p_split=p_inner_split)
@@ -1754,7 +1756,7 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
             data_folds = p_data_folds[period].copy()
 
             # Feature engineering (Autoregressive)
-            linear_data = linear_features(p_data=data_folds, p_memory=dt.features_params['lags_diffs'])
+            linear_data = linear_features(p_data=data_folds, p_memory=memory)
             
             # Symbolic features generation with genetic programming
             m_features = genetic_programed_features(p_data=linear_data, p_split=p_inner_split)
@@ -1775,7 +1777,7 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
                                                                  p_trans=p_trans_function)
         
         else:
-            print('error: p_scaling value not valid')
+            print('Error in fold_process: p_scaling value not valid')
 
         # features data profile 
         ft_metrics = {}
@@ -1796,7 +1798,8 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
         logger.debug('---- Optimization Fitness: ' + p_fit_type)
         logger.debug('---- Data Scaling Order: ' + p_trans_order)
         logger.debug('---- Data Transformation: ' + p_trans_function)
-        logger.debug('---- val set inner-split: ' + p_inner_split + '\n')
+        logger.debug('---- Validation inner-split: ' + p_inner_split)
+        logger.debug('---- Embargo: ' + p_embargo + ' - ' + str(memory) + '\n')
 
         logger.info("Feature Engineering in Fold done in = " + str(datetime.now() - init) + '\n')
 
@@ -1862,7 +1865,7 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
 
     # File name to save the data
     file_name = route + period[0] + '_' + p_fit_type + '_' + p_trans_function + '_' + \
-                p_trans_order + '_' + p_inner_split + '.dat'
+                p_trans_order + '_' + p_inner_split + '_' + p_embargo + '.dat'
 
     # (pending) Extract tensorflow model and parameters separately
     

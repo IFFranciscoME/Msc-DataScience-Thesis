@@ -75,7 +75,7 @@
 |   Meeting        | With thesis director               | 12:00 26.Feb.2021  | 1.0          |                  |
 |   Coding         | improve ann-mlp training scheme    | 19:00 26.Feb.2021  | 1.0          |                  |
 |   Coding         | min-max cases search fix           | 14:00 27.Feb.2021  | 9.0          |                  |
-
 |   Coding         | ann-mlp model performance revision | 10:00 28.Feb.2021  | 0.5          |                  |
-
 |   Coding         | tf.metrics fix and refactor       |  11:00 28.Feb.2021  | 2.0          |                  |
+
+|   Coding         | embargo in filename       |  11:00 28.Feb.2021  | 2.0          |                  |

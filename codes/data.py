@@ -26,14 +26,14 @@ from os.path import isfile, join
 # -- Short Version for Testing
 
 # fold size
-iter_fold = ['quarter', 'semester']
+iter_fold = ['quarter', 'semester', 'year']
 
 # experiment parameters
 iter_opt = {'embargo': ['fix', 'memory'],
             'inner-split': ['20', '0'],
             'trans_function': ['scale', 'robust'],
             'trans_order': ['pre-features', 'post-features'],
-            'fitness': ['logloss-train', 'logloss-inv-weighted']}
+            'fitness': ['logloss-inv-weighted', 'acc-inv-weighted']}
 
 # -- Long Version (Complete list)
 
@@ -75,7 +75,7 @@ symbolic_params = {'functions': ['sub', 'add', 'inv', 'mul', 'div', 'abs', 'log'
 # ------------------------------------------------------------------ Parameters for Genetic Optimization -- #
 # ------------------------------------------------------------------ ----------------------------------- -- #
 
-optimization_params = {'halloffame': 10, 'tournament': 15, 'population': 50, 'generations': 9,
+optimization_params = {'halloffame': 10, 'tournament': 15, 'population': 60, 'generations': 9,
                        'mutation': 0.7, 'crossover': 0.7}
 
 # ----------------------------------------------------------------------- Hyperparameters for the Models -- #
@@ -217,15 +217,15 @@ for file_f in files_f:
         price_data[file_nom + year_f] = data_f
 
 # One period
-# ohlc_data = pd.concat([price_data[list(price_data.keys())[0]]])
+ohlc_data = pd.concat([price_data[list(price_data.keys())[0]]])
 
 # Two periods
 # ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]]])
 
 # Six periods
-ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
-                       price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
-                       price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]]])
+# ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
+                       # price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
+                       # price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]]])
 
 # All periods
 # ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
