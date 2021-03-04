@@ -11,8 +11,8 @@
 """
 
 from data import ohlc_data as data
-from data import iter_fold
-from data import iter_exp
+from data import exec_fold
+from data import exec_exp
 from datetime import datetime
 from multiprocessing import cpu_count
 
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     print(' -- ---------------- ------------------- ---------------- --\n\n')
 
     # main loop to test all t-fold sizes
-    for iteration in iter_fold:
+    for iteration in exec_fold:
 
         # debugging
         # iteration = iter_fold[0]
@@ -55,13 +55,10 @@ if __name__ == "__main__":
         # -- ------------------------------------------------------------------- ----------------------- -- #
 
         # List with the names of the models
-        # ml_models = list(dt.models.keys())
-        ml_models = ['ann-mlp']
+        ml_models = dt.exec_models
         
         # Establish the number of workers with as many cores as the computer has
-        workers = cpu_count()-1
-        # workers = 1
-        # print(workers)
+        workers = dt.exec_workers
 
         # create pool of workers for asyncronous parallelism
         pool = mp.Pool(workers)
@@ -75,7 +72,7 @@ if __name__ == "__main__":
         fold_process = {'fold_' + str(iteration): pool.starmap(fn.fold_process,
                                                                [(folds, ml_models,
                                                                  exp[0], exp[1], exp[2], exp[3], exp[4])
-                                                               for exp in iter_exp])}
+                                                               for exp in exec_exp])}
 
         # close pool
         pool.close()

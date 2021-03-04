@@ -1,5 +1,5 @@
 
-# ---------- Added manually ---------- #
+# ---------- Exclude manually ---------- #
 
 # pycharm project folder
 .idea/
@@ -8,21 +8,18 @@
 .vscode/
 
 # vscode project workspace
-codes/Msc_Thesis.code-workspace
+Msc_Thesis_workspace.code-workspace
 
 # virtual environment
-codes/Msc_Thesis_venv/
+Msc_Thesis_venv/
 
 # folder with Pickle Rick !! files
-codes/files/pickle_rick
+files/pickle_rick
 
 # folder with Logs
-# codes/files/logs
+files/logs
 
-# folder with prices
-# codes/files/prices
-
-# ---------- ------------- ---------- #
+# ----------- -------------- ----------- #
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -173,6 +173,9 @@ sym_length = sym_data['best_programs']['length']
 # fitness metric
 sym_fitness = sym_data['best_programs']['fitness']
 
+# detailed console print
+d_sym_fitness = inspect(sym_fitness)
+
 # -- --------------------------------------------------------------- PLOT 3: CLASSIFICATION FOLD RESULTS -- #
 # -- ----------------------------------------------------------------------------- --------------------- -- #
 

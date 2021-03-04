@@ -10,12 +10,7 @@
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 
-# Modify environmental variable to suppress console log messages from TensorFlow
 import os
-from re import T
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-
-from rich import inspect
 import random
 import warnings
 import logging
@@ -46,8 +41,13 @@ from scipy.stats import skew as m_skew
 from gplearn.genetic import SymbolicTransformer
 from deap import base, creator, tools, algorithms
 
+# hide warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 warnings.filterwarnings('ignore', 'Solver terminated early.*')
+
+# Modify environmental variable to suppress console log messages from TensorFlow
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+
 
 # ------------------------------------------------------------------ PROCESSING RESOURCES FOR TENSORFLOW -- #
 # ------------------------------------------------------------------ ----------------------------------- -- #
@@ -1697,7 +1697,7 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
                p_trans_order + '_' + p_inner_split + '_' + p_embargo
 
     # Base route to save file
-    route = 'files/logs/'
+    route = 'files/logs/' + dt.folder
 
     # Create logfile
     logger = setup_logger('log%s' %name_log, route + '%s.txt' %name_log)
@@ -1861,7 +1861,7 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
     # -- ------------------------------------------------------------------------------- ----------- -- #
 
     # Base route to save file
-    route = 'files/pickle_rick/'
+    route = 'files/pickle_rick/' + dt.folder
 
     # File name to save the data
     file_name = route + period[0] + '_' + p_fit_type + '_' + p_trans_function + '_' + \

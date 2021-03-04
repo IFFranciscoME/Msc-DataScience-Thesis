@@ -10,51 +10,78 @@
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 
-# Modify environmental variable to suppress console log messages from TensorFlow
-import os
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-
 import pickle
 import itertools
 import pandas as pd
-from os import listdir, path
+from os import listdir, path, environ
 from os.path import isfile, join
 
-# ---------------------------------------------------------------------------------- PARALLEL EXPERIMENT -- #
-# ---------------------------------------------------------------------------------- ------------------- -- #
+# To detect where the project is executed
+from multiprocessing import cpu_count
 
-# -- Short Version for Testing
+# Redirect to the respective folder to store files
+if cpu_count() > 8:
+    print('\nOoooh Yeahhh')
+    folder = 'ludwig/'
+else:
+    print('\nmeh')
+    folder = 't490/'
+
+# Modify environmental variable to suppress console log messages from TensorFlow
+environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+
+# --------------------------------------------------------------------------------- EXECUTION PARAMETERS -- #
+# --------------------------------------------------------------------------------- -------------------- -- #
+
+# number of processing cores to use
+exec_workers = cpu_count()-2
+
+# --------------------------------------------------------------------------------------- SUBSET VERSION -- #
+
+# number of years of prices, accepted values range from 2 (2009) to 12 (2020)
+exec_data = 2
+
+# models to explore
+exec_models = ['ann-mlp']
 
 # fold size
-iter_fold = ['quarter', 'semester', 'year']
+exec_fold = ['semester', 'year']
 
 # experiment parameters
-iter_opt = {'embargo': ['fix', 'memory'],
+exec_opt = {'embargo': ['fix', 'memory'],
             'inner-split': ['20', '0'],
-            'trans_function': ['scale', 'robust'],
+            'trans_function': ['scale', 'normalize', 'robust'],
             'trans_order': ['pre-features', 'post-features'],
             'fitness': ['logloss-inv-weighted', 'acc-inv-weighted']}
 
-# -- Long Version (Complete list)
+# ------------------------------------------------------------------------------------- COMPLETE VERSION -- #
+
+"""
+# number of years of prices
+exec_data = 12
+
+# models to explore
+exec_models = ['logistic-elasticnet', 'l1-svm', 'ann-mlp']
 
 # fold size
-# iter_fold = ['quarter', 'semester', 'year', 'bi-year', '80-20']
+exec_fold = ['quarter', 'semester', 'year', 'bi-year', '80-20']
 
 # experiment parameters
-# iter_opt = {'embargo': ['fix', 'memory', 'False'],
-            # 'inner-split': ['30', '10', '0'],
-            # 'transform': ['scale', 'normalize', 'robust'],
-            # 'scaling': ['post-features', 'pre-features'],
-            # 'fitness': ['auc-train', 'auc-val', 'auc-diff',
-                        # 'auc-mean', 'auc-weighted', 'auc-inv-weighted',
-                        #  'acc-train', 'acc-val', 'acc-diff',
-                        #  'acc-mean', 'acc-weighted', 'acc-inv-weighted',
-                        #  'logloss-train', 'logloss-val', 'logloss-diff',
-                        #  'logloss-mean', 'logloss-weighted', 'logloss-inv-weighted']}
+exec_opt = {'embargo': ['fix', 'memory', 'False'],
+            'inner-split': ['30', '10', '0'],
+            'transform': ['scale', 'normalize', 'robust'],
+            'scaling': ['post-features', 'pre-features'],
+            'fitness': ['auc-train', 'auc-val', 'auc-diff',
+                        'auc-mean', 'auc-weighted', 'auc-inv-weighted',
+                        'acc-train', 'acc-val', 'acc-diff',
+                        'acc-mean', 'acc-weighted', 'acc-inv-weighted',
+                        'logloss-train', 'logloss-val', 'logloss-diff',
+                        'logloss-mean', 'logloss-weighted', 'logloss-inv-weighted']}
+"""
 
 # Iterative/Parallel Experiment Data
-iter_exp = list(itertools.product(*[iter_opt['embargo'], iter_opt['inner-split'], iter_opt['trans_function'],
-                                    iter_opt['trans_order'], iter_opt['fitness']]))
+exec_exp = list(itertools.product(*[exec_opt['embargo'], exec_opt['inner-split'], exec_opt['trans_function'],
+                                    exec_opt['trans_order'], exec_opt['fitness']]))
 
 # --------------------------------------------------------------------- Parameters for Symbolic Features -- #
 # --------------------------------------------------------------------- -------------------------------- -- #
@@ -216,24 +243,8 @@ for file_f in files_f:
     for year_f in years_f:
         price_data[file_nom + year_f] = data_f
 
-# One period
-ohlc_data = pd.concat([price_data[list(price_data.keys())[0]]])
-
-# Two periods
-# ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]]])
-
-# Six periods
-# ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
-                       # price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
-                       # price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]]])
-
-# All periods
-# ohlc_data = pd.concat([price_data[list(price_data.keys())[0]], price_data[list(price_data.keys())[1]],
-                       # price_data[list(price_data.keys())[2]], price_data[list(price_data.keys())[3]],
-                       # price_data[list(price_data.keys())[4]], price_data[list(price_data.keys())[5]],
-                       # price_data[list(price_data.keys())[6]], price_data[list(price_data.keys())[7]],
-                       # price_data[list(price_data.keys())[8]], price_data[list(price_data.keys())[9]],
-                       # price_data[list(price_data.keys())[10]], price_data[list(price_data.keys())[11]]])
+# Number of periods according to execution parameter: exec_data
+ohlc_data = pd.concat([price_data[list(price_data.keys())[i]] for i in range(0, exec_data)])
 
 # Test data
 # test_data = pd.concat([price_data[list(price_data.keys())[12]]])

@@ -1,0 +1,112 @@
+
+# ------------------------------------------------------------------------------------------- CHANGE LOG -- #
+# ------------------------------------------------------------------------------------------- ---------- -- #
+
+# -- 10.02.2021
+
+- create a new document.py file with all the codes necessary to produce the elements that will be
+  added to the thesis document.
+
+- T-Fold process completed
+
+- Enhacement: refactor project structure to support parallelization
+- Addition: Log registration with every worker in the paralelization
+
+- mapped all variations of factors to run the general experiment 
+- - different types of data pre-processing (Normalize, Standarize, Robust Standarization)
+- - data pre-processing order (pre/post features)
+
+- - fitness metric as cost function (optimization process)
+	ACC: (train, test, simple, weighted, inv-weighted)
+	AUC: (simple, weighted, inv-weighted)
+	LOGLOSS: (simple, weighted, inv-weighted)
+
+- - fitness metric as ranking function (selection of cases max, min)
+	ACC: (train, test, simple, weighted, inv-weighted)
+	AUC: (simple, weighted, inv-weighted)
+	LOGLOSS: (simple, weighted, inv-weighted)
+
+- Addition: Asyncronous parallelization capabilities for several functions
+- Enhacement: Aesthetic Logs and invidiual files for worker-log during parallelization
+- Addition: pickle_rick data saving method for individual file during parallelization
+
+# -- 11.02.2021
+
+- Addition: data_profile function for OHLC and timeseries data profiling
+- Addition: data profile for target variable (balance of classes)
+- Addition: data profile for feature variables (descriptive statistics)
+- Addition: table Correlation between features and features vs target variable
+
+# -- 12.02.2021 
+
+- Enhacement: Variations of AUC, LogLoss, ACC to use as cost functions and ranking function
+- Enhacement: search for min, max, mode cases according to selected cost function
+- Enhacement: ROC plot to support Multiple ROC values of the evaluated HoF
+- Addition: table for multi modal cases
+
+- Enhacement: Global evaluation function for the whole HoF 
+- Fix: gray candles (windows without prediction) and vertical line traintest ohlc class
+- Results: Execute code with several features to have wider results to analize.
+
+# -- 13.02.2021
+
+- Optimization: add to model_metrics the other sofisticated metrics already calculated
+- Optimization: refactor and simplify code in genetic_algo_evaluate 
+- Enhacement: add inner-split option of iterations (choose inner test split of data)
+- Addition: met_cases params and metric data of the min and max cases
+- Enhacement: Refactor project in order to work with no train-test split in inner data sets of the t-folds
+
+# -- 14.02.2021
+- Fix: model fit and predict separation in model evaluation
+- Enhacement: Train&Test option for plots
+
+# -- 17.02.2021
+- Enhacement: Install GPU capabilities in T490
+
+# -- 18.02.2021
+- Enhacement: Migrate from sklearn to keras (basic tests)
+- Modification: Hide tensorflow console messages
+
+# -- 19.02.2021
+- Fix: use pickle to save tf.keras model 
+- Fix: global evaluation test with pickle object with tf.keras model (use of model.predict())
+
+# -- 22.02.2021
+- Enhacement: Expand hyperparameter to search for ann-mlp model 
+- Fix: sklearn wrapper for tf.keras in order to use it with current genetic_algo_optimization
+- Fix: snippets and tricks to avoid errors when numeric instability is present in loss function (Futile)
+
+# -- 23.02.2021
+- Addition: Create new prices files with H8 intervals for grouping the minute files
+- Addition: Added historical prices from 2009 to 2020, and 2021 will be left as ultimate test
+- Fix: Error with tf evaluating loss function when producing nan, with callback type TerminateOnNaN()
+- Addition: add another metric for optimization: Difference between train and validation metric result
+- Addition: added KLDivergence metric and callback with monitoring to it.
+- Addition: added callback EarlyStopping monitoring accuracy to it.
+
+# -- 24.02.2021
+- Fix: pickle tf.keras model with wrapper from scikit learn. 
+
+# -- 25.02.2021
+- Modification: Change nomenclature from Train-Test, to Train-Validation and Test (never seen data from 2021)
+
+# -- 26.02.2021
+- Addition: Implement embargo criteria for t-fold variation
+
+# -- 27.02.2021
+- Modification: Erase hadamard features, they add model complexity without being uniquely useful
+- fix: Filtration of explanatory variables in the target variable, fixed to have  [y_t+1 | X_t]
+- Testing: Data - t_folds, folds_embargo, data_profile, data_scaler
+- Testing: Features Engineering - linear_features, genetic_programed_features
+- Testing: Models - logistic-elasticnet, l1-svm, ann-mlp
+- Enhacement: Include polynomial kernel and some values for the degree hyperparameter for SVC
+- Testing: Optimization - genetic_algo_optimization
+
+# -- 28.02.2021
+- fix: Error in data_scaler, it was scaling 1: cols, leaving out the 1st, probably the cause of saturation
+       in ann-mlp model since the 1st has a big scale.
+- fix: Erros in predicted probabilities type of data and code refactor in tf_metrics
+- fix: include embargo info in log file and picke file name
+
+# -- 04.03.2021
+- Modification: project refactor for use in computing cluster
