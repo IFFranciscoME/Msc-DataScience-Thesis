@@ -50,7 +50,7 @@ exec_fold = ['semester', 'year']
 # experiment parameters
 exec_opt = {'embargo': ['fix', 'memory'],
             'inner-split': ['20', '0'],
-            'trans_function': ['scale', 'normalize', 'robust'],
+            'trans_function': ['scale', 'standard', 'robust'],
             'trans_order': ['pre-features', 'post-features'],
             'fitness': ['logloss-inv-weighted', 'acc-inv-weighted']}
 
