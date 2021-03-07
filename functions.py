@@ -48,6 +48,8 @@ warnings.filterwarnings('ignore', 'Solver terminated early.*')
 # Modify environmental variable to suppress console log messages from TensorFlow
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
+# suppress most warnings of tensorflow
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 # ------------------------------------------------------------------ PROCESSING RESOURCES FOR TENSORFLOW -- #
 # ------------------------------------------------------------------ ----------------------------------- -- #
@@ -1122,31 +1124,34 @@ def ann_mlp(p_data, p_params):
     n_inputs = len(list(p_data['train_x'].columns))
 
     # function to build base model that is used with the KerasClassifier sklearn wrapper for tf.keras
-    def build_model(hidden_layers, hidden_neurons, activation, dropout, reg_1, reg_2,
-                    learning_rate, momentum, input_shape=[n_inputs]):
+    def build_model():
 
         # create base model
         model = models.Sequential()
+
         # add input layer
-        model.add(layers.InputLayer(input_shape=input_shape, name='input_layer'))
+        model.add(layers.InputLayer(input_shape=[n_inputs], name='input_layer'))
         
         # dynamic construction of neural net
-        for layer in range(hidden_layers):
+        for layer in range(p_params['hidden_layers']):
 
             # Add hidden layers with hyperparameters
-            model.add(layers.Dense(hidden_neurons, activation=activation,
+            model.add(layers.Dense(units=p_params['hidden_neurons'], activation=p_params['activation'],
                                    name='hidden_layer_' + str(layer),
-                                   kernel_regularizer=regularizers.l1_l2(reg_2[0], reg_2[1]),
-                                   bias_regularizer=regularizers.l1_l2(reg_2[0], reg_2[1]),
-                                   activity_regularizer=regularizers.l1_l2(reg_1[0], reg_1[1])))
+                                   kernel_regularizer=regularizers.l1_l2(p_params['reg_2'][0],
+                                                                         p_params['reg_2'][1]),
+                                   bias_regularizer=regularizers.l1_l2(p_params['reg_2'][0],
+                                                                       p_params['reg_2'][1]),
+                                   activity_regularizer=regularizers.l1_l2(p_params['reg_1'][0],
+                                                                           p_params['reg_1'][1])))
             # Add dropout layer
-            model.add(layers.Dropout(dropout))
+            model.add(layers.Dropout(p_params['dropout']))
 
         # output layer
         model.add(layers.Dense(1, activation='sigmoid', name='output_layer'))
         
         # optimizer for the training
-        optimizer = optimizers.SGD(lr=learning_rate, momentum=momentum)
+        optimizer = optimizers.SGD(lr=p_params['learning_rate'], momentum=p_params['momentum'])
         
         # compile model 
         model.compile(loss='binary_crossentropy', optimizer=optimizer,
@@ -1155,20 +1160,13 @@ def ann_mlp(p_data, p_params):
 
         return model
 
-    # re-mapping of hyperparameters in order to use them inside the wrapper
-    param_distribs = {'hidden_layers': p_params['hidden_layers'],
-                      'hidden_neurons': p_params['hidden_neurons'],
-                      'activation': p_params['activation'], 'dropout': p_params['dropout'],
-                      'reg_1': p_params['reg_1'], 'reg_2': p_params['reg_2'],
-                      'learning_rate': p_params['learning_rate'], 'momentum': p_params['momentum']}
-
     # build model with modified wrapper
-    keras_class = Modified_KerasClassifier(build_fn=build_model, **param_distribs)
-    keras_class.model = build_model(**param_distribs)
+    keras_class = Modified_KerasClassifier(build_fn=build_model)
+    keras_class.model = build_model()
 
     # fit model with corresponding training scheme
     history = keras_class.fit(p_data['train_x'], p_data['train_y'],
-                              epochs=200, batch_size=16, verbose=0, shuffle=False,
+                              epochs=100, batch_size=16, verbose=0, shuffle=False,
                               callbacks=[tf.keras.callbacks.TerminateOnNaN(),
 
                               tf.keras.callbacks.ReduceLROnPlateau(monitor='kullback_leibler_divergence', 

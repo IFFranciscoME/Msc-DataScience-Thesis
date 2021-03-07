@@ -7,11 +7,9 @@
 # vscode project folder
 .vscode/
 
-# vscode project workspace
-Msc_Thesis_workspace.code-workspace
-
 # virtual environment
-Msc_Thesis_venv/
+msc_thesis_t490_venv/
+msc_thesis_ludwig_venv/
 
 # folder with Pickle Rick !! files
 files/pickle_rick
