@@ -1,21 +1,27 @@
 
 # ---------- Exclude manually ---------- #
 
-# pycharm project folder
+# ignore pycharm project folder
 .idea/
 
-# vscode project folder
+# ignore vscode project folder
 .vscode/
 
-# virtual environment
+# ignore virtual environments
 msc_thesis_t490_venv/
 msc_thesis_ludwig_venv/
 
-# folder with Pickle Rick !! files
+# ignore folder with Pickle Rick !! files
 files/pickle_rick
 
-# folder with Logs
-files/logs
+# ignore nohup files
+nohup.out
+
+# ignore folder with Logs
+# files/logs
+
+# ignore folder with prices
+# files/prices
 
 # ----------- -------------- ----------- #
 

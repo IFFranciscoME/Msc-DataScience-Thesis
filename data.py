@@ -34,25 +34,25 @@ environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 # --------------------------------------------------------------------------------- -------------------- -- #
 
 # number of processing cores to use
-exec_workers = 4 # cpu_count()-2
+exec_workers = cpu_count()-4
 
 # --------------------------------------------------------------------------------------- SUBSET VERSION -- #
 
 # number of years of prices, accepted values range from 2 (2009) to 12 (2020)
-exec_data = 5
+exec_data = 4
 
 # models to explore
-exec_models = ['ann-mlp']
+exec_models = ['ann-mlp', 'logistic-elasticnet', 'l1-svm']
 
 # fold size
-exec_fold = ['quarter']
+exec_fold = ['quarter', 'semester', 'year']
 
 # experiment parameters
 exec_opt = {'embargo': ['fix', 'memory'],
             'inner-split': ['20', '0'],
-            'trans_function': ['scale', 'robust'],
+            'trans_function': ['scale', 'robust', 'standard'],
             'trans_order': ['post-features'],
-            'fitness': ['logloss-inv-weighted']}
+            'fitness': ['logloss-inv-weighted', 'logloss-train']}
 
 # ------------------------------------------------------------------------------------- COMPLETE VERSION -- #
 
@@ -87,11 +87,11 @@ exec_exp = list(itertools.product(*[exec_opt['embargo'], exec_opt['inner-split']
 # --------------------------------------------------------------------- -------------------------------- -- #
 
 # parameters for features formation
-features_params = {'lags_diffs': 5}
+features_params = {'lags_diffs': 15}
 
 # paremeters for symbolic features generation process
 symbolic_params = {'functions': ['sub', 'add', 'inv', 'mul', 'div', 'abs', 'log', 'sqrt'],
-                   'population': 1000, 'tournament': 20, 'hof': 20, 'generations': 2, 'n_features': 15,
+                   'population': 2000, 'tournament': 20, 'hof': 15, 'generations': 9, 'n_features': 15,
                    'init_depth': (6, 18), 'init_method': 'half and half', 'parsimony': 0.05,
                    'constants': None,
                    'metric': 'pearson', 'metric_goal': 0.70, 
@@ -102,7 +102,7 @@ symbolic_params = {'functions': ['sub', 'add', 'inv', 'mul', 'div', 'abs', 'log'
 # ------------------------------------------------------------------ Parameters for Genetic Optimization -- #
 # ------------------------------------------------------------------ ----------------------------------- -- #
 
-optimization_params = {'halloffame': 10, 'tournament': 15, 'population': 60, 'generations': 2,
+optimization_params = {'halloffame': 10, 'tournament': 15, 'population': 60, 'generations': 9,
                        'mutation': 0.7, 'crossover': 0.7}
 
 # ----------------------------------------------------------------------- Hyperparameters for the Models -- #
