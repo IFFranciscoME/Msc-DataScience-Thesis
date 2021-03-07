@@ -65,8 +65,6 @@ if __name__ == "__main__":
 
         # configuration for tensorflow and CPU/GPU processing
         fn.tf_processing(p_option='cpu', p_cores=workers)
-        # tf.config.threading.set_intra_op_parallelism_threads(workers)
-        # tf.config.threading.set_inter_op_parallelism_threads(workers)
         
         # Parallel Asyncronous Process 
         fold_process = {'fold_' + str(iteration): pool.starmap(fn.fold_process,

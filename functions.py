@@ -1166,7 +1166,7 @@ def ann_mlp(p_data, p_params):
 
     # fit model with corresponding training scheme
     history = keras_class.fit(p_data['train_x'], p_data['train_y'],
-                              epochs=100, batch_size=16, verbose=0, shuffle=False,
+                              epochs=100, batch_size=32, verbose=0, shuffle=False,
                               callbacks=[tf.keras.callbacks.TerminateOnNaN(),
 
                               tf.keras.callbacks.ReduceLROnPlateau(monitor='kullback_leibler_divergence', 
