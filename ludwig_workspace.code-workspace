@@ -6,6 +6,13 @@
 		}
 	],
 	"settings": {
+		"workbench.colorCustomizations": {
+			"statusBar.background" : "#047CFB",
+			"activityBar.foreground" : "#fafafa",	
+			"activityBar.background" : "#047CFB",
+			"activityBar.activeBackground": "#418FFB",
+			"activityBar.activeFocusBorder": "#fafafa",
+		},
 		"python.pythonPath": "/home/franciscome/github/Msc_Thesis/msc_thesis_ludwig_venv/bin/python3.8"
 	}
 }

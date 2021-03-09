@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"workbench.colorCustomizations": {
+			"statusBar.background" : "#2e3440",
+			"activityBar.foreground" : "#d8dee9",	
+			"activityBar.background" : "#2e3440",
+			"activityBar.activeBackground": "#2e3440",
+			"activityBar.activeFocusBorder": "#d8dee9",
+		},
+		"workbench.colorTheme": "Visible Comments Nord Deep",
+		"workbench.preferredDarkColorTheme": "Visible Comments Nord Deep",
+		"workbench.preferredLightColorTheme": "Visible Comments Nord Deep"
+	}
+}
