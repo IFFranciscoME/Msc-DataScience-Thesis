@@ -115,6 +115,7 @@
 - Addition: Add cluster workspace and local workspace to repo
 - Addition: Add suppress message option for tensorflow (due to retracing warnings)
 
-# -- 08.03.2021
+# -- 09.03.2021
 - (goal): Modification: Remove pre-features data transformation and make post-features the default
-- (goal): Enhacement: Add target variable pre-scaling option (replacing pre-features pre-processing)
+- (goal): Enhacement: Add option to pre-escale or not target variable
+- (goal): Performe inverse operation for scaled features and target variable

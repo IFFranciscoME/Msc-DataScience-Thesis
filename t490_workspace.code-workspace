@@ -14,6 +14,7 @@
 		},
 		"workbench.colorTheme": "Visible Comments Nord Deep",
 		"workbench.preferredDarkColorTheme": "Visible Comments Nord Deep",
-		"workbench.preferredLightColorTheme": "Visible Comments Nord Deep"
+		"workbench.preferredLightColorTheme": "Visible Comments Nord Deep",
+		"python.pythonPath": "msc_thesis_t490_venv/bin/python3.8"
 	}
 }
