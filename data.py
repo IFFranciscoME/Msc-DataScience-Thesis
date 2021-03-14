@@ -39,20 +39,21 @@ exec_workers = cpu_count()-4
 # --------------------------------------------------------------------------------------- SUBSET VERSION -- #
 
 # number of years of prices, accepted values range from 2 (2009) to 12 (2020)
-exec_data = 4
+exec_data = 10
 
 # models to explore
 exec_models = ['ann-mlp', 'logistic-elasticnet', 'l1-svm']
 
 # fold size
-exec_fold = ['quarter', 'semester', 'year']
+exec_fold = ['quarter', 'semester', 'year', 'bi-year', '80-20']
 
 # experiment parameters
-exec_opt = {'embargo': ['fix', 'memory'],
+exec_opt = {'embargo': ['fix', 'memory', 'False'],
             'inner-split': ['20', '0'],
-            'trans_function': ['scale', 'robust', 'standard'],
-            'trans_order': ['post-features'],
-            'fitness': ['logloss-inv-weighted', 'logloss-train']}
+            'trans_function': ['scale', 'standard', 'robust'],
+            'trans_order': ['pre-features', 'post-features'],
+            'fitness': ['logloss-train', 'logloss-val', 'logloss-mean', 'logloss-weighted',
+            'logloss-inv-weighted']}
 
 # ------------------------------------------------------------------------------------- COMPLETE VERSION -- #
 
@@ -69,7 +70,7 @@ exec_fold = ['quarter', 'semester', 'year', 'bi-year', '80-20']
 # experiment parameters
 exec_opt = {'embargo': ['fix', 'memory', 'False'],
             'inner-split': ['30', '10', '0'],
-            'transform': ['scale', 'normalize', 'robust'],
+            'transform': ['scale', 'standard', 'robust'],
             'scaling': ['post-features', 'pre-features'],
             'fitness': ['auc-train', 'auc-val', 'auc-diff',
                         'auc-mean', 'auc-weighted', 'auc-inv-weighted',
@@ -91,8 +92,8 @@ features_params = {'lags_diffs': 15}
 
 # paremeters for symbolic features generation process
 symbolic_params = {'functions': ['sub', 'add', 'inv', 'mul', 'div', 'abs', 'log', 'sqrt'],
-                   'population': 2000, 'tournament': 20, 'hof': 15, 'generations': 9, 'n_features': 15,
-                   'init_depth': (6, 18), 'init_method': 'half and half', 'parsimony': 0.05,
+                   'population': 3000, 'tournament': 20, 'hof': 10, 'generations': 19, 'n_features': 15,
+                   'init_depth': (2, 10), 'init_method': 'half and half', 'parsimony': 0.15,
                    'constants': None,
                    'metric': 'pearson', 'metric_goal': 0.70, 
                    'prob_cross': 0.4, 'prob_mutation_subtree': 0.4,
@@ -102,7 +103,7 @@ symbolic_params = {'functions': ['sub', 'add', 'inv', 'mul', 'div', 'abs', 'log'
 # ------------------------------------------------------------------ Parameters for Genetic Optimization -- #
 # ------------------------------------------------------------------ ----------------------------------- -- #
 
-optimization_params = {'halloffame': 10, 'tournament': 15, 'population': 60, 'generations': 9,
+optimization_params = {'halloffame': 10, 'tournament': 20, 'population': 50, 'generations': 19,
                        'mutation': 0.7, 'crossover': 0.7}
 
 # ----------------------------------------------------------------------- Hyperparameters for the Models -- #

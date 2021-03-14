@@ -1166,7 +1166,7 @@ def ann_mlp(p_data, p_params):
 
     # fit model with corresponding training scheme
     history = keras_class.fit(p_data['train_x'], p_data['train_y'],
-                              epochs=100, batch_size=32, verbose=0, shuffle=False,
+                              epochs=50, batch_size=64, verbose=0, shuffle=False,
                               callbacks=[tf.keras.callbacks.TerminateOnNaN(),
 
                               tf.keras.callbacks.ReduceLROnPlateau(monitor='kullback_leibler_divergence', 
@@ -1721,35 +1721,27 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
         logger.debug('------------------- Feature Engineering on the Current Fold ---------------------')
         logger.debug('------------------- --------------------------------------- ---------------------')
         
-        # Feature metrics for ORIGINAL DATA: OHLCV
-        dt_metrics = data_profile(p_data=p_data_folds[period].copy(), p_type='ohlc', p_mult=10000)
+        # ------------------------------------------------------------------------------- DATA PROFILING -- #
 
         # dummy initialization
         data_folds = {}
         m_features = {}
 
-        # -- DATA SCALING OPTIONS -- #
-        
-        # OPTION 1: Scaling original data before feature engineering
         if p_trans_order == 'pre-features':
-            
-            # Original data to scale without the timestamp column
-            data_folds = data_scaler(p_data=p_data_folds[period], p_trans=p_trans_function)
-        
-            # Feature engineering (Autoregressive)
-            linear_data = linear_features(p_data=data_folds, p_memory=memory)
-            
-            # Symbolic features generation with genetic programming
-            m_features = genetic_programed_features(p_data=linear_data, p_split=p_inner_split)
 
-            # print to have it in the log
-            df_log = pd.DataFrame(m_features['sym_data']['details'])
-            df_log.columns = ['gen', 'avg_len', 'avg_fit', 'best_len', 'best_fit', 'best_oob', 'gen_time']
-            logger.debug('\n\n{}\n'.format(df_log))
+            # scale original OHLC data (the same transformation will be required for out-of-sample)
+            p_data_folds[period] = data_scaler(p_data=p_data_folds[period], p_trans=p_trans_function)
 
-        # OPTION 2: Scaling original data after feature engineering
+            # Feature metrics for SCALED ORIGINAL DATA: OHLCV
+            dt_metrics = data_profile(p_data=p_data_folds[period].copy(), p_type='ohlc', p_mult=10000)
+
+        # ----------------------------------------------------------------------------- FEATURES SCALING -- #
+
         elif p_trans_order == 'post-features':
-            
+
+            # Feature metrics for ORIGINAL DATA: OHLCV
+            dt_metrics = data_profile(p_data=p_data_folds[period].copy(), p_type='ohlc', p_mult=10000)
+
             # Original data
             data_folds = p_data_folds[period].copy()
 
@@ -1759,12 +1751,12 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
             # Symbolic features generation with genetic programming
             m_features = genetic_programed_features(p_data=linear_data, p_split=p_inner_split)
 
-            # print to have it in the log
+            # print it to have it in the logs
             df_log_2 = pd.DataFrame(m_features['sym_data']['details'])
             df_log_2.columns = ['gen', 'avg_len', 'avg_fit', 'best_len', 'best_fit', 'best_oob', 'gen_time']
             logger.debug('\n\n{}\n'.format(df_log_2))
 
-            # Data scaling in train
+            #  scale just the features
             for data in list(m_features['model_data'].keys()):
                 # debugging
                 # data = list(m_features['model_data'].keys())[1]
@@ -1772,12 +1764,10 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
                 # just scale the features, not the target, of inner data-sets
                 if data[-1] == 'x':
                     m_features['model_data'][data] = data_scaler(p_data=m_features['model_data'][data],
-                                                                 p_trans=p_trans_function)
+                                                                    p_trans=p_trans_function)
         
-        else:
-            print('Error in fold_process: p_scaling value not valid')
+        # --------------------------------------------------------------------------- FEATURES PROFILING -- #
 
-        # features data profile 
         ft_metrics = {}
         for data in list(m_features['model_data'].keys()):
             if data[-1] == 'y':
@@ -1789,6 +1779,8 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
         
         # save calculated metrics
         memory_palace[period]['metrics'] = {'data_metrics': dt_metrics, 'feature_metrics': ft_metrics}
+
+        # ------------------------------------------------------------------ HYPERPARAMETER OPTIMIZATION -- #
 
         logger.debug('----------------- Hyperparameter Optimization on the Current Fold ---------------')
         logger.debug('------------------- --------------------------------------- ---------------------\n')
@@ -1817,9 +1809,7 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
             logger.debug('---------------------------------------------------------------------------------')
             logger.debug('model: ' + model)
             logger.debug('---------------------------------------------------------------------------------\n')
-
-            # -- model optimization and evaluation for every element in the Hall of Fame for every period
-               
+             
             # verification of type of objective to optimize
             # default to minimize in order to have an option for logloss
             ob_type = 'min'
@@ -1838,6 +1828,8 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
             # log the result of genetic algorithm
             logger.info('\n\n{}\n'.format(hof_model['logs']))
 
+            # --------------------------------------------------------------------- HOF MODEL EVALUATION -- #
+
             # evaluation process
             for i in range(0, len(list(hof_model['hof']))):
                 # i = range(0, len(list(hof_model['hof'])))[0]
@@ -1855,8 +1847,8 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
 
             logger.info("Model Optimization in Fold done in = " + str(datetime.now() - init) + '\n')
     
-    # -- ------------------------------------------------------------------------------- DATA BACKUP -- #
-    # -- ------------------------------------------------------------------------------- ----------- -- #
+    # -- ----------------------------------------------------------------------------------- DATA BACKUP -- #
+    # -- ----------------------------------------------------------------------------------- ----------- -- #
 
     # Base route to save file
     route = 'files/pickle_rick/' + dt.folder
@@ -1864,8 +1856,6 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
     # File name to save the data
     file_name = route + period[0] + '_' + p_fit_type + '_' + p_trans_function + '_' + \
                 p_trans_order + '_' + p_inner_split + '_' + p_embargo + '.dat'
-
-    # (pending) Extract tensorflow model and parameters separately
     
     # objects to be saved
     pickle_rick = {'data': dt.ohlc_data, 't_folds': period, 'embargo_dates': embargo_dates,
