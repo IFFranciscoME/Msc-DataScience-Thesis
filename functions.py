@@ -27,7 +27,6 @@ import statsmodels.api as sm
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, RobustScaler, MaxAbsScaler
 from sklearn.linear_model import LogisticRegression
-from sklearn.svm import SVC
 from sklearn.metrics import confusion_matrix, accuracy_score, roc_auc_score, roc_curve, log_loss
 
 import tensorflow as tf
@@ -775,6 +774,8 @@ def model_metrics(p_model, p_model_data, p_history=None, p_tf=False):
 
         # tensorflow probabilistic output converted to class according threshold
         p_y_train_d = np.array(tf.greater(probs_train, tf_threshold)).astype(int)
+        p_y_train_d[0] = 0 # hardcode this to avoid errors
+        p_y_train_d[1] = 1 # hardcode this to avoid errors
         # dataframe with ground truth and prediction
         p_y_result_train = pd.DataFrame({'train_y': p_model_data['train_y'], 'train_pred_y': p_y_train_d})
         
@@ -828,6 +829,8 @@ def model_metrics(p_model, p_model_data, p_history=None, p_tf=False):
         
         # tensorflow probabilistic output converted to class according threshold
         p_y_val_d = np.array(tf.greater(probs_val, tf_threshold)).astype(int)
+        p_y_val_d[0] = 0 # hardcode this to avoid errors
+        p_y_val_d[1] = 1 # hardcode this to avoid errors
         # dataframe with ground truth and prediction
         p_y_result_val = pd.DataFrame({'val_y': p_model_data['val_y'], 'val_pred_y': p_y_val_d})
         
@@ -971,78 +974,6 @@ def logistic_net(p_data, p_params):
     metrics_en_model = model_metrics(p_model=en_model, p_model_data=p_data.copy())
 
     return metrics_en_model
-
-
-# --------------------------------------------------------- MODEL: Least Squares Support Vector Machines -- #
-# --------------------------------------------------------------------------------------------------------- #
-
-def l1_svm(p_data, p_params):
-    """
-    Least Squares Support Vector Machines
-
-    Parameters
-    ----------
-    p_data: dict
-        Diccionario con datos de entrada como los siguientes:
-
-        p_x: pd.DataFrame
-            with regressors or predictor variables
-            p_x = data_features.iloc[0:30, 3:]
-
-        p_y: pd.DataFrame
-            with variable to predict
-            p_y = data_features.iloc[0:30, 1]
-
-    p_params: dict
-        Diccionario con parametros de entrada para modelos, como los siguientes
-
-        p_kernel: str
-                kernel de L1_SVM
-                p_alpha = ['linear']
-
-        p_c: float
-            Valor de coeficiente C
-            p_ratio = 0.1
-
-        p_gamma: int
-            Valor de coeficiente gamma
-            p_iter = 0.1
-
-    Returns
-    -------
-    r_models: dict
-        Diccionario con modelos ajustados
-
-    References
-    ----------
-    https://scikit-learn.org/stable/modules/svm.html#
-
-    """
-
-    # ------------------------------------------------------------------------------ FUNCTION PARAMETERS -- #
-    # model hyperparameters
-    # C, kernel, degree (if kernel = poly), gamma (if kernel = {rbf, poly, sigmoid},
-    # coef0 (if kernel = {poly, sigmoid})
-
-    # computations parameters
-    # shrinking, probability, tol, cache_size, class_weight, verbose, max_iter, decision_function_shape,
-    # break_ties, random_state
-
-    # model function
-    svm_model = SVC(C=p_params['c'], kernel=p_params['kernel'], gamma=p_params['gamma'],
-                    degree=int(p_params['degree']),
-
-                    shrinking=True, probability=True, tol=1e-3, cache_size=6000,
-                    class_weight=None, verbose=False, max_iter=1e6, decision_function_shape='ovr',
-                    break_ties=False, random_state=123)
-
-    # model fit
-    svm_model.fit(p_data['train_x'].copy(), p_data['train_y'].copy())
-
-    # performance metrics of the model
-    metrics_svm_model = model_metrics(p_model=svm_model, p_model_data=p_data.copy())
-
-    return metrics_svm_model
 
 
 # --------------------------------------------------- MODEL: Artificial Neural Net Multilayer Perceptron -- #
@@ -1198,7 +1129,7 @@ def genetic_algo_evaluate(p_individual, p_eval_data, p_model, p_fit_type):
     ----------
 
     p_model: str
-        with the model name: 'logistic-elasticnet', 'l1-svm', 'ann-mlp'
+        with the model name: 'logistic-elasticnet', 'ann-mlp'
 
     p_fit_type: str
         type of fitness metric for the optimization process:
@@ -1222,12 +1153,6 @@ def genetic_algo_evaluate(p_individual, p_eval_data, p_model, p_fit_type):
     if p_model == 'logistic-elasticnet':
         # model results
         model = logistic_net(p_data=p_eval_data, p_params=chromosome)
-        # return the already calculated metric
-        return model['pro-metrics'][p_fit_type]
-        
-    elif p_model == 'l1-svm':
-        # model results
-        model = l1_svm(p_data=p_eval_data, p_params=chromosome)
         # return the already calculated metric
         return model['pro-metrics'][p_fit_type]
 
@@ -1278,9 +1203,6 @@ def genetic_algo_optimization(p_gen_data, p_model, p_opt_params, p_fit_type, p_m
     r_model_ols_elasticnet: dict
         resultados de modelo OLS con regularizacion elastic net
 
-    r_model_ls_svm: dict
-        resultados de modelo Least Squares Support Vector Machine
-
     r_model_ann_mlp: dict
         resultados de modelo Red Neuronal Artificial tipo perceptron multicapa
 
@@ -1323,7 +1245,7 @@ def genetic_algo_optimization(p_gen_data, p_model, p_opt_params, p_fit_type, p_m
         # population definition
         toolbox_en.register("population", tools.initRepeat, list, toolbox_en.Individual_en)
 
-        # -------------------------------------------------------------- funcion de mutacion para LS SVM -- #
+        # ------------------------------------------------- funcion de mutacion para  Logistic-Elasticnet-- #
         def mutate_en(individual):
 
             # select which parameter to mutate
@@ -1371,87 +1293,6 @@ def genetic_algo_optimization(p_gen_data, p_model, p_opt_params, p_fit_type, p_m
 
         return {'population': en_pop, 'logs': en_log, 'hof': en_hof}
 
-    # -- --------------------------------------------------------- Least Squares Support Vector Machines -- #
-    # ----------------------------------------------------------------------------------------------------- #
-
-    elif p_model['label'] == 'l1-svm':
-
-        # borrar clases previas si existen
-        try:
-            del creator.Fitness_svm
-            del creator.Individual_svm
-        except AttributeError:
-            pass
-
-        # inicializar ga
-        creator.create("Fitness_svm", base.Fitness, weights=(ga_type, ))
-        creator.create("Individual_svm", list, fitness=creator.Fitness_svm)
-        toolbox_svm = base.Toolbox()
-
-        # define how each gene will be generated (e.g. criterion is a random choice from the criterion list).
-        toolbox_svm.register("attr_c", random.choice, p_model['params']['c'])
-        toolbox_svm.register("attr_kernel", random.choice, p_model['params']['kernel'])
-        toolbox_svm.register("attr_gamma", random.choice, p_model['params']['gamma'])
-        toolbox_svm.register("attr_degree", random.choice, p_model['params']['degree'])
-
-        # This is the order in which genes will be combined to create a chromosome
-        toolbox_svm.register("Individual_svm", tools.initCycle, creator.Individual_svm,
-                             (toolbox_svm.attr_c, toolbox_svm.attr_kernel,
-                              toolbox_svm.attr_gamma, toolbox_svm.attr_degree), n=1)
-
-        # population definition
-        toolbox_svm.register("population", tools.initRepeat, list, toolbox_svm.Individual_svm)
-
-        # -------------------------------------------------------------- funcion de mutacion para LS SVM -- #
-        def mutate_svm(individual):
-
-            # select which parameter to mutate
-            gene = random.randint(0, len(p_model['params']) - 1)
-
-            if gene == 0:
-                individual[0] = random.choice(p_model['params']['c'])
-            elif gene == 1:
-                individual[1] = random.choice(p_model['params']['kernel'])
-            elif gene == 2:
-                individual[2] = random.choice(p_model['params']['gamma'])
-            elif gene == 3:
-                individual[3] = random.choice(p_model['params']['degree'])
-            return individual,
-
-        # ------------------------------------------------------------ funcion de evaluacion para LS SVM -- #
-        def evaluate_svm(eva_individual):
-
-            model_fit = genetic_algo_evaluate(p_individual=eva_individual,
-                                              p_eval_data=p_gen_data, p_model='l1-svm',
-                                              p_fit_type=p_fit_type)
-
-            return model_fit,
-
-        toolbox_svm.register("mate", tools.cxOnePoint)
-        toolbox_svm.register("mutate", mutate_svm)
-        toolbox_svm.register("select", tools.selTournament, tournsize=p_opt_params['tournament'])
-        toolbox_svm.register("evaluate", evaluate_svm)
-
-        svm_pop = toolbox_svm.population(n=p_opt_params['population'])
-        svm_hof = tools.HallOfFame(p_opt_params['halloffame'])
-        stats = tools.Statistics(lambda ind: ind.fitness.values)
-        stats.register("avg", np.mean)
-        stats.register("std", np.std)
-        stats.register("min", np.min)
-        stats.register("max", np.max)
-
-        # Genetic Algortihm implementation
-        svm_pop, svm_log = algorithms.eaSimple(population=svm_pop, toolbox=toolbox_svm, stats=stats,
-                                               cxpb=p_opt_params['crossover'], mutpb=p_opt_params['mutation'],
-                                               ngen=p_opt_params['generations'], halloffame=svm_hof, verbose=True)
-
-        # transform the deap objects into list so it can be serialized and stored with pickle
-        svm_pop = [list(pop) for pop in list(svm_pop)]
-        # svm_log = [list(log) for log in list(svm_log)]
-        svm_hof = [list(hof) for hof in list(svm_hof)]
-
-        return {'population': svm_pop, 'logs': svm_log, 'hof': svm_hof}
-
     # -- ----------------------------------------------- Artificial Neural Network MultiLayer Perceptron -- #
     # ----------------------------------------------------------------------------------------------------- #
 
@@ -1493,7 +1334,7 @@ def genetic_algo_optimization(p_gen_data, p_model, p_opt_params, p_fit_type, p_m
         # population definition
         toolbox_mlp.register("population", tools.initRepeat, list, toolbox_mlp.Individual_mlp)
 
-        # -------------------------------------------------------------- funcion de mutacion para LS SVM -- #
+        # ------------------------------------------------------------- funcion de mutacion para ANN-MLP -- #
         def mutate_mlp(individual):
 
             # select which parameter to mutate
@@ -1518,7 +1359,7 @@ def genetic_algo_optimization(p_gen_data, p_model, p_opt_params, p_fit_type, p_m
 
             return individual,
 
-        # ------------------------------------------------------------ funcion de evaluacion para LS SVM -- #
+        # ----------------------------------------------------------- funcion de evaluacion para ANN-MLP -- #
         def evaluate_mlp(eva_individual):
 
             model_fit = genetic_algo_evaluate(p_individual=eva_individual,
@@ -1565,12 +1406,6 @@ def model_evaluation(p_features, p_optim_data, p_model):
 
         return logistic_net(p_data=p_features, p_params=parameters)
 
-    elif p_model == 'l1-svm':
-        parameters = {'c': p_optim_data[0], 'kernel': p_optim_data[1], 'gamma': p_optim_data[2],
-                      'degree': p_optim_data[3]}
-
-        return l1_svm(p_data=p_features, p_params=parameters)
-
     elif p_model == 'ann-mlp':
         parameters = {'hidden_layers': p_optim_data[0], 'hidden_neurons': p_optim_data[1],
                       'activation': p_optim_data[2], 'reg_1': p_optim_data[3], 'reg_2': p_optim_data[4],
@@ -1612,7 +1447,7 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
     p_models: list
         with the name of the models
 
-        p_models = ['logistic-elasticnet', 'l1-svm', 'ann-mlp']
+        p_models = ['logistic-elasticnet', 'ann-mlp']
         p_models = ['ann-mlp']
 
     p_fit_type: str
@@ -1666,7 +1501,9 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
                                                             p_memory=None)
     elif p_embargo == 'False':
         # Without embargo
+        memory = dt.features_params['lags_diffs']
         p_data_folds, embargo_dates = p_data_folds, ['no embargo']
+
     else: 
         print('Error in fold_process, invalid p_embargo parameter')
     
@@ -1742,29 +1579,29 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
             # Feature metrics for ORIGINAL DATA: OHLCV
             dt_metrics = data_profile(p_data=p_data_folds[period].copy(), p_type='ohlc', p_mult=10000)
 
-            # Original data
-            data_folds = p_data_folds[period].copy()
+        # Original data
+        data_folds = p_data_folds[period].copy()
 
-            # Feature engineering (Autoregressive)
-            linear_data = linear_features(p_data=data_folds, p_memory=memory)
-            
-            # Symbolic features generation with genetic programming
-            m_features = genetic_programed_features(p_data=linear_data, p_split=p_inner_split)
+        # Feature engineering (Autoregressive)
+        linear_data = linear_features(p_data=data_folds, p_memory=memory)
+        
+        # Symbolic features generation with genetic programming
+        m_features = genetic_programed_features(p_data=linear_data, p_split=p_inner_split)
 
-            # print it to have it in the logs
-            df_log_2 = pd.DataFrame(m_features['sym_data']['details'])
-            df_log_2.columns = ['gen', 'avg_len', 'avg_fit', 'best_len', 'best_fit', 'best_oob', 'gen_time']
-            logger.debug('\n\n{}\n'.format(df_log_2))
+        # print it to have it in the logs
+        df_log_2 = pd.DataFrame(m_features['sym_data']['details'])
+        df_log_2.columns = ['gen', 'avg_len', 'avg_fit', 'best_len', 'best_fit', 'best_oob', 'gen_time']
+        logger.debug('\n\n{}\n'.format(df_log_2))
 
-            #  scale just the features
-            for data in list(m_features['model_data'].keys()):
-                # debugging
-                # data = list(m_features['model_data'].keys())[1]
+        #  scale just the features
+        for data in list(m_features['model_data'].keys()):
+            # debugging
+            # data = list(m_features['model_data'].keys())[1]
 
-                # just scale the features, not the target, of inner data-sets
-                if data[-1] == 'x':
-                    m_features['model_data'][data] = data_scaler(p_data=m_features['model_data'][data],
-                                                                    p_trans=p_trans_function)
+            # just scale the features, not the target, of inner data-sets
+            if data[-1] == 'x':
+                m_features['model_data'][data] = data_scaler(p_data=m_features['model_data'][data],
+                                                                p_trans=p_trans_function)
         
         # --------------------------------------------------------------------------- FEATURES PROFILING -- #
 
@@ -1789,7 +1626,7 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
         logger.debug('---- Data Scaling Order: ' + p_trans_order)
         logger.debug('---- Data Transformation: ' + p_trans_function)
         logger.debug('---- Validation inner-split: ' + p_inner_split)
-        logger.debug('---- Embargo: ' + p_embargo + ' - ' + str(memory) + '\n')
+        logger.debug('---- Embargo: ' + p_embargo + ' = ' + str(memory) + '\n')
 
         logger.info("Feature Engineering in Fold done in = " + str(datetime.now() - init) + '\n')
 
@@ -1851,7 +1688,7 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
     # -- ----------------------------------------------------------------------------------- ----------- -- #
 
     # Base route to save file
-    route = 'files/pickle_rick/' + dt.folder
+    route = 'files/backups/' + dt.folder
 
     # File name to save the data
     file_name = route + period[0] + '_' + p_fit_type + '_' + p_trans_function + '_' + \
@@ -1928,14 +1765,6 @@ def global_evaluation(p_global_data, p_case, p_features, p_trans_function, p_tra
                                    'model': model_metrics(p_model=individual_model['model'],
                                                           p_model_data=global_data)})
 
-        elif p_model == 'l1-svm':
-            parameters = {'c': individual_params[0], 'kernel': individual_params[1],
-                          'gamma': individual_params[2], 'degree': individual_params[3]}
-
-            global_results.append({'global_data': global_data, 'global_parameters': parameters,
-                                   'model': model_metrics(p_model=individual_model['model'], 
-                                                          p_model_data=global_data)})
-
         elif p_model == 'ann-mlp':
             parameters = {'hidden_layers': individual_params[0], 'hidden_neurons': individual_params[1],
                           'activation': individual_params[2], 'alpha': individual_params[3],
@@ -1967,7 +1796,7 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
     p_models: list
         with the models name
         
-        p_models = ['logistic-elasticnet', 'ann-mlp', 'l1-svm']
+        p_models = ['logistic-elasticnet', 'ann-mlp']
 
     p_global_cases: dict
         With all the info for the global cases

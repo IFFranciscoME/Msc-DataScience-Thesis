@@ -13,6 +13,7 @@
 			"activityBar.activeBackground": "#418FFB",
 			"activityBar.activeFocusBorder": "#fafafa",
 		},
-		"python.pythonPath": "/home/franciscome/github/Msc_Thesis/msc_thesis_ludwig_venv/bin/python3.8"
+		"python.pythonPath": "/home/franciscome/github/Msc_Thesis/msc_thesis_ludwig_venv/bin/python3.8",
+		"jupyter.jupyterServerType": "local"
 	}
 }
