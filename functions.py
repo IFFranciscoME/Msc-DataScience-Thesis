@@ -434,10 +434,49 @@ def t_folds(p_data, p_period):
     return 'Error in t_folds: verify p_period parameter'
 
 
+# -------------------------------------------------------------------------------------- Linear Features -- #
+# --------------------------------------------------------------------------------------------------------- #
+
+def linear_features(p_data, p_mult):
+    """
+    Calculations for linear features, special for OHLCV data
+
+    Parameters
+    ----------
+
+    p_data: pd.DataFrame
+        With Open, High, Low, Close, Volume numerical valued columns, index doesnt matter  
+    
+    p_mult: int
+        Quantity to multiply the differences, useful when wanting the calculations expressed in PIPS
+
+    Returns
+    -------
+    ohlc_data: pd.DataFrame
+        Original OHLCV columns + Linear Features for OHLCV Case
+
+    """
+   
+    # initial data
+    ohlc_data = p_data[['timestamp','open', 'high', 'low', 'close', 'volume']].copy()
+
+    # data calculations
+    ohlc_data['co'] = round((ohlc_data['close'] - ohlc_data['open'])*p_mult, 2)
+    ohlc_data['hl'] = round((ohlc_data['high'] - ohlc_data['low'])*p_mult, 2)
+    ohlc_data['ol'] = round((ohlc_data['open'] - ohlc_data['low'])*p_mult, 2)
+    ohlc_data['ho'] = round((ohlc_data['high'] - ohlc_data['open'])*p_mult, 2)
+
+    # Period Change and Period Volatility adjusted with Scalated Volume
+    ohlc_data['cov'] = round((ohlc_data['co']/ohlc_data['volume'])*p_mult, 4)
+    ohlc_data['hlv'] = round((ohlc_data['hl']/ohlc_data['volume'])*p_mult, 4)
+    
+    # original shifted data + co, hl, ol, ho columns
+    return ohlc_data
+
 # ------------------------------------------------------------------------------ Autoregressive Features -- #
 # --------------------------------------------------------------------------------------------------------- #
 
-def autoregressive_features(p_data, p_nmax):
+def autoregressive_features(p_data, p_memory):
     """
     Creacion de variables de naturaleza autoregresiva (resagos, promedios, diferencias)
 
@@ -446,125 +485,106 @@ def autoregressive_features(p_data, p_nmax):
     p_data: pd.DataFrame
         Con columnas OHLCV para construir los features
 
-    p_nmax: int
+    p_memory: int
         Para considerar n calculos de features (resagos y promedios moviles)
 
     Returns
     -------
-    r_features: pd.DataFrame
+    ar_features: pd.DataFrame
         Con dataframe de features (timestamp + co + co_d + features)
 
     """
-
+    
     # work with a copy
     data = p_data.copy()
 
-    # pips descontados al cierre
-    data['co'] = (data['close'] - data['open']) * 10000
-    # pips descontados alcistas
-    data['ho'] = (data['high'] - data['open']) * 10000
-    # pips descontados bajistas
-    data['ol'] = (data['open'] - data['low']) * 10000
-    # pips descontados en total (medida de volatilidad)
-    data['hl'] = (data['high'] - data['low']) * 10000
     # Target variable
-    data['co_d'] = [1 if i > 0 else 0 for i in list(data['co'])]
+    data['cod'] = [1 if i > 0 else 0 for i in list(data['co'])]
+    
+    # N features with window-based calculations
+    for n in range(0, p_memory):
 
-    # exponential moving average of open-high 
-    data['ewma_vol'] = data['volume'].ewm(alpha=0.4).mean()
-    # exponential moving average of
-    data['ewma_ol'] = data['ol'].ewm(alpha=0.4).mean()
-    # exponential moving average of
-    data['ewma_ho'] = data['ho'].ewm(alpha=0.4).mean()
-    # exponential moving average of
-    data['ewma_hl'] = data['hl'].ewm(alpha=0.4).mean()
-
-    # ciclo para calcular N features con logica de "Ventanas de tamaño n"
-    for n in range(0, p_nmax):
-        # rezago n de Open Interest
-        data['lag_vol_' + str(n + 1)] = data['volume'].shift(n + 1)
-        # rezago n de Open - Low
+        data['ma_ol'] = data['ol'].rolling(n + 2).mean()
+        data['ma_ho'] = data['ho'].rolling(n + 2).mean()
+        data['ma_hl'] = data['hl'].rolling(n + 2).mean()
+        data['ma_hlv'] = data['hlv'].rolling(n + 2).mean()
+        data['ma_cov'] = data['cov'].rolling(n + 2).mean()
+        
         data['lag_ol_' + str(n + 1)] = data['ol'].shift(n + 1)
-        # rezago n de High - Open
         data['lag_ho_' + str(n + 1)] = data['ho'].shift(n + 1)
-        # rezago n de High - Low
         data['lag_hl_' + str(n + 1)] = data['hl'].shift(n + 1)
-        # promedio movil de open-high de ventana n
+        data['lag_hlv_' + str(n + 1)] = data['hlv'].shift(n + 1)
+        data['lag_cov_' + str(n + 1)] = data['cov'].shift(n + 1)
+
+        data['sd_ol_' + str(n + 1)] = data['ol'].rolling(n + 1).std()
+        data['sd_ho_' + str(n + 1)] = data['ho'].rolling(n + 1).std()
+        data['sd_hl_' + str(n + 1)] = data['hl'].rolling(n + 1).std()
+        data['sd_hlv_' + str(n + 1)] = data['hlv'].rolling(n + 1).std()
+        data['sd_cov_' + str(n + 1)] = data['cov'].rolling(n + 1).std()
+
+        data['lag_vol_' + str(n + 1)] = data['volume'].shift(n + 1)
         data['sum_vol_' + str(n + 1)] = data['volume'].rolling(n + 1).sum()
+        data['mean_vol_' + str(n + 1)] = data['volume'].rolling(n + 1).mean()
 
     # asignar timestamp como index
     data.index = pd.to_datetime(data.index)
     # quitar columnas no necesarias para modelos de ML
-    r_features = data.drop(['open', 'high', 'low', 'close', 'hl', 'ol', 'ho', 'volume'], axis=1)
+    ar_features = data.drop(['open', 'high', 'low', 'close', 'hl', 'ol', 'ho', 'volume'], axis=1)
     # borrar columnas donde exista solo NAs
-    r_features = r_features.dropna(axis='columns', how='all')
+    ar_features = ar_features.dropna(axis='columns', how='all')
     # borrar renglones donde exista algun NA
-    r_features = r_features.dropna(axis='rows')
+    ar_features = ar_features.dropna(axis='rows')
     # convertir a numeros tipo float las columnas
-    r_features.iloc[:, 2:] = r_features.iloc[:, 2:].astype(float)
+    ar_features.iloc[:, 2:] = ar_features.iloc[:, 2:].astype(float)
     # resetear index
-    r_features.reset_index(inplace=True, drop=True)
+    ar_features.reset_index(inplace=True, drop=True)
 
-    return r_features
+    return ar_features
+
 
 # ---------------------------------------------------------- FUNCTION: Autoregressive Feature Engieering -- #
 # ---------------------------------------------------------- ---------------------------------------------- #
 
-def linear_features(p_data, p_memory):
+def data_shift(p_data, p_target):
     """
-    autoregressive process for feature engineering
+    Target data shift
 
     Parameters
     ----------
     p_data: pd.DataFrame
-        con datos completos para ajustar modelos
-        p_data = m_folds['periodo_1']
+        
 
-    p_memory: int
-        valor de memoria maxima para hacer calculo de variables autoregresivas
-        p_memory = 7
+    p_target: int
 
+    
     Returns
     -------
     model_data: dict
-        {'train_x': pd.DataFrame, 'train_y': pd.DataFrame, 'val_x': pd.DataFrame, 'val_y': pd.DataFrame}
+    
 
     References
     ----------
 
     """
 
-    # hardcopy of data
-    data = p_data.copy()
-
-    # funcion para generar variables autoregresivas
-    data_ar = autoregressive_features(p_data=data, p_nmax=p_memory)
-
     # y_t = y_t+1 in order to prevent filtration, that is, at time t, the target variable y_t
     # with the label {co_d}_t will be representing the direction of the price movement (0: down, 1: high) 
     # that was observed at time t+1, and so on applies to t [0, n-1]. the last value is droped
-    data_ar['co_d'] = data_ar['co_d'].shift(-1, fill_value=999)
-    data_ar = data_ar.drop(data_ar['co_d'].index[[-1]])
+    p_data[p_target] = p_data[p_target].shift(-1, fill_value=9999)
+    shifted_data = p_data.drop(p_data[p_target].index[[-1]])
+    shifted_data.rename(columns = {p_target: p_target + '_t1'}, inplace = True)
 
-    # separacion de variable dependiente
-    data_y = data_ar['co_d'].copy()
-
-    # separacion de variables independientes
-    data_arf = data_ar.drop(['timestamp', 'co', 'co_d'], axis=1, inplace=False)
-
-    # datos para utilizar en la siguiente etapa
-    next_data = pd.concat([data_y.copy(), data_arf.copy()], axis=1)
-
-    # keep the timestamp as index
-    next_data.index = data_ar['timestamp'].copy()
+    if 'timestamp' in list(shifted_data.columns):
+        shifted_data.index = shifted_data['timestamp']
+        shifted_data.drop('timestamp', inplace=True, axis=1)
   
-    return next_data
+    return shifted_data
 
 
 # ------------------------------------------------------------------ MODEL: Symbolic Features Generation -- #
 # --------------------------------------------------------------------------------------------------------- #
 
-def symbolic_features(p_x, p_y, p_params):
+def genetic_programming(p_x, p_y, p_params):
     """
     Feature engineering process with symbolic variables by using genetic programming. 
 
@@ -603,6 +623,18 @@ def symbolic_features(p_x, p_y, p_params):
     ----------
     https://gplearn.readthedocs.io/en/stable/reference.html#gplearn.genetic.SymbolicTransformer
     
+    
+    **** NOTE ****
+
+    simplified internal calculation for correlation (asuming w=1)
+    
+    y_pred_demean = y_pred - np.average(y_pred)
+    y_demean = y - np.average(y)
+
+                              np.sum(y_pred_demean * y_demean)
+    pearson =  ---------------------------------------------------------------
+                np.sqrt((np.sum(y_pred_demean ** 2) * np.sum(y_demean ** 2)))  
+
     """
    
     # Function to produce Symbolic Features
@@ -629,7 +661,7 @@ def symbolic_features(p_x, p_y, p_params):
     model_fit = model.fit_transform(p_x, p_y)
 
     # output data of the model
-    data = pd.DataFrame(model_fit)
+    data = pd.DataFrame(np.round(model_fit, 6))
 
     # parameters of the model
     model_params = model.get_params()
@@ -637,13 +669,13 @@ def symbolic_features(p_x, p_y, p_params):
     # best programs dataframe
     best_programs = {}
     for p in model._best_programs:
-        factor_name = 'sym' + str(model._best_programs.index(p) + 1)
-        best_programs[factor_name] = {'fitness': p.fitness_, 'expression': str(p),
-                                      'depth': p.depth_, 'length': p.length_}
+        factor_name = 'sym_' + str(model._best_programs.index(p))
+        best_programs[factor_name] = {'raw_fitness': p.raw_fitness_, 'reg_fitness': p.fitness_, 
+                                      'expression': str(p), 'depth': p.depth_, 'length': p.length_}
 
     # format and sorting
     best_programs = pd.DataFrame(best_programs).T
-    best_programs = best_programs.sort_values(by='fitness', ascending=False)
+    best_programs = best_programs.sort_values(by='raw_fitness', ascending=False)
 
     # results
     results = {'fit': model_fit, 'params': model_params, 'model': model, 'data': data,
@@ -655,7 +687,7 @@ def symbolic_features(p_x, p_y, p_params):
 # ------------------------------------------------- FUNCTION: Genetic Programming for Feature Engieering -- #
 # ------------------------------------------------- ------------------------------------------------------- #
 
-def genetic_programed_features(p_data, p_split):
+def symbolic_features(p_data, p_target, p_split):
     """
     El uso de programacion genetica para generar variables independientes simbolicas
 
@@ -665,6 +697,9 @@ def genetic_programed_features(p_data, p_split):
         con datos completos para ajustar modelos
         
         p_data = m_folds['periodo_1']
+
+    p_target: str
+        with the name of the target variable
 
     p_split: int
         split in val
@@ -684,24 +719,24 @@ def genetic_programed_features(p_data, p_split):
     """
    
     # separacion de variable dependiente
-    datos_y = p_data['co_d'].copy().astype(int)
+    datos_y = p_data[p_target].copy().astype(int)
 
     # separacion de variables independientes
-    datos_had = p_data.copy().drop(['co_d'], axis=1, inplace=False)
+    datos_x = p_data.copy().drop([p_target], axis=1, inplace=False)
 
     # --------------------------------------------------------------- ingenieria de variables simbolicas -- #
     # --------------------------------------------------------------- ---------------------------------- -- #
 
     # Lista de operaciones simbolicas
-    sym_data = symbolic_features(p_x=datos_had, p_y=datos_y, p_params=dt.symbolic_params)
+    sym_data = genetic_programming(p_x=datos_x, p_y=datos_y, p_params=dt.symbolic_params)
 
     # variables
     datos_sym = sym_data['data'].copy()
     datos_sym.columns = ['sym_' + str(i) for i in range(0, len(sym_data['data'].iloc[0, :]))]
-    datos_sym.index = datos_had.index
+    datos_sym.index = datos_x.index
 
     # datos para utilizar en la siguiente etapa
-    datos_modelo = pd.concat([datos_had.copy(), datos_sym.copy()], axis=1)
+    datos_modelo = pd.concat([datos_x.copy(), datos_sym.copy()], axis=1)
     model_data = {}
 
     # if size != 0 then an inner fold division is performed with size*100 % as val and the rest for train
@@ -1564,29 +1599,31 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
         data_folds = {}
         m_features = {}
 
-        if p_trans_order == 'pre-features':
-
-            # scale original OHLC data (the same transformation will be required for out-of-sample)
-            p_data_folds[period] = data_scaler(p_data=p_data_folds[period], p_trans=p_trans_function)
-
-            # Feature metrics for SCALED ORIGINAL DATA: OHLCV
-            dt_metrics = data_profile(p_data=p_data_folds[period].copy(), p_type='ohlc', p_mult=10000)
-
         # ----------------------------------------------------------------------------- FEATURES SCALING -- #
 
-        elif p_trans_order == 'post-features':
-
-            # Feature metrics for ORIGINAL DATA: OHLCV
-            dt_metrics = data_profile(p_data=p_data_folds[period].copy(), p_type='ohlc', p_mult=10000)
+        # Feature metrics for ORIGINAL DATA: OHLCV
+        dt_metrics = data_profile(p_data=p_data_folds[period].copy(), p_type='ohlc', p_mult=10000)
 
         # Original data
         data_folds = p_data_folds[period].copy()
 
         # Feature engineering (Autoregressive)
-        linear_data = linear_features(p_data=data_folds, p_memory=memory)
+        linear_data = linear_features(p_data=data_folds, p_mult=10000)
+
+        # Feature engineering (Autoregressive)
+        autoregressive_data = autoregressive_features(p_data=linear_data, p_memory=memory)
+
+        # Target Variable shift to avoid information leakage
+        shifted_data = data_shift(p_data=autoregressive_data, p_target='cod')
+
+        # pre-feature scaling (Scale OHLCV based linear features)
+        fold_data_y = shifted_data['cod_t1'].copy()
+        shifted_data.drop('cod_t1', inplace=True, axis=1)
+        fold_data_x = data_scaler(p_data=shifted_data, p_trans='scale')
+        fold_data = pd.concat([fold_data_y, fold_data_x], axis=1)
         
-        # Symbolic features generation with genetic programming
-        m_features = genetic_programed_features(p_data=linear_data, p_split=p_inner_split)
+                # Symbolic features generation with genetic programming
+        m_features = symbolic_features(p_data=fold_data, p_split=p_inner_split, p_target='cod_t1')
 
         # print it to have it in the logs
         df_log_2 = pd.DataFrame(m_features['sym_data']['details'])
@@ -1595,8 +1632,6 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
 
         #  scale just the features
         for data in list(m_features['model_data'].keys()):
-            # debugging
-            # data = list(m_features['model_data'].keys())[1]
 
             # just scale the features, not the target, of inner data-sets
             if data[-1] == 'x':
