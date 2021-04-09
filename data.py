@@ -45,13 +45,13 @@ exec_data = 4
 exec_models = ['logistic-elasticnet', 'ann-mlp']
 
 # fold size
-exec_fold = ['quarter', 'semester', 'year']
+# exec_fold = ['quarter', 'semester', 'year']
 
 # experiment parameters
-exec_opt = {'embargo': ['fix'],
+exec_opt = {'fold': ['quarter', 'semester', 'year'],
+            'embargo': ['fix'],
             'inner-split': ['20'],
-            'trans_function': ['standard', 'scale'],
-            'trans_order': ['pre-features'], # fix this message and allocate this option to other thing
+            'trans_function': ['robust', 'standard'],
             'fitness': ['logloss-train', 'logloss-inv-weighted']}
 
 # ------------------------------------------------------------------------------------- COMPLETE VERSION -- #
@@ -80,8 +80,11 @@ exec_opt = {'embargo': ['fix', 'memory', 'False'],
 """
 
 # Iterative/Parallel Experiment Data
-exec_exp = list(itertools.product(*[exec_opt['embargo'], exec_opt['inner-split'], exec_opt['trans_function'],
-                                    exec_opt['trans_order'], exec_opt['fitness']]))
+exec_exp = list(itertools.product(*[exec_opt['fold'],
+                                    exec_opt['embargo'],
+                                    exec_opt['inner-split'],
+                                    exec_opt['trans_function'],
+                                    exec_opt['fitness']]))
 
 # --------------------------------------------------------------------- Parameters for Symbolic Features -- #
 # --------------------------------------------------------------------- -------------------------------- -- #

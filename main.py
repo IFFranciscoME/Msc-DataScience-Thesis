@@ -14,7 +14,7 @@
 import functions as fn
 import data as dt
 from data import ohlc_data as data
-from data import exec_fold
+from data import exec_models
 from data import exec_exp
 
 # support functions
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     print(' -- ---------------- ------------------- ---------------- --\n\n')
 
     # main loop to test all t-fold sizes
-    for iteration in exec_fold:
+    for model in exec_models:
    
         # Measure the begining of the code execution process
         ini_time = datetime.now()
@@ -47,8 +47,8 @@ if __name__ == "__main__":
         # ----------------------------------------------------------- ---------------------------------- -- #
 
         # Timeseries data division in t-folds
-        folds = fn.t_folds(p_data=data, p_period=iteration)
-
+        # folds = fn.t_folds(p_data=data, p_period=iteration)
+        
         # -- ------------------------------------------------------------------- FOLD EVALUATION PROCESS -- #
         # -- ------------------------------------------------------------------- ----------------------- -- #
 
@@ -65,10 +65,10 @@ if __name__ == "__main__":
         fn.tf_processing(p_option='cpu', p_cores=workers)
         
         # Parallel Asyncronous Process 
-        fold_process = {'fold_' + str(iteration): pool.starmap(fn.fold_process,
-                                                               [(folds, ml_models,
-                                                                 exp[0], exp[1], exp[2], exp[3], exp[4])
-                                                               for exp in exec_exp])}
+        fold_process = {'fold_' + str(model): pool.starmap(fn.fold_process,
+                                                           [(fn.t_folds(p_data=data, p_period=exp[0]),
+                                                             ml_models, exp[1], exp[2], exp[3], exp[4])
+                                                            for exp in exec_exp])}
 
         # close pool
         pool.close()
