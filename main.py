@@ -10,14 +10,15 @@
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 
+# project files
+import functions as fn
+import data as dt
 from data import ohlc_data as data
 from data import exec_fold
 from data import exec_exp
-from datetime import datetime
-from multiprocessing import cpu_count
 
-import functions as fn
-import data as dt
+# support functions
+from datetime import datetime
 import multiprocessing as mp
 import warnings
 import random
@@ -38,10 +39,7 @@ if __name__ == "__main__":
 
     # main loop to test all t-fold sizes
     for iteration in exec_fold:
-
-        # debugging
-        # iteration = iter_fold[0]
-    
+   
         # Measure the begining of the code execution process
         ini_time = datetime.now()
 
@@ -85,3 +83,4 @@ if __name__ == "__main__":
         end_time = datetime.now()
         print('elapsed time for the whole process: ', str(end_time - ini_time))
         # ---------------------------------------------------------------------------------------------- -- #
+        

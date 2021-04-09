@@ -10,6 +10,7 @@
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 
+#%%
 from rich import print
 from rich import inspect
 
@@ -30,6 +31,8 @@ random.seed(123)
 # ---------------------------------------------------------------- PLOT 1: OHLC DATA PLOT (ALL DATA SET) -- #
 # ---------------------------------------------------------------- ------------------------------------- -- #
 
+#%%
+
 # Candlestick chart for historical OHLC prices
 plot_1 =vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_1, p_vlines=None)
 
@@ -42,31 +45,36 @@ plot_1 =vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_1, p_vlines=None)
 # ------------------------------------------------------------------------------------ LOAD RESULTS DATA -- #
 # ------------------------------------------------------------------------------------ ----------------- -- #
 
-# Fold size
-fold_case = 'semester'
-
-# Timeseries data division in t-folds
-folds = fn.t_folds(p_data=data, p_period=fold_case)
-
-# List with the names of the models
-# ml_models = list(dt.models.keys())
-ml_models = ['ann-mlp']
+#%%
 
 # File name to save the data
-file_name = 'files/pickle_rick/s_logloss-inv-weighted_robust_post-features_20.dat'
+file_name = 'files/backups/ludwig/q_logloss-weighted_scale_post-features_0_False.dat'
 
 # Load previously generated data
 memory_palace = dt.data_pickle(p_data_objects=None, p_data_action='load', p_data_file=file_name)
 memory_palace = memory_palace['memory_palace']
 
-# -- ----------------------------------------------------------------- PLOT 2: TIME SERIES BLOCK T-FOLDS -- #
-# -- ----------------------------------------------------------------- --------------------------------- -- #
+# -- -------------------------------------------------------------------------------------- LOAD T-FOLDS -- #
+# -- -------------------------------------------------------------------------------------- ------------ -- #
+
+#%%
+
+# Fold size
+fold_case = 'quarter'
+
+# Timeseries data division in t-folds
+folds = fn.t_folds(p_data=data, p_period=fold_case)
 
 # Dates for vertical lines in the T-Folds plot
 dates_folds = []
 for n_fold in list(folds.keys()):
     dates_folds.append(folds[n_fold]['timestamp'].iloc[0])
     dates_folds.append(folds[n_fold]['timestamp'].iloc[-1])
+
+# -- ----------------------------------------------------------------- PLOT 2: TIME SERIES BLOCK T-FOLDS -- #
+# -- ----------------------------------------------------------------- --------------------------------- -- #
+
+#%%
 
 # Plot_1 with t-folds vertical lines
 plot_2 = vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_2, p_vlines=dates_folds)
@@ -79,6 +87,8 @@ plot_2 = vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_2, p_vlines=dates_folds)
 
 # ----------------------------------------------------------------------------------------- DATA PROFILE -- #
 # ----------------------------------------------------------------------------------------- ------------ -- #
+
+#%%
 
 # period to explore results
 period = list(folds.keys())[0]
@@ -102,7 +112,7 @@ n_sf = dt.symbolic_params['n_features']
 lf_profile_train = memory_palace[period]['metrics']['feature_metrics']['train_x'].iloc[:, :-n_sf]
 # lf_profile_val = memory_palace[period]['metrics']['feature_metrics']['val_x'].iloc[:, :-n_sf]
 
-# ------------------------------------------------------------------------------------ symbolic variables -- #
+# ----------------------------------------------------------------------------------- symbolic variables -- #
 
 # train and val data sets with only symbolic variables
 sm_profile_train = memory_palace[period]['metrics']['feature_metrics']['train_x'].iloc[:, -n_sf:]
@@ -127,6 +137,11 @@ tgv_corr_train = pd.concat([memory_palace[period]['features']['train_y'],
 
 # -- ------------------------------------------------------------------------------- PARAMETER SET CASES -- #
 # -- ------------------------------------------------------------------------------- ------------------- -- #
+
+#%% 
+
+# List with the names of the models
+ml_models = list(dt.models.keys())
 
 # metric type (all the available in iter_opt['fitness'])
 metric_case = 'acc-inv-weighted'
@@ -154,8 +169,10 @@ mode_repetitions = pd.DataFrame(met_cases[model_case]['met_mode']['data']).T
 # -- ------------------------------------------------------------------------ SYMBOLIC FEATURES ANALYSIS -- #
 # -- ------------------------------------------------------------------------ -------------------------- -- #
 
+#%%
+
 # period to explore results
-period_case = 's_02_2009'
+period_case = 'q_01_2009'
 
 # models to explore results
 model_case = 'ann-mlp'
@@ -178,6 +195,8 @@ d_sym_fitness = inspect(sym_fitness)
 
 # -- --------------------------------------------------------------- PLOT 3: CLASSIFICATION FOLD RESULTS -- #
 # -- ----------------------------------------------------------------------------- --------------------- -- #
+
+#%%
 
 # Pick case
 case = 'met_min'
@@ -215,6 +234,8 @@ plot_3 = vs.g_ohlc_class(p_ohlc=ohlc_prices, p_theme=dt.theme_plot_3, p_data_cla
 # -- -------------------------------------------------------------------------- PLOT 4: All ROCs in FOLD -- #
 # -- -------------------------------------------------------------------------- ------------------------ -- #
 
+#%% 
+
 # case to plot
 case = 'met_max'
 
@@ -228,7 +249,7 @@ metric_case = 'acc-val'
 model_case = 'ann-mlp'
 
 # period 
-period_case = 's_02_2009'
+period_case = 'q_01_2009'
 
 # parameters of the evaluated models
 d_params = memory_palace[period_case][model_case]['p_hof']['hof']
@@ -254,6 +275,8 @@ plot_4 = vs.g_multiroc(p_data=d_plot_4, p_metric=metric_case, p_theme=dt.theme_p
 # -- --------------------------------------------------------------------------------- GLOBAL EVALUATION -- #
 # -- --------------------------------------------------------------------------------- ----------------- -- #
 
+#%% 
+
 # metric type (all the available in iter_opt['fitness'])
 metric_case = 'acc-diff'
 
@@ -261,7 +284,7 @@ metric_case = 'acc-diff'
 model_case = 'ann-mlp'
 
 # period 
-period_case = 's_02_2009'
+period_case = 'q_02_2009'
 
 # data subset to use
 subset = 'train'
@@ -270,7 +293,7 @@ subset = 'train'
 met_cases = fn.model_cases(p_models=ml_models, p_global_cases=memory_palace, p_data_folds=folds,
                            p_cases_type=metric_case)
 
-# Global Evaluation for a particular type of case
+# Global Evaluation for a particular selected type of case
 global_models = fn.global_evaluation(p_case=memory_palace[period_case][model_case],
                                      p_global_data=data,
                                      p_features=memory_palace[period_case],
@@ -295,6 +318,8 @@ global_model['model']['pro-metrics']['logloss-mean']
 # -- ------------------------------------------------------------- PLOT 5: GLOBAL CLASSIFICATION RESULTS -- #
 # -- ------------------------------------------------------------- ------------------------------------- -- #
 
+#%%
+
 # Get data for prices and predictions
 ohlc_prices = data
 
@@ -317,3 +342,5 @@ plot_5 = vs.g_ohlc_class(p_ohlc=ohlc_prices, p_theme=dt.theme_plot_3, p_data_cla
 
 # Generate plot online with chartstudio
 # py.plot(plot_5)
+
+# %%

@@ -34,26 +34,25 @@ environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 # --------------------------------------------------------------------------------- -------------------- -- #
 
 # number of processing cores to use
-exec_workers = cpu_count()-4
+exec_workers = cpu_count() - 4
 
 # --------------------------------------------------------------------------------------- SUBSET VERSION -- #
 
 # number of years of prices, accepted values range from 2 (2009) to 12 (2020)
-exec_data = 10
+exec_data = 2
 
 # models to explore
-exec_models = ['ann-mlp', 'logistic-elasticnet', 'l1-svm']
+exec_models = ['logistic-elasticnet', 'ann-mlp']
 
 # fold size
-exec_fold = ['quarter', 'semester', 'year', 'bi-year', '80-20']
+exec_fold = ['quarter']
 
 # experiment parameters
-exec_opt = {'embargo': ['fix', 'memory', 'False'],
-            'inner-split': ['20', '0'],
-            'trans_function': ['scale', 'standard', 'robust'],
-            'trans_order': ['pre-features', 'post-features'],
-            'fitness': ['logloss-train', 'logloss-val', 'logloss-mean', 'logloss-weighted',
-            'logloss-inv-weighted']}
+exec_opt = {'embargo': ['fix'],
+            'inner-split': ['20'],
+            'trans_function': ['standard'],
+            'trans_order': ['pre-features'], # fix this message and allocate this option to other thing
+            'fitness': ['logloss-mean']}
 
 # ------------------------------------------------------------------------------------- COMPLETE VERSION -- #
 
@@ -62,7 +61,7 @@ exec_opt = {'embargo': ['fix', 'memory', 'False'],
 exec_data = 12
 
 # models to explore
-exec_models = ['logistic-elasticnet', 'l1-svm', 'ann-mlp']
+exec_models = ['logistic-elasticnet', 'ann-mlp']
 
 # fold size
 exec_fold = ['quarter', 'semester', 'year', 'bi-year', '80-20']
@@ -88,23 +87,24 @@ exec_exp = list(itertools.product(*[exec_opt['embargo'], exec_opt['inner-split']
 # --------------------------------------------------------------------- -------------------------------- -- #
 
 # parameters for features formation
-features_params = {'lags_diffs': 15}
+features_params = {'lags_diffs': 3}
 
-# paremeters for symbolic features generation process
+# paremeters for symbolic features generation process (metric is pearson default but changed later)
 symbolic_params = {'functions': ['sub', 'add', 'inv', 'mul', 'div', 'abs', 'log', 'sqrt'],
-                   'population': 3000, 'tournament': 20, 'hof': 10, 'generations': 19, 'n_features': 15,
-                   'init_depth': (2, 10), 'init_method': 'half and half', 'parsimony': 0.15,
+                   'population': 1200, 'tournament': 300, 'hof': 30, 'generations': 2, 'n_features': 30,
+                   'init_depth': (4, 10), 'init_method': 'half and half', 'parsimony': 0.001,
                    'constants': None,
-                   'metric': 'pearson', 'metric_goal': 0.70, 
-                   'prob_cross': 0.4, 'prob_mutation_subtree': 0.4,
-                   'prob_mutation_hoist': 0.1, 'prob_mutation_point': 0.1,
+                   
+                   'metric': 'pearson', 'metric_goal': 0.80, 
+                   'prob_cross': 0.4, 'prob_mutation_subtree': 0.5,
+                   'prob_mutation_hoist': 0.05, 'prob_mutation_point': 0.05,
                    'verbose': True, 'parallelization': True, 'warm_start': True}
 
 # ------------------------------------------------------------------ Parameters for Genetic Optimization -- #
 # ------------------------------------------------------------------ ----------------------------------- -- #
 
-optimization_params = {'halloffame': 10, 'tournament': 20, 'population': 50, 'generations': 19,
-                       'mutation': 0.7, 'crossover': 0.7}
+optimization_params = {'population': 300, 'halloffame': 10, 'tournament': 30, 'generations': 2,
+                       'mutation': 0.4, 'crossover': 0.4}
 
 # ----------------------------------------------------------------------- Hyperparameters for the Models -- #
 # ----------------------------------------------------------------------- ------------------------------ -- #
@@ -119,27 +119,6 @@ models = {
 
                    'c': [1.5, 1.1, 1, 0.8, 0.5, 1.5, 1.1, 1, 0.8, 0.5,
                          1.5, 1.1, 1, 0.8, 0.5, 1.5, 1.1, 1, 0.8, 0.5] }},
-
-    'l1-svm': {
-        'label': 'l1-svm',
-
-        'params': {'c': [1.5, 1.1, 1, 0.8, 0.5, 1.5, 1.1, 1, 0.8, 0.5,
-                         1.5, 1.1, 1, 0.8, 0.5, 1.5, 1.1, 1, 0.8, 0.5],
-
-                   'kernel': ['poly', 'linear', 'linear', 'linear', 'poly',
-                              'poly', 'linear', 'linear', 'linear', 'poly',
-
-                              'poly', 'rbf', 'rbf', 'rbf', 'poly',
-                              'poly', 'rbf', 'rbf', 'rbf', 'poly'],
-
-                   'gamma': ['scale', 'scale', 'scale', 'scale', 'scale',
-                             'auto', 'auto', 'auto', 'auto', 'auto',
-
-                             'scale', 'scale', 'scale', 'scale', 'scale',
-                             'auto', 'auto', 'auto', 'auto', 'auto'],
-                             
-                   'degree': [2, 2, 2, 2, 2, 4, 4, 4, 4, 4,
-                              6, 6, 6, 6, 6, 9, 9, 9, 9, 9] }},
 
     'ann-mlp': {
         'label': 'ann-mlp',
