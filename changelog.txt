@@ -115,7 +115,19 @@
 - Addition: Add cluster workspace and local workspace to repo
 - Addition: Add suppress message option for tensorflow (due to retracing warnings)
 
-# -- 09.03.2021
-- (goal): Modification: Remove pre-features data transformation and make post-features the default
-- (goal): Enhacement: Add option to pre-escale or not target variable
-- (goal): Performe inverse operation for scaled features and target variable
+# -- 13.03.2021
+- Modification: Remove pre-features data transformation and make post-features the default
+- Modification: Re use of pre-features option as scaling original OHLCV data before feature engineering
+
+# -- 08.04.2021
+- Delete: SVC Model and params
+- Test: Run test with quick parameters
+- Fix: Documents.py to have all results available.
+- Enhacement: Create volume discounted variables cov and hlv
+- Delete: pre-features and post-features option
+- Modification: Do always pre-features scaling and post-genetic_programed normalization
+- Modification: add reg_fitness (regularized fitness metric) and remove duplicated programms in GP
+
+- (pending) Enhacement: Pearson GP process and Spearman GP Process and selected top 10 unique variables
+- (pending) Feature importance option to explore, according to AIFML 2018
+- (pending) Fix: memory value for False embargo case
