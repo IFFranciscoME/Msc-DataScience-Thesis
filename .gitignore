@@ -21,6 +21,9 @@ nohup.out
 # files/logs
 
 # ignore folder with prices
+files/backups
+
+# ignore folder with prices
 # files/prices
 
 # ----------- -------------- ----------- #

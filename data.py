@@ -39,20 +39,20 @@ exec_workers = cpu_count() - 4
 # --------------------------------------------------------------------------------------- SUBSET VERSION -- #
 
 # number of years of prices, accepted values range from 2 (2009) to 12 (2020)
-exec_data = 2
+exec_data = 4
 
 # models to explore
 exec_models = ['logistic-elasticnet', 'ann-mlp']
 
 # fold size
-exec_fold = ['quarter']
+exec_fold = ['quarter', 'semester', 'year']
 
 # experiment parameters
 exec_opt = {'embargo': ['fix'],
             'inner-split': ['20'],
-            'trans_function': ['standard'],
+            'trans_function': ['standard', 'scale'],
             'trans_order': ['pre-features'], # fix this message and allocate this option to other thing
-            'fitness': ['logloss-mean']}
+            'fitness': ['logloss-train', 'logloss-inv-weighted']}
 
 # ------------------------------------------------------------------------------------- COMPLETE VERSION -- #
 
@@ -91,7 +91,7 @@ features_params = {'lags_diffs': 3}
 
 # paremeters for symbolic features generation process (metric is pearson default but changed later)
 symbolic_params = {'functions': ['sub', 'add', 'inv', 'mul', 'div', 'abs', 'log', 'sqrt'],
-                   'population': 1200, 'tournament': 300, 'hof': 30, 'generations': 2, 'n_features': 30,
+                   'population': 12000, 'tournament': 3000, 'hof': 30, 'generations': 5, 'n_features': 30,
                    'init_depth': (4, 10), 'init_method': 'half and half', 'parsimony': 0.001,
                    'constants': None,
                    
