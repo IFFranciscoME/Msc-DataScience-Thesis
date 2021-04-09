@@ -34,7 +34,7 @@ environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 # --------------------------------------------------------------------------------- -------------------- -- #
 
 # number of processing cores to use
-exec_workers = 1 # cpu_count() - 4
+exec_workers = cpu_count() - 4
 
 # --------------------------------------------------------------------------------------- SUBSET VERSION -- #
 
@@ -45,14 +45,14 @@ exec_data = 2
 exec_models = ['logistic-elasticnet', 'ann-mlp']
 
 # fold size
-exec_fold = ['quarter', 'year']
+exec_fold = ['quarter']
 
 # experiment parameters
-exec_opt = {'embargo': ['fix', 'memory', 'False'],
-            'inner-split': ['20', '0'],
-            'trans_function': ['standard', 'scale'],
-            'trans_order': ['pre-features', 'post-features'],
-            'fitness': ['logloss-train', 'logloss-val', 'logloss-mean']}
+exec_opt = {'embargo': ['fix'],
+            'inner-split': ['20'],
+            'trans_function': ['standard'],
+            'trans_order': ['pre-features'], # fix this message and allocate this option to other thing
+            'fitness': ['logloss-mean']}
 
 # ------------------------------------------------------------------------------------- COMPLETE VERSION -- #
 
@@ -87,13 +87,14 @@ exec_exp = list(itertools.product(*[exec_opt['embargo'], exec_opt['inner-split']
 # --------------------------------------------------------------------- -------------------------------- -- #
 
 # parameters for features formation
-features_params = {'lags_diffs': 7}
+features_params = {'lags_diffs': 3}
 
-# paremeters for symbolic features generation process
+# paremeters for symbolic features generation process (metric is pearson default but changed later)
 symbolic_params = {'functions': ['sub', 'add', 'inv', 'mul', 'div', 'abs', 'log', 'sqrt'],
-                   'population': 12000, 'tournament': 300, 'hof': 30, 'generations': 2, 'n_features': 30,
+                   'population': 1200, 'tournament': 300, 'hof': 30, 'generations': 2, 'n_features': 30,
                    'init_depth': (4, 10), 'init_method': 'half and half', 'parsimony': 0.001,
                    'constants': None,
+                   
                    'metric': 'pearson', 'metric_goal': 0.80, 
                    'prob_cross': 0.4, 'prob_mutation_subtree': 0.5,
                    'prob_mutation_hoist': 0.05, 'prob_mutation_point': 0.05,

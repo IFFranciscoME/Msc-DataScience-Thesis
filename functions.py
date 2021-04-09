@@ -673,9 +673,10 @@ def genetic_programming(p_x, p_y, p_params):
         best_programs[factor_name] = {'raw_fitness': p.raw_fitness_, 'reg_fitness': p.fitness_, 
                                       'expression': str(p), 'depth': p.depth_, 'length': p.length_}
 
-    # format and sorting
+    # formatting, drop duplicates and sort by reg_fitness
     best_programs = pd.DataFrame(best_programs).T
-    best_programs = best_programs.sort_values(by='raw_fitness', ascending=False)
+    best_programs = best_programs.drop_duplicates(subset = ['expression'])
+    best_programs = best_programs.sort_values(by='reg_fitness', ascending=False)
 
     # results
     results = {'fit': model_fit, 'params': model_params, 'model': model, 'data': data,
@@ -687,7 +688,7 @@ def genetic_programming(p_x, p_y, p_params):
 # ------------------------------------------------- FUNCTION: Genetic Programming for Feature Engieering -- #
 # ------------------------------------------------- ------------------------------------------------------- #
 
-def symbolic_features(p_data, p_target, p_split):
+def symbolic_features(p_data, p_target, p_split, p_metric):
     """
     El uso de programacion genetica para generar variables independientes simbolicas
 
@@ -705,6 +706,9 @@ def symbolic_features(p_data, p_target, p_split):
         split in val
 
         p_split = '0'
+    
+    p_metric: str
+        fitness metric for genetic programming process, 'spearman' or 'pearson'
 
     Returns
     -------
@@ -727,12 +731,17 @@ def symbolic_features(p_data, p_target, p_split):
     # --------------------------------------------------------------- ingenieria de variables simbolicas -- #
     # --------------------------------------------------------------- ---------------------------------- -- #
 
+    # fitness metric
+    dt.symbolic_params['metric'] = p_metric
+
     # Lista de operaciones simbolicas
     sym_data = genetic_programming(p_x=datos_x, p_y=datos_y, p_params=dt.symbolic_params)
 
     # variables
     datos_sym = sym_data['data'].copy()
-    datos_sym.columns = ['sym_' + str(i) for i in range(0, len(sym_data['data'].iloc[0, :]))]
+    datos_sym.columns = ['sym_' + p_metric[0] + '_' + str(i)
+                        for i in range(0, len(sym_data['data'].iloc[0, :]))]
+
     datos_sym.index = datos_x.index
 
     # datos para utilizar en la siguiente etapa
@@ -1597,7 +1606,6 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
 
         # dummy initialization
         data_folds = {}
-        m_features = {}
 
         # ----------------------------------------------------------------------------- FEATURES SCALING -- #
 
@@ -1622,35 +1630,73 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
         fold_data_x = data_scaler(p_data=shifted_data, p_trans='scale')
         fold_data = pd.concat([fold_data_y, fold_data_x], axis=1)
         
-                # Symbolic features generation with genetic programming
-        m_features = symbolic_features(p_data=fold_data, p_split=p_inner_split, p_target='cod_t1')
+        # -- Symbolic features (PEARSON) -- #
+        
+        # feature generation
+        p_features = symbolic_features(p_data=fold_data.copy(), p_split=p_inner_split,
+                                       p_target='cod_t1', p_metric='pearson')
 
         # print it to have it in the logs
-        df_log_2 = pd.DataFrame(m_features['sym_data']['details'])
-        df_log_2.columns = ['gen', 'avg_len', 'avg_fit', 'best_len', 'best_fit', 'best_oob', 'gen_time']
-        logger.debug('\n\n{}\n'.format(df_log_2))
+        df_log_p = pd.DataFrame(p_features['sym_data']['details'])
+        df_log_p.columns = ['gen', 'avg_len', 'avg_fit', 'best_len', 'best_fit', 'best_oob', 'gen_time']
+        
+        logger.debug('\n\n---- Genetic Programming Metric: Pearson \n')
+        logger.debug('\n\n{}\n'.format(df_log_p))
 
-        #  scale just the features
-        for data in list(m_features['model_data'].keys()):
 
+        # -- Symbolic features (SPEARMAN) -- #
+        
+        # feature generation
+        s_features = symbolic_features(p_data=fold_data.copy(), p_split=p_inner_split,
+                                       p_target='cod_t1', p_metric='spearman')
+
+        # print it to have it in the logs
+        df_log_s = pd.DataFrame(s_features['sym_data']['details'])
+        df_log_s.columns = ['gen', 'avg_len', 'avg_fit', 'best_len', 'best_fit', 'best_oob', 'gen_time']
+        
+        logger.debug('\n\n---- Genetic Programming Metric: Spearman \n')
+        logger.debug('\n\n{}\n'.format(df_log_s))
+
+        # -- Join Features
+        n_s_sym = s_features['sym_data']['best_programs'].shape[0]
+
+        ps_f = {'sym_data': {'pearson': p_features['sym_data'], 'spearman': s_features['sym_data']},
+               
+                'model_data':
+                             {'train_y': p_features['model_data']['train_y'],
+                              'train_x': pd.concat([p_features['model_data']['train_x'],
+                                                    s_features['model_data']['train_x'].iloc[:,-n_s_sym:]],
+                                                    axis=1),
+        
+                              'val_y': p_features['model_data']['val_y'],
+                              'val_x': pd.concat([p_features['model_data']['val_x'],
+                                                  s_features['model_data']['val_x'].iloc[:,-n_s_sym:]],
+                                                  axis=1)}}
+        
+        # -- Scale
+
+        for data in list(ps_f['model_data'].keys()):
             # just scale the features, not the target, of inner data-sets
             if data[-1] == 'x':
-                m_features['model_data'][data] = data_scaler(p_data=m_features['model_data'][data],
-                                                                p_trans=p_trans_function)
+                ps_f['model_data'][data] = data_scaler(p_data=ps_f['model_data'][data],
+                                                       p_trans=p_trans_function)
         
         # --------------------------------------------------------------------------- FEATURES PROFILING -- #
 
-        ft_metrics = {}
-        for data in list(m_features['model_data'].keys()):
+        # objects to store features metrics
+        ps_metrics = {}
+        
+        # for pearson based features
+        for data in list(ps_f['model_data'].keys()):
             if data[-1] == 'y':
                 data_type = 'target' 
             else:
                 data_type = 'ts'
-            ft_metrics.update({data: data_profile(p_data=m_features['model_data'][data],
+            ps_metrics.update({data: data_profile(p_data=ps_f['model_data'][data],
                                                   p_type=data_type, p_mult=10000)})
-        
+
         # save calculated metrics
-        memory_palace[period]['metrics'] = {'data_metrics': dt_metrics, 'feature_metrics': ft_metrics}
+        memory_palace[period]['metrics'] = {'data_metrics': dt_metrics, 'feature_ps_metrics': ps_metrics}
 
         # ------------------------------------------------------------------ HYPERPARAMETER OPTIMIZATION -- #
 
@@ -1666,10 +1712,10 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
         logger.info("Feature Engineering in Fold done in = " + str(datetime.now() - init) + '\n')
 
         # Save data of features used in the evaluation in memory_palace (only once per fold)
-        memory_palace[period]['features'] = m_features['model_data']
+        memory_palace[period]['features'] = ps_f['model_data']
 
         # Save equations of features used in the evaluation in memory_palace (only once per fold)
-        memory_palace[period]['sym_features'] = m_features['sym_data']
+        memory_palace[period]['sym_features'] = ps_f['sym_data']
 
         # cycle to iterate all models
         for model in p_models:
@@ -1693,7 +1739,7 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
                 ob_type = 'min'
 
             # optimization process NEEDS TO INCLUDE MODEL OBJECT OR WEIGHTS FOR MLP for reproducibility
-            hof_model = genetic_algo_optimization(p_gen_data=m_features['model_data'],
+            hof_model = genetic_algo_optimization(p_gen_data=ps_f['model_data'],
                                                   p_model=dt.models[model], p_fit_type=p_fit_type,
                                                   p_opt_params=dt.optimization_params, p_minmax=ob_type)
 
@@ -1705,7 +1751,7 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
             # evaluation process
             for i in range(0, len(list(hof_model['hof']))):
                 # i = range(0, len(list(hof_model['hof'])))[0]
-                hof_eval = model_evaluation(p_features=m_features['model_data'], p_model=model,
+                hof_eval = model_evaluation(p_features=ps_f['model_data'], p_model=model,
                                             p_optim_data=hof_model['hof'][i])
 
                 # save evaluation in memory_palace
