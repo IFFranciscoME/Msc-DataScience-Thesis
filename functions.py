@@ -1476,8 +1476,7 @@ def setup_logger(name_logfile, path_logfile):
 # -------------------------------------------------------------------------- Model Evaluations by period -- #
 # --------------------------------------------------------------------------------------------------------- #
 
-def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
-                 p_trans_function, p_trans_order, p_fit_type):
+def fold_process(p_data_folds, p_models, p_embargo, p_inner_split, p_trans_function, p_fit_type):
     """
     Global evaluations for specified data folds for specified models
 
@@ -1505,7 +1504,7 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
         
         p_fit_type = 'auc-diff'
     
-    p_transform: str
+    p_trans_function: str
         type of transformation to perform to the data
         'scale': x/max(x)
         'standard': [x - mean(x)] / sd(x)
@@ -1572,8 +1571,7 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
         msg = 'na'
 
     # Construct the file name for the logfile
-    name_log = iteration + '_' + p_fit_type + '_' + p_trans_function + '_' + \
-               p_trans_order + '_' + p_inner_split + '_' + p_embargo
+    name_log = iteration + '_' + p_fit_type + '_' + p_trans_function + '_' + p_inner_split + '_' + p_embargo
 
     # Base route to save file
     route = 'files/logs/' + dt.folder
@@ -1704,7 +1702,7 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
         logger.debug('------------------- --------------------------------------- ---------------------\n')
 
         logger.debug('---- Optimization Fitness: ' + p_fit_type)
-        logger.debug('---- Data Scaling Order: ' + p_trans_order)
+        logger.debug('---- Data Scaling Order: pre-scale & post-standard')
         logger.debug('---- Data Transformation: ' + p_trans_function)
         logger.debug('---- Validation inner-split: ' + p_inner_split)
         logger.debug('---- Embargo: ' + p_embargo + ' = ' + str(memory) + '\n')
@@ -1773,7 +1771,7 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
 
     # File name to save the data
     file_name = route + period[0] + '_' + p_fit_type + '_' + p_trans_function + '_' + \
-                p_trans_order + '_' + p_inner_split + '_' + p_embargo + '.dat'
+                p_inner_split + '_' + p_embargo + '.dat'
     
     # objects to be saved
     pickle_rick = {'data': dt.ohlc_data, 't_folds': period, 'embargo_dates': embargo_dates,
@@ -1798,7 +1796,7 @@ def fold_process(p_data_folds, p_models, p_embargo, p_inner_split,
 # ------------------------------------------------------------------------------ Model Global Evaluation -- #
 # --------------------------------------------------------------------------------------------------------- #
 
-def global_evaluation(p_global_data, p_case, p_features, p_trans_function, p_trans_order, p_model):
+def global_evaluation(p_global_data, p_case, p_features, p_trans_function, p_model):
     """
     
 
@@ -1808,9 +1806,8 @@ def global_evaluation(p_global_data, p_case, p_features, p_trans_function, p_tra
     hof_params = p_case['p_hof']['hof'].copy()
     hof_models = p_case['e_hof'].copy()
 
-    # data was scaled orginally pre-features
-    if p_trans_order == 'pre-features':
-        p_global_data = data_scaler(p_data=p_global_data.copy(), p_trans=p_trans_function)
+    # always pre-scale and post-standard
+    p_global_data = data_scaler(p_data=p_global_data.copy(), p_trans='scale')
    
     # get all the linear features 
     g_linear_data = linear_features(p_data=p_global_data, p_memory=dt.features_params['lags_diffs'])
@@ -1822,8 +1819,7 @@ def global_evaluation(p_global_data, p_case, p_features, p_trans_function, p_tra
     g_global_data = pd.DataFrame(np.hstack((g_linear_data, g_sym_data)))
 
     # data was scaled orginally post-features
-    if p_trans_order == 'post-features':
-        g_global_data = data_scaler(p_data=g_global_data, p_trans=p_trans_function)
+    g_global_data = data_scaler(p_data=g_global_data, p_trans='standard')
 
     # data format
     global_data = {}
