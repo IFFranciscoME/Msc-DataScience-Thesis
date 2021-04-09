@@ -127,7 +127,8 @@
 - Delete: pre-features and post-features option
 - Modification: Do always pre-features scaling and post-genetic_programed normalization
 - Modification: add reg_fitness (regularized fitness metric) and remove duplicated programms in GP
+- Enhacement: Pearson GP process and Spearman GP Process and selected all unique variables
 
-- (pending) Enhacement: Pearson GP process and Spearman GP Process and selected top 10 unique variables
-- (pending) Feature importance option to explore, according to AIFML 2018
-- (pending) Fix: memory value for False embargo case
+- (pending) Feature importance option to explore, according to AIFML 2018 (as option substitution for pre-post-features)
+- (pending) Fix: memory value for False embargo case *is this an error? - update: yes it is
+- (pending) Fix: 0 inner split value
