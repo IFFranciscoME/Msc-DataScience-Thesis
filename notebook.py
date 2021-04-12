@@ -44,7 +44,7 @@ folds = fn.t_folds(p_data=historical_prices, p_period=fold_case)
 dir_route = 'files/backups/ludwig/test_1_09042021/'
 
 # Final route
-file_route = dir_route + 's_logloss-inv-weighted_robust_20_fix.dat'
+file_route = dir_route + 's_logloss-train_standard_20_fix.dat'
 
 # Load data (previously generated results)
 memory_palace = dt.data_pickle(p_data_objects=None, p_data_action='load', p_data_file=file_route)
@@ -75,28 +75,42 @@ plot_2 = vs.plot_ohlc(p_ohlc=historical_prices, p_theme=dt.theme_plot_2, p_vline
 # --------------------------------------------------------------------------------------------------------- #
 
 # metric type for MIN, MAX, MODE
-metric_case = 'auc-mean'
-
-# models to explore results
-model_case = 'ann-mlp'
+metric_case = 'auc-diff'
 
 # Filtered cases
-filters = {'filter_1': {'metric': 'acc-train', 'objective': 'above_threshold', 'threshold': 0.65},
-           'filter_2': {'metric': 'acc-val', 'objective': 'above_threshold', 'threshold': 0.7},
+filters = {'filter_1': {'metric': 'acc-train', 'objective': 'above_threshold', 'threshold': 0.70},
+           'filter_2': {'metric': 'acc-val', 'objective': 'above_threshold', 'threshold': 0.70},
            'filter_3': {'metric': 'acc-diff', 'objective': 'abs_min'}}
 
 # -- get MIN, MAX, MODE, FILTERED Cases
 met_cases = fn.model_cases(p_models=ml_models, p_global_cases=memory_palace,
                            p_data_folds=folds, p_cases_type=metric_case, p_filters=filters)
  
-# periods with at least 1 matching case
-filtered_periods = met_cases[model_case]['met_filter']['period']
+for i in range(0, len(ml_models)):
+    model_case = ml_models[i]
+    
+    # periods with at least 1 matching case
+    filtered_periods = met_cases[model_case]['met_filter']['period']
 
-# print periods
-print(filtered_periods)
+    # in case of at least 1 period found
+    if len(filtered_periods) > 0:
+        data = []
+        # concatenate all ocurrences
+        for i_period in filtered_periods:
+            data.append(met_cases[model_case]['met_filter']['data'][i_period]['metrics'])
+            df_filtered = pd.concat(data, axis=1)
+
+        # format to output dataframe
+        df_filtered.index.name=model_case + '-metrics'
+        df_filtered.head()
+
+# 'y_logloss-train_robust_20_fix.dat' : ann con .89 en train
 
 # --------------------------------------------------------------------------------- MIN, MAX, MODE CASES -- #
 # --------------------------------------------------------------------------------------------------------- #
+
+# models to explore results
+model_case = ml_models[1]
 
 # period of the best of HoF: according to model_case and metric_case 
 maxcase_period = met_cases[model_case]['met_max']['period']

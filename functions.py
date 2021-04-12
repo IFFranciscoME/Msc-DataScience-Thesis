@@ -2004,7 +2004,8 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type, p_filters)
                     # Update data with filtered case
                     data = p_global_cases[period][model]['e_hof'][i_filter]
                     params = p_global_cases[period][model]['p_hof']['hof'][i_filter]
-                    metrics = pd.DataFrame({period: e_hof['pro-metrics']})
+                    metrics = pd.DataFrame({period: e_hof['pro-metrics'].values()},
+                                            index=e_hof['pro-metrics'])
                     met_cases[model]['met_filter']['data'][period] = {'data': data, 'params': params, 
                                                                       'metrics': metrics}
 
@@ -2019,7 +2020,8 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type, p_filters)
                     # Update data with filtered case
                     data = p_global_cases[period][model]['e_hof'][i_filter]
                     params = p_global_cases[period][model]['p_hof']['hof'][i_filter]
-                    metrics = pd.DataFrame({period: e_hof['pro-metrics']})
+                    metrics = pd.DataFrame({period: e_hof['pro-metrics'].values()},
+                                            index=e_hof['pro-metrics'])
                     met_cases[model]['met_filter']['data'][period] = {'data': data, 'params': params, 
                                                                       'metrics': metrics}
                     
