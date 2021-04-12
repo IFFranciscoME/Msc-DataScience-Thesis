@@ -10,7 +10,6 @@
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 
-#%%
 from rich import print
 from rich import inspect
 
@@ -28,10 +27,21 @@ import data as dt
 import random
 random.seed(123)
 
+# ------------------------------------------------------------------------------------ LOAD RESULTS DATA -- #
+# ------------------------------------------------------------------------------------ ----------------- -- #
+
+# route to backup files folder
+dir_route = 'files/backups/ludwig/test_1_09042021/'
+
+# file name to save the data
+file_route = dir_route + 'y_logloss-inv-weighted_robust_20_fix.dat'
+
+# Load previously generated data
+memory_palace = dt.data_pickle(p_data_objects=None, p_data_action='load', p_data_file=file_route)
+memory_palace = memory_palace['memory_palace']
+
 # ---------------------------------------------------------------- PLOT 1: OHLC DATA PLOT (ALL DATA SET) -- #
 # ---------------------------------------------------------------- ------------------------------------- -- #
-
-#%%
 
 # Candlestick chart for historical OHLC prices
 plot_1 =vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_1, p_vlines=None)
@@ -42,22 +52,8 @@ plot_1 =vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_1, p_vlines=None)
 # Generate plot online with chartstudio
 # py.plot(plot_1)
 
-# ------------------------------------------------------------------------------------ LOAD RESULTS DATA -- #
-# ------------------------------------------------------------------------------------ ----------------- -- #
-
-#%%
-
-# File name to save the data
-file_name = 'files/backups/ludwig/q_logloss-weighted_scale_post-features_0_False.dat'
-
-# Load previously generated data
-memory_palace = dt.data_pickle(p_data_objects=None, p_data_action='load', p_data_file=file_name)
-memory_palace = memory_palace['memory_palace']
-
 # -- -------------------------------------------------------------------------------------- LOAD T-FOLDS -- #
 # -- -------------------------------------------------------------------------------------- ------------ -- #
-
-#%%
 
 # Fold size
 fold_case = 'quarter'
@@ -74,7 +70,6 @@ for n_fold in list(folds.keys()):
 # -- ----------------------------------------------------------------- PLOT 2: TIME SERIES BLOCK T-FOLDS -- #
 # -- ----------------------------------------------------------------- --------------------------------- -- #
 
-#%%
 
 # Plot_1 with t-folds vertical lines
 plot_2 = vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_2, p_vlines=dates_folds)
@@ -88,57 +83,99 @@ plot_2 = vs.g_ohlc(p_ohlc=data, p_theme=dt.theme_plot_2, p_vlines=dates_folds)
 # ----------------------------------------------------------------------------------------- DATA PROFILE -- #
 # ----------------------------------------------------------------------------------------- ------------ -- #
 
-#%%
-
 # period to explore results
 period = list(folds.keys())[0]
 
 # ------------------------------------------------------------------------------------------- input data -- # 
+# ----------------------------------------------------------------------------------------- ------------ -- #
 
 # all the input data
 in_profile = memory_palace[period]['metrics']['data_metrics']
 
 # -------------------------------------------------------------------------------------- target variable -- #
+# ----------------------------------------------------------------------------------------- ------------ -- #
 
-# train and val data sets with only target variable
-tv_profile_train = memory_palace[period]['metrics']['feature_metrics']['train_y']
-# tv_profile_val = memory_palace[period]['metrics']['feature_metrics']['val_y']
+# train and val data sets with only target variable (To check class imbalance)
+tv_profile_train = memory_palace[period]['metrics']['feature_ps_metrics']['train_y']
+tv_profile_val = memory_palace[period]['metrics']['feature_ps_metrics']['val_y']
 
 # ------------------------------------------------------------------------------------- linear variables -- #
-# amount of symbolic features
-n_sf = dt.symbolic_params['n_features']
+# ----------------------------------------------------------------------------------------- ------------ -- #
+
+# -- Stats -- #
+
+# amount of symbolic features to choose non-repeated ones and use them in later part of process
+n_lav = 55
 
 # train and val data sets with only autoregressive variables
-lf_profile_train = memory_palace[period]['metrics']['feature_metrics']['train_x'].iloc[:, :-n_sf]
-# lf_profile_val = memory_palace[period]['metrics']['feature_metrics']['val_x'].iloc[:, :-n_sf]
+lf_profile_train = memory_palace[period]['metrics']['feature_ps_metrics']['train_x'].iloc[:, :n_lav]
+lf_profile_val = memory_palace[period]['metrics']['feature_ps_metrics']['val_x'].iloc[:, :n_lav]
+
+# -- Visuals -- #
+
+# histograms plot
+hist_data = memory_palace[period]['features']['train_x'][['ma_cov', 'lag_cov_2', 'sum_vol_3',
+ 'sd_hlv_2', 'sd_hlv_3', 'ma_ol']]
+
+# remove duplicate columns (TEMPORARY FIX)
+hist_data = hist_data.loc[:, ~hist_data.columns.duplicated()]
+
+plot_1 = vs.plot_h_histograms(p_data=hist_data.copy())
+# plot_1.show()
+
+import chart_studio.plotly as py
+# Generate plot online with chartstudio
+# py.plot(plot_1)
+
+# Pearson
+# exp_1_corr_p = exp_1.corr('pearson')
+# title_txt = 'Experiment 1 with Pearson'
+# exp_1_plot_2_1 = vz.g_heat_corr(p_data=exp_1_corr_p.copy(), p_title=title_txt)
+
+# show plot
+# exp_1_plot_2_1.show()
+
+# ---------------------------------------------------------------------------------------- best_programs -- #
+# Best programs according to the genetic programming process
+bp_s = memory_palace[period]['sym_features']['spearman']['best_programs']
+bp_p = memory_palace[period]['sym_features']['pearson']['best_programs']
 
 # ----------------------------------------------------------------------------------- symbolic variables -- #
 
+n_lav = 8
+
 # train and val data sets with only symbolic variables
-sm_profile_train = memory_palace[period]['metrics']['feature_metrics']['train_x'].iloc[:, -n_sf:]
-# sm_profile_val = memory_palace[period]['metrics']['feature_metrics']['val_x'].iloc[:, -n_sf:]
+sm_profile_train = memory_palace[period]['metrics']['feature_ps_metrics']['train_x'].iloc[:, -n_lav:]
+sm_profile_val = memory_palace[period]['metrics']['feature_ps_metrics']['val_x'].iloc[:, -n_lav:]
+
+# -- VISUAL PROFILE -- #
+
+# remove duplicate columns (TEMPORARY FIX)
+sym_data_df = memory_palace[period]['features']['train_x']
+hist_data = sym_data_df.iloc[:, 84:87]
+
+plot_1 = vs.plot_h_histograms(p_data=hist_data.copy())
+# plot_1.show()
+import chart_studio.plotly as py
+# Generate plot online with chartstudio
+py.plot(plot_1)
+
 
 # ---------------------------------------------------------------------------------------- All variables -- #
 
 # correlation among all variables
 all_corr_train = memory_palace[period]['features']['train_x'].corr()
-# all_corr_val = memory_palace[period]['features']['val_x'].corr()
+all_corr_val = memory_palace[period]['features']['val_x'].corr()
 
 # correlation of all variables with target variable
 tgv_corr_train = pd.concat([memory_palace[period]['features']['train_y'],
                             memory_palace[period]['features']['train_x']], axis=1).corr().iloc[:, 0]
-# tgv_corr_val = pd.concat([memory_palace[period]['features']['val_y'],
-#                            memory_palace[period]['features']['val_x']], axis=1).corr().iloc[:, 0]
 
-# --------------------------------------------------------------------------------------- VISUAL PROFILE -- #
-# ----------------------------------------------------------------------------------------- ------------ -- #
-
-# (pending)
+tgv_corr_val = pd.concat([memory_palace[period]['features']['val_y'],
+                          memory_palace[period]['features']['val_x']], axis=1).corr().iloc[:, 0]
 
 # -- ------------------------------------------------------------------------------- PARAMETER SET CASES -- #
 # -- ------------------------------------------------------------------------------- ------------------- -- #
-
-#%% 
 
 # List with the names of the models
 ml_models = list(dt.models.keys())
@@ -169,8 +206,6 @@ mode_repetitions = pd.DataFrame(met_cases[model_case]['met_mode']['data']).T
 # -- ------------------------------------------------------------------------ SYMBOLIC FEATURES ANALYSIS -- #
 # -- ------------------------------------------------------------------------ -------------------------- -- #
 
-#%%
-
 # period to explore results
 period_case = 'q_01_2009'
 
@@ -195,8 +230,6 @@ d_sym_fitness = inspect(sym_fitness)
 
 # -- --------------------------------------------------------------- PLOT 3: CLASSIFICATION FOLD RESULTS -- #
 # -- ----------------------------------------------------------------------------- --------------------- -- #
-
-#%%
 
 # Pick case
 case = 'met_min'
@@ -233,8 +266,6 @@ plot_3 = vs.g_ohlc_class(p_ohlc=ohlc_prices, p_theme=dt.theme_plot_3, p_data_cla
 
 # -- -------------------------------------------------------------------------- PLOT 4: All ROCs in FOLD -- #
 # -- -------------------------------------------------------------------------- ------------------------ -- #
-
-#%% 
 
 # case to plot
 case = 'met_max'
@@ -274,8 +305,6 @@ plot_4 = vs.g_multiroc(p_data=d_plot_4, p_metric=metric_case, p_theme=dt.theme_p
 
 # -- --------------------------------------------------------------------------------- GLOBAL EVALUATION -- #
 # -- --------------------------------------------------------------------------------- ----------------- -- #
-
-#%% 
 
 # metric type (all the available in iter_opt['fitness'])
 metric_case = 'acc-diff'
@@ -318,8 +347,6 @@ global_model['model']['pro-metrics']['logloss-mean']
 # -- ------------------------------------------------------------- PLOT 5: GLOBAL CLASSIFICATION RESULTS -- #
 # -- ------------------------------------------------------------- ------------------------------------- -- #
 
-#%%
-
 # Get data for prices and predictions
 ohlc_prices = data
 
@@ -342,5 +369,3 @@ plot_5 = vs.g_ohlc_class(p_ohlc=ohlc_prices, p_theme=dt.theme_plot_3, p_data_cla
 
 # Generate plot online with chartstudio
 # py.plot(plot_5)
-
-# %%

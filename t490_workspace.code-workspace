@@ -15,6 +15,11 @@
 		"workbench.colorTheme": "Visible Comments Nord Deep",
 		"workbench.preferredDarkColorTheme": "Visible Comments Nord Deep",
 		"workbench.preferredLightColorTheme": "Visible Comments Nord Deep",
-		"python.pythonPath": "msc_thesis_t490_venv/bin/python3.8"
+		"python.pythonPath": "msc_thesis_t490_venv/bin/python3.8",
+		"editor.fontSize": 12,
+		"scm.inputFontSize": 12,
+		"debug.console.fontSize": 12,
+		"markdown.preview.fontSize": 12,
+		"terminal.integrated.fontSize": 12
 	}
 }

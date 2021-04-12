@@ -11,6 +11,13 @@
 """
 
 import numpy as np
+import numpy as np
+import pandas as pd
+import plotly.express as px
+
+from functools import reduce
+from itertools import product
+
 import plotly.graph_objects as go
 import plotly.io as pio
 import chart_studio
@@ -25,7 +32,7 @@ chart_studio.tools.set_config_file(world_readable=True, sharing='public')
 # -- -------------------------------------------------------- PLOT: OHLC Price Chart with Vertical Lines -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 
-def g_ohlc(p_ohlc, p_theme, p_vlines):
+def plot_ohlc(p_ohlc, p_theme, p_vlines):
     """
     Timeseries Candlestick with OHLC prices and figures for trades indicator
 
@@ -133,7 +140,7 @@ def g_ohlc(p_ohlc, p_theme, p_vlines):
 # -- -------------------------------------------- PLOT: OHLC Candlesticks + Colored Classificator Result -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 
-def g_ohlc_class(p_ohlc, p_theme, p_data_class, p_vlines):
+def plot_ohlc_class(p_ohlc, p_theme, p_data_class, p_vlines):
     """
 
     """
@@ -292,7 +299,7 @@ def g_ohlc_class(p_ohlc, p_theme, p_data_class, p_vlines):
 # -- ----------------------------------------------------------------------------------- PLOT: ROC + ACU -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 
-def g_timeseries(p_data, p_theme):
+def plot_timeseries(p_data, p_theme):
     """
     Visualize evolution of a metric for a particular model, with a particular parameter set, 
     and do that for N different cases. 
@@ -370,7 +377,7 @@ def g_timeseries(p_data, p_theme):
 # -- ------------------------------------------------------------------------------------ PLOT: ALL ROCs -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 
-def g_multiroc(p_data, p_theme, p_metric):
+def plot_multiroc(p_data, p_theme, p_metric):
 
     # default value for lables to use in main title, and both x and y axisp_fonts
     if p_theme['p_labels'] is not None:
@@ -435,3 +442,50 @@ def g_multiroc(p_data, p_theme, p_metric):
     fig_rocs.layout.height = p_theme['p_dims']['height']
 
     return fig_rocs
+
+
+# -- ----------------------------------------------------------------------------- Horizontal Histograms -- #
+# -- --------------------------------------------------------------------------------------------------- -- #
+
+def plot_h_histograms(p_data):
+    """
+    Horizontal layout of histograms, one per column in input data
+
+    Parameters
+    ----------
+    p_data: pd.DataFrame
+        With a 'timestamp' column and 'open', 'high', 'low', 'close' columns
+
+    Returns
+    -------
+    r_h_histograms: plotly.plot
+
+
+    References
+    ----------
+
+    """
+    # add facet_col for variable content
+    # add dictionary with categories for every variable, to use facet_row for type of variable
+
+    # p_data = df_data.copy()
+    
+    variables = p_data.columns.to_list()
+    ts = pd.DataFrame(p_data.index.to_list())
+    data_len = len(ts)
+
+    df_hist = pd.DataFrame({'data': pd.concat([p_data[variable] for variable in variables],
+                             axis=0, ignore_index=True)})
+   
+    types = []
+    for i in range(0, len(variables)):
+        types.extend([str(variables[i])]*data_len)
+
+    df_hist['type'] = types
+
+    fig = px.histogram(df_hist, x="data", facet_row='type', color='type', histnorm='probability',
+                       opacity=0.75, nbins=550)
+    fig.update_xaxes(matches=None)
+    fig.update_yaxes(matches=None, title_font=dict(size=12))
+
+    return fig

@@ -504,11 +504,12 @@ def autoregressive_features(p_data, p_memory):
     # N features with window-based calculations
     for n in range(0, p_memory):
 
-        data['ma_ol'] = data['ol'].rolling(n + 2).mean()
-        data['ma_ho'] = data['ho'].rolling(n + 2).mean()
-        data['ma_hl'] = data['hl'].rolling(n + 2).mean()
-        data['ma_hlv'] = data['hlv'].rolling(n + 2).mean()
-        data['ma_cov'] = data['cov'].rolling(n + 2).mean()
+        # this label needs fix
+        data['ma_ol_' + str(n + 1)] = data['ol'].rolling(n + 2).mean()
+        data['ma_ho_' + str(n + 1)] = data['ho'].rolling(n + 2).mean()
+        data['ma_hl_' + str(n + 1)] = data['hl'].rolling(n + 2).mean()
+        data['ma_hlv_' + str(n + 1)] = data['hlv'].rolling(n + 2).mean()
+        data['ma_cov_' + str(n + 1)] = data['cov'].rolling(n + 2).mean()
         
         data['lag_ol_' + str(n + 1)] = data['ol'].shift(n + 1)
         data['lag_ho_' + str(n + 1)] = data['ho'].shift(n + 1)
@@ -1861,10 +1862,10 @@ def global_evaluation(p_global_data, p_case, p_features, p_trans_function, p_mod
     return global_results
 
 
-# -------------------------------------------------------------------------- Model AUC Min and Max Cases -- #
+# --------------------------------------------------------------------------------- MIN, MAX, MODE CASES -- #
 # --------------------------------------------------------------------------------------------------------- #
 
-def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
+def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type, p_filters):
     """
     AUC min and max cases for the models
 
@@ -1902,7 +1903,8 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
 
     # diccionario para almacenar resultados de busqueda
     met_cases = {j: {i: {'data': {}, 'period':''}
-                     for i in ['met_min', 'met_max', 'met_mode', 'hof_metrics']} for j in p_models}
+                     for i in ['met_min', 'met_max', 'met_filter', 'met_mode', 'hof_metrics']}
+                for j in p_models}
 
     # catch mode on model params
     met_mode = {}
@@ -1919,26 +1921,30 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
         met_max_params = {}
         met_min_params = {}
         met_mode[model] = {}
+
+        # list to store periods where data is found
+        met_cases[model]['met_filter']['period'] = []
         
         # search for every fold
         for period in p_data_folds:
 
             # debugging
-            # period = list(p_data_folds.keys())[0]
-
-            if p_cases_type not in list(p_global_cases[period][model]['e_hof'][0]['pro-metrics'].keys()):
-                print('error: selected p_cases_type is not in pro-metrics')
-                return 0
+            # period = list(p_data_folds.keys())[3]
 
             # add period key to data info
             met_cases[model]['hof_metrics']['data'][period] = {}
+
+            # add period key to data info
+            met_cases[model]['met_filter']['data'][period] = {}
            
-            # -- CASE 0 (MODE)
+            # -------------------------------------------------------------------------------- MODE CASE -- # 
             # get the number of repeated individuals in the whole HoF
             for p in p_global_cases[period][model]['p_hof']['hof']:
+
+                # debugging
                 # p = p_global_cases[period][model]['p_hof']['hof'][1]
 
-                # in case of finding a repeated parameter set
+                # in case of finding an exact repeated parameter set
                 if str(tuple(p)) in list(met_mode[model].keys()):
                     met_mode[model][str(tuple(p))]['repetitions'] += 1
                     met_mode[model][str(tuple(p))]['periods'].append(period)
@@ -1948,11 +1954,11 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
                     # base dict to store findings
                     met_mode[model].update({str(tuple(p)): {'params': tuple(p), 'repetitions': 0,
                                                                                 'periods': [period]}})
+           
+             # Values for all metrics for all evaluated HoF
+            hof = [ev_hof['pro-metrics'][p_cases_type] for ev_hof in p_global_cases[period][model]['e_hof']]
 
-            # Values for all metrics for all evaluated HoF
-            hof = [metric['pro-metrics'][p_cases_type] for metric in p_global_cases[period][model]['e_hof']]
-            
-            # -- CASE 1 (MIN)
+            # --------------------------------------------------------------------------------- MIN CASE -- # 
             # min metric in evaluated HoF
             fold_i_met_min = hof.index(min(hof))
             fold_v_met_min = hof[fold_i_met_min]
@@ -1963,7 +1969,7 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
                 period_min = fold_p_met_min
                 i_min = fold_i_met_min
 
-            # -- CASE 2 (MAX)
+            # --------------------------------------------------------------------------------- MAX CASE -- # 
             # max metric in evaluated HoF
             fold_i_met_max = hof.index(max(hof))
             fold_v_met_max = hof[fold_i_met_max]
@@ -1973,12 +1979,77 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
                 met_max = fold_v_met_max
                 period_max = fold_p_met_max
                 i_max = fold_i_met_max
+       
+            # ---------------------------------------------------------------------------- FILTERED CASE -- # 
+                       
+            # The Hall Of Fame for the currently selected period and model
+            e_hof = p_global_cases[period][model]['e_hof']
 
-            # Get features used for every case, therefore, for min and max metric cases
+            # Check all filters in p_filters
+            for filter_i in list(p_filters.keys()):
+                # debuging
+                # filter_i = 'filter_3'
+
+                metric_i = p_filters[filter_i]['metric']
+                metric_vals = [metric['pro-metrics'][metric_i] for metric in e_hof]
+            
+                if p_filters[filter_i]['objective'] == 'abs_max':
+
+                    if not len(e_hof) == 0: 
+                        met_cases[model]['met_filter']['period'].append(period)
+
+                    i_filter = np.argmax([metric['pro-metrics'][metric_i] for metric in e_hof])
+                    e_hof = e_hof[i_filter]
+                    
+                    # Update data with filtered case
+                    data = p_global_cases[period][model]['e_hof'][i_filter]
+                    params = p_global_cases[period][model]['p_hof']['hof'][i_filter]
+                    metrics = pd.DataFrame({period: e_hof['pro-metrics']})
+                    met_cases[model]['met_filter']['data'][period] = {'data': data, 'params': params, 
+                                                                      'metrics': metrics}
+
+                elif p_filters[filter_i]['objective'] == 'abs_min':
+
+                    if len(e_hof) != 0:
+                        met_cases[model]['met_filter']['period'].append(period)
+
+                    i_filter = np.argmin([metric['pro-metrics'][metric_i] for metric in e_hof])
+                    e_hof = e_hof[i_filter]
+
+                    # Update data with filtered case
+                    data = p_global_cases[period][model]['e_hof'][i_filter]
+                    params = p_global_cases[period][model]['p_hof']['hof'][i_filter]
+                    metrics = pd.DataFrame({period: e_hof['pro-metrics']})
+                    met_cases[model]['met_filter']['data'][period] = {'data': data, 'params': params, 
+                                                                      'metrics': metrics}
+                    
+                elif p_filters[filter_i]['objective'] == 'above_threshold':
+                  
+                    intern_list = [i > p_filters[filter_i]['threshold'] for i in metric_vals]
+                    
+                    if any(intern_list) is True:
+                        e_hof = np.array(e_hof)[np.array(intern_list)]
+                    else:
+                        e_hof = []
+                        break
+                
+                elif p_filters[filter_i]['objective'] == 'below_threshold':
+
+                    intern_list = [i <= p_filters[filter_i]['threshold'] for i in metric_vals]
+
+                    if any(intern_list) is True:
+                        e_hof = np.array(e_hof)[np.array(intern_list)]
+                    else:
+                        e_hof = []
+                        break                                 
+        
+                
+        # Get features used for every case, therefore, for min and max metric cases
             features = {'features': p_global_cases[period]['features'],
                         'sym_features': p_global_cases[period]['sym_features']}
+
             met_cases[model]['hof_metrics']['data'][period]['features'] = features
-        
+                
         # update data with min case
         met_cases[model]['met_min']['data'] = p_global_cases[period_min][model]['e_hof'][i_min]
         met_cases[model]['met_min']['period'] = period_min
@@ -2017,3 +2088,90 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type):
                     met_cases[model]['met_mode']['period'].update({key_period: met_mode[model][i]['periods']})
 
     return met_cases
+
+
+# --------------------------------------------------------------------- EXPERIMENT 1: OOS GENERALIZATION -- #
+# --------------------------------------------------------------------------------------------------------- #
+
+def oos_case(p_models, p_memory_palace, p_data_folds, p_filters):
+    """
+
+    Process to find the case with the lowest Out-Of-Sample error
+
+    Parameters
+    ----------
+    
+    p_models: list of str
+        With model's name consistent with the ones used in memory_palace
+    
+    p_memory_palace: dict
+        With all historical information read from the .dat file
+    
+    p_data_folds: dict
+        With all historical prices in folds
+    
+    p_filters: dict
+        With the filters criteria
+
+    
+    Returns
+    -------
+
+
+    References
+    ----------
+
+
+    """
+
+    # -- informed_threshold - case 1
+    # use case with highest auc-train value
+    # locate threshold value with highest acc-train 
+    # use located threshold to conduct the filters
+
+    # -- uninformed_threshold
+    # class_threshold = 0.5
+    # performance_train = 0.6
+    # performance_val = 0.6
+
+    # -- sufficiency of training
+    # Filter 1: All the cases with acc-train >= performance_train
+
+    # -- relevant to OOS Generalization
+    # Filter 2: All the cases from Filter 1 with acc-val > performance_val
+    # Filter 3: The case with argmin(acc-diff)
+
+    # -- Info to report 
+
+    # Predictive model
+    # Fold info
+    # -- T value
+    # -- Train/Val split
+    # -- Type of Embargo
+    # -- Fitness 
+    # -- OHLC visual profile (with split + embargo info)
+
+    # Winner
+    # -- Features transformation
+    # -- Features data profile
+    # -- Features histograms
+    # -- Correlation matrix 
+    # -- Class OHLC
+    # -- Pro-metrics
+
+
+    return 1
+
+
+# --------------------------------------------------------------------------------- GENERALIZATION TESTS -- #
+# --------------------------------------------------------------------------------------------------------- #
+
+def generalization_tests():
+    """
+    """
+
+    # -- Out-Of-Sample -- #
+
+    # -- Out-Of-Distribution -- #
+    
+    return 1

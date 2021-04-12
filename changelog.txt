@@ -128,7 +128,25 @@
 - Modification: Do always pre-features scaling and post-genetic_programed normalization
 - Modification: add reg_fitness (regularized fitness metric) and remove duplicated programms in GP
 - Enhacement: Pearson GP process and Spearman GP Process and selected all unique variables
+- Enhacement: Added the fold size as a parameter for parallelization, instead trans-order
 
+# -- 10.04.2021
+
+- Fix: Check for column names correctly typed in auto regressive features generation
+
+# -- 11.04.2021
+
+- Fix: Read .dat file and layout general ideas for lacking output results data representation.
+- Addition: Create layout for content sequence in notebook.py
+
+
+# -- PENDING -- # 
+
+- (pending) Modification: Update information in header docstring in all files. 
 - (pending) Feature importance option to explore, according to AIFML 2018 (as option substitution for pre-post-features)
 - (pending) Fix: memory value for False embargo case *is this an error? - update: yes it is
 - (pending) Fix: 0 inner split value
+- (pending) Addition: Add regression models capability
+- (pending) Enhacement: Multi-row facet histograms plot to graph objects in plotly instead express
+- (pending) Enhacement: Sepparate theme dictionary from every plot in order to have 1 theme shared by every plot (or 2 or 3 themes)
+- (pending) add transparent rectangular boxes by fold and embargo to plo_ohlc

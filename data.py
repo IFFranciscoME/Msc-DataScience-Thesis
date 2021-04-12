@@ -69,8 +69,7 @@ exec_fold = ['quarter', 'semester', 'year', 'bi-year', '80-20']
 # experiment parameters
 exec_opt = {'embargo': ['fix', 'memory', 'False'],
             'inner-split': ['30', '10', '0'],
-            'transform': ['scale', 'standard', 'robust'],
-            'scaling': ['post-features', 'pre-features'],
+            'trans_function': ['scale', 'standard', 'robust'],
             'fitness': ['auc-train', 'auc-val', 'auc-diff',
                         'auc-mean', 'auc-weighted', 'auc-inv-weighted',
                         'acc-train', 'acc-val', 'acc-diff',
