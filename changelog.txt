@@ -141,7 +141,6 @@
 - Tests: Read .dat files and test results and data structures.
 
 # -- 12.04.2021
-
 - Modification: Changes in objects previous to load .dat files to automatize results
 - Enhacement: Filtered results with 2 filters and a 'abs_min'/'abs_max'/'all' options
 
