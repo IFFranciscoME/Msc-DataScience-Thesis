@@ -511,6 +511,9 @@ def autoregressive_features(p_data, p_memory):
         data['ma_hlv_' + str(n + 1)] = data['hlv'].rolling(n + 2).mean()
         data['ma_cov_' + str(n + 1)] = data['cov'].rolling(n + 2).mean()
         
+        # add a lag for close - open variable
+        # data['lag_co_' + str(n + 1)] = data['co'].shift(n + 1)
+
         data['lag_ol_' + str(n + 1)] = data['ol'].shift(n + 1)
         data['lag_ho_' + str(n + 1)] = data['ho'].shift(n + 1)
         data['lag_hl_' + str(n + 1)] = data['hl'].shift(n + 1)
