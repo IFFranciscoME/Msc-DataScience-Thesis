@@ -2025,6 +2025,21 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type, p_filters)
                     met_cases[model]['met_filter']['data'][period] = {'data': data, 'params': params, 
                                                                       'metrics': metrics}
                     
+                elif p_filters[filter_i]['objective'] == 'all':
+                    
+                    if len(e_hof) != 0:
+                        met_cases[model]['met_filter']['period'].append(period)
+
+                    data = pd.DataFrame([p_global_cases[period][model]['e_hof']])
+                    params = pd.DataFrame([p_global_cases[period][model]['p_hof']['hof']])
+                    
+                    metrics = pd.DataFrame({period + '_' + str(e): e_hof[e]['pro-metrics'].values()
+                                            for e in range(0, len(e_hof))},
+                                            index=e_hof[0]['pro-metrics'])
+
+                    met_cases[model]['met_filter']['data'][period] = {'data': data, 'metrics': metrics,
+                                                                      'params': params}
+
                 elif p_filters[filter_i]['objective'] == 'above_threshold':
                   
                     intern_list = [i > p_filters[filter_i]['threshold'] for i in metric_vals]
@@ -2164,6 +2179,15 @@ def oos_case(p_models, p_memory_palace, p_data_folds, p_filters):
 
     return 1
 
+
+# ----------------------------------------------------------------------- TEXT DESCRIPTION OF EXPERIMENT -- #
+# --------------------------------------------------------------------------------------------------------- #
+
+def experiment_text(p_filename):
+    """
+    """
+
+    return 'not ready'
 
 # --------------------------------------------------------------------------------- GENERALIZATION TESTS -- #
 # --------------------------------------------------------------------------------------------------------- #

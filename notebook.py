@@ -21,6 +21,10 @@ import pandas as pd
 import numpy as np
 import random
 
+# -- file operations
+from os import listdir, path
+from os.path import isfile, join
+
 # -- complementary
 from rich import print
 from rich import inspect
@@ -31,20 +35,27 @@ random.seed(123)
 # ---------------------------------------------------------- LOAD PRICES, FOLDS AND PROCESS RESULTS DATA -- #
 # ------------------------------------------------------------------------------------------------------ -- #
 
-# Historical prices
-historical_prices = dt.ohlc_data
-
-# Fold size
-fold_case = 'semester'
-
-# Timeseries data division in t-folds
-folds = fn.t_folds(p_data=historical_prices, p_period=fold_case)
-
 # Route to backup files folder
 dir_route = 'files/backups/ludwig/test_1_09042021/'
 
+# Available files with experiment data
+abspath = path.abspath(dir_route)
+experiment_files = sorted([f for f in listdir(abspath) if isfile(join(abspath, f))])
+
+# -- Experiment case -- # 
+experiment = 11
+
+# Fold case
+fold_case = dt.fold_cases[experiment_files[experiment][0]]
+
 # Final route
-file_route = dir_route + 's_logloss-train_standard_20_fix.dat'
+file_route = dir_route + experiment_files[experiment]
+
+# Historical prices
+historical_prices = dt.ohlc_data
+
+# Timeseries data division in t-folds
+folds = fn.t_folds(p_data=historical_prices, p_period=fold_case)
 
 # Load data (previously generated results)
 memory_palace = dt.data_pickle(p_data_objects=None, p_data_action='load', p_data_file=file_route)
@@ -74,16 +85,16 @@ plot_2 = vs.plot_ohlc(p_ohlc=historical_prices, p_theme=dt.theme_plot_2, p_vline
 # --------------------------------------------------------------------- EXPERIMENT 1: OOS GENERALIZATION -- #
 # --------------------------------------------------------------------------------------------------------- #
 
-# metric type for MIN, MAX, MODE
-metric_case = 'auc-diff'
-
 # Filtered cases
-filters = {'filter_1': {'metric': 'acc-train', 'objective': 'above_threshold', 'threshold': 0.70},
-           'filter_2': {'metric': 'acc-val', 'objective': 'above_threshold', 'threshold': 0.70},
-           'filter_3': {'metric': 'acc-diff', 'objective': 'abs_min'}}
+filters = {'filter_1': {'metric': 'acc-train', 'objective': 'above_threshold', 'threshold': 0.90},
+           'filter_2': {'metric': 'acc-val', 'objective': 'above_threshold', 'threshold': 0.50},
+           'filter_3': {'metric': 'acc-diff', 'objective': 'all'}}
+
+# metric type for MIN, MAX, MODE
+metric_case = 'acc-train'
 
 # -- get MIN, MAX, MODE, FILTERED Cases
-met_cases = fn.model_cases(p_models=ml_models, p_global_cases=memory_palace,
+met_cases = fn.model_cases(p_models=ml_models, p_global_cases=memory_palace, 
                            p_data_folds=folds, p_cases_type=metric_case, p_filters=filters)
  
 for i in range(0, len(ml_models)):
@@ -104,23 +115,65 @@ for i in range(0, len(ml_models)):
         df_filtered.index.name=model_case + '-metrics'
         df_filtered.head()
 
-# 'y_logloss-train_robust_20_fix.dat' : ann con .89 en train
+# Description of results for the founded result
+# TEXT Fold size, Cost function, feature transformation, train-val proportion, embargo
+
+# Descriptive text of experiment
+experiment_des = fn.experiment_text(p_filename=experiment_files[experiment])
+
+# TABLE data profile (Target)
+# memory_palace['y_2012']['features']['train_y']
+# memory_palace['y_2012']['features']['val_y']
+
+# PLOT histogram (Target)
+# memory_palace['y_2012']['features']['train_y']
+# memory_palace['y_2012']['features']['val_y']
+
+# TABLE data profile (Inputs)
+# memory_palace['y_2012']['features']['train_x']
+# memory_palace['y_2012']['features']['val_x']
+
+# PLOT histograms (Inputs)
+# memory_palace['y_2012']['features']['train_x']
+# memory_palace['y_2012']['features']['val_x']
+
+# PLOT correlation inputs and target
+# memory_palace['y_2012']['features']['train_y'], memory_palace['y_2012']['features']['train_x']
+
+# PLOT ROC & AUC
+# PLOT ohlc class
+
+# PLOT MultiROC (From Fold )
+# PLOT AUC TS 
 
 # --------------------------------------------------------------------------------- MIN, MAX, MODE CASES -- #
 # --------------------------------------------------------------------------------------------------------- #
 
 # models to explore results
-model_case = ml_models[1]
+model_case = ml_models[0]
 
 # period of the best of HoF: according to model_case and metric_case 
 maxcase_period = met_cases[model_case]['met_max']['period']
 maxcase_params = met_cases[model_case]['met_max']['params']
 maxcase_metric = met_cases[model_case]['met_max'][metric_case]
 
+# output DataFrame
+df_max = pd.DataFrame([met_cases[model_case]['met_max']['data']['pro-metrics']]).T
+df_max.columns = [maxcase_period]
+df_max.index.name=model_case + '-metrics'
+df_max.head(5)
+
 # period of the worst of HoF: according to model_case and metric_case 
 mincase_period = met_cases[model_case]['met_min']['period']
 mincase_params = met_cases[model_case]['met_min']['params']
 mincase_metric = met_cases[model_case]['met_min'][metric_case]
 
+# output DataFrame
+df_min = pd.DataFrame([met_cases[model_case]['met_min']['data']['pro-metrics']]).T
+df_min.columns = [mincase_period]
+df_min.index.name=model_case + '-metrics'
+# df_min.head(5)
+
 # Modes and their params, no. of repetitions and periods.
 mode_repetitions = pd.DataFrame(met_cases[model_case]['met_mode']['data']).T
+# mode_repetitions.head(5)

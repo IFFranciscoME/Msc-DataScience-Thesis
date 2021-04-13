@@ -192,6 +192,8 @@ def group_daily():
 # ---------------------------------------------------------------------------- Historical Prices Reading -- #
 # ---------------------------------------------------------------------------- ------------------------- -- #
 
+fold_cases = {'q': 'quarter', 's': 'semester', 'y': 'year', 'b': 'bi-year', '8': '80-20'}
+
 # the price in the file is expressed as the USD to purchase one MXN
 # if is needed to convert to the inverse, the MXN to purchase one USD, uncomment the following line
 mode = 'MXN_USD'

@@ -140,8 +140,12 @@
 - Addition: Create layout for content sequence in notebook.py
 - Tests: Read .dat files and test results and data structures.
 
-# -- PENDING -- # 
+# -- 12.04.2021
 
+- Modification: Changes in objects previous to load .dat files to automatize results
+- Enhacement: Filtered results with 2 filters and a 'abs_min'/'abs_max'/'all' options
+
+# -- PENDING -- # 
 - (pending) Modification: Update information in header docstring in all files. 
 - (pending) Feature importance option to explore, according to AIFML 2018 (as option substitution for pre-post-features)
 - (pending) Fix: memory value for False embargo case *is this an error? - update: yes it is
