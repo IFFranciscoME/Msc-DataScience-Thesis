@@ -8,26 +8,32 @@
 # -- Repository: https://github.com/IFFranciscoME/Msc_Thesis                                             -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 
-# ------------------------------------------------------------------------------------- generic installs -- # 
 
+# -- Artificial Intelligence Tools
 deap>=1.3.1
 gplearn>=0.4.1
-pandas>=1.1.4
-requests>=2.24
-plotly>=4.12
+tensorflow==2.4.1
+
+# -- Special case for project
+"""
+1) Local Machine: Install version 2.4.1
+2) Ludwig Cluster: Install directly with tensorflow-2.4.1-cp38-cp38-linux_x86_64.whl   
+"""
+
+# -- Data science tools
 scikit-learn>=0.23
-chart_studio>=1.1.0
-rich>=9.5
 keras>=2.4.3
 statsmodels>=0.12.2
 
-# ------------------------------------------------------------------- install these 3 separately in t490 -- # 
+# -- Generic
+pandas>=1.1.4
+numpy>=1.20
 
-# tensorflow==2.4.1
-# numpy
+# -- Complementary
+rich>=9.5
+requests>=2.24
 
-# ----------------------------------------------------------------- install these 3 separately in ludwig -- # 
-
-# wheel
-# tensorflow-2.4.1-cp38-cp38-linux_x86_64.whl ; sys_platform == "linux"
-# numpy
+# -- Visualization
+plotly>=4.12
+chart_studio>=1.1.0
+jupyter>=1.0
