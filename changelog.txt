@@ -144,6 +144,12 @@
 - Modification: Changes in objects previous to load .dat files to automatize results
 - Enhacement: Filtered results with 2 filters and a 'abs_min'/'abs_max'/'all' options
 
+# -- 13.04.2021
+- (pending) Fix: All the data tables and dataframes printed in jupyter notebook
+- (pending) Enhacement: Create a similarity in information matrix using all folds for each experiment
+- (pending) Enhacement: For each informationally independent Fold, find the case with highest OOS Generalization
+- (pending) Enhacement: Create a voting prediction for test_1 with acc-diff metric as voting importance factor
+
 # -- PENDING -- # 
 - (pending) Modification: Update information in header docstring in all files. 
 - (pending) Feature importance option to explore, according to AIFML 2018 (as option substitution for pre-post-features)

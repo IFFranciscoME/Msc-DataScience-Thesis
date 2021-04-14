@@ -37,3 +37,5 @@ requests>=2.24
 plotly>=4.12
 chart_studio>=1.1.0
 jupyter>=1.0
+matplotlib>=3.4.1
+seaborn>=0.11.1

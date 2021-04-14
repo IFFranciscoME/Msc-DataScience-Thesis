@@ -21,7 +21,7 @@ import numpy as np
 import random
 
 # -- file operations
-from os import listdir, path
+from os import listdir, name, path
 from os.path import isfile, join
 
 # -- complementary
@@ -45,7 +45,7 @@ experiment_files = sorted([f for f in listdir(abspath) if isfile(join(abspath, f
 # [11, 0.9, 0.5, 'all']
 
 # Experiment file  
-experiment = 11
+experiment = 1
 
 # Fold case
 fold_case = dt.fold_cases[experiment_files[experiment][0]]
@@ -121,7 +121,9 @@ for i in range(0, len(ml_models)):
 
         # format to output dataframe
         df_filtered.index.name=model_case + '-metrics'
-        df_filtered.head()
+
+# Print filtered cases
+# df_filtered.head()
 
 # -- ------------------------------------------------------------------------------------- DATA PROFILES -- #
 # -- ------------------------------------------------------------------------------------- ------------- -- #
@@ -150,13 +152,13 @@ tabla_4 = fn.data_profile(p_data=exp_val_x, p_type='target', p_mult=10000)
 plot_2_1 = vs.plot_h_histograms(p_data=exp_train_x.iloc[:, 0:9])
 
 # Show plot
-plot_2_1.show()
+# plot_2_1.show()
 
 # PLOT histogram (Features)
 plot_2_2 = vs.plot_h_histograms(p_data=exp_train_x.iloc[:, -10:])
 
 # Show plot
-plot_2_2.show()
+# plot_2_2.show()
 
 # -- ------------------------------------------------------------------------ PLOT: HEATMAP CORRELATIONS -- #
 # -- ---------------------------------------------------------------------------- ---------------------- -- #
@@ -168,7 +170,7 @@ title_txt = 'Linear-Autoregressive Features Vs Target Correlation (pearson)'
 exp_1_plot = vs.plot_heatmap_corr(p_data=exp_1_corr_p.copy(), p_title=title_txt)
 
 # Show plot
-exp_1_plot.show()
+# exp_1_plot.show()
 
 # -- Target and Symbolic Features correlation
 exp_2 = pd.concat([exp_train_y.copy(), exp_train_x.iloc[:, -40:].copy()], axis=1)
@@ -177,7 +179,7 @@ title_txt = 'Symbolic Features Vs Target Correlation (pearson)'
 exp_2_plot = vs.plot_heatmap_corr(p_data=exp_1_corr_p.copy(), p_title=title_txt)
 
 # Show plot
-exp_2_plot.show()
+# exp_2_plot.show()
 
 # -- ---------------------------------------------------------------------------- PLOT: All ROCs in FOLD -- #
 # -- ---------------------------------------------------------------------------- ---------------------- -- #
@@ -213,7 +215,7 @@ dt.theme_plot_4['p_labels']['title'] = 'in Fold max & min ' + metric_case + ' ' 
 plot_4 = vs.plot_multiroc(p_data=d_plot_4, p_metric=metric_case, p_theme=dt.theme_plot_4)
 
 # Show plot in script
-plot_4.show()
+# plot_4.show()
 
 # Generate plot online with chartstudio
 # py.plot(plot_4)
@@ -249,7 +251,7 @@ plot_3 = vs.plot_ohlc_class(p_ohlc=ohlc_prices, p_theme=dt.theme_plot_3, p_data_
                             p_vlines=date_vlines)
 
 # Show plot in script
-plot_3.show()
+# plot_3.show()
 
 # Generate plot online with chartstudio
 # py.plot(plot_3)
@@ -269,7 +271,7 @@ maxcase_metric = met_cases[model_case]['met_max'][metric_case]
 df_max = pd.DataFrame([met_cases[model_case]['met_max']['data']['pro-metrics']]).T
 df_max.columns = [maxcase_period]
 df_max.index.name=model_case + '-metrics'
-df_max.head(5)
+# df_max.head(5)
 
 # period of the worst of HoF: according to model_case and metric_case 
 mincase_period = met_cases[model_case]['met_min']['period']
@@ -285,3 +287,158 @@ df_min.index.name=model_case + '-metrics'
 # Modes and their params, no. of repetitions and periods.
 mode_repetitions = pd.DataFrame(met_cases[model_case]['met_mode']['data']).T
 # mode_repetitions.head(5)
+
+
+# --------------------------------------------------------------------------- SIMILARITY IN DISTRIBUTION -- #
+# --------------------------------------------------------------------------------------------------------- #
+
+# Use target variable (discrete for classification problem)
+# Produce a Kullback Liebler based distance matrix among all fold
+
+import numpy as np
+from matplotlib import pyplot as plt
+import seaborn as sns
+sns.set()
+
+p = (folds['q_01_2009']['close'] - folds['q_01_2009']['open'])*10000
+# p = np.array(p/max(p))
+p = p[0:190]
+
+q = (folds['q_03_2009']['close'] - folds['q_03_2009']['open'])*10000
+# q = np.array((q - np.mean(q))/np.std(q))
+# q = np.array(q/max(q))
+q = q[0:190]
+
+# sns.jointplot(x=p, y=q, kind='scatter')
+# plt.show()
+
+fig = sns.kdeplot(p, shade=True, color="r")
+fig = sns.kdeplot(q, shade=True, color="b")
+plt.show()
+
+# -- Synthetic data 
+# x = np.arange(-10, 10, 0.001)
+# p = norm.pdf(x, 2, 2)
+# q = norm.pdf(x, 2, 2)
+
+def compute_probs(data, n=10): 
+    h, e = np.histogram(data, n)
+    p = h/data.shape[0]
+    return e, p
+
+def support_intersection(p, q): 
+    sup_int = (
+        list(
+            filter(
+                lambda x: (x[0]!=0) & (x[1]!=0), zip(p, q)
+            )
+        )
+    )
+    return sup_int
+
+def get_probs(list_of_tuples): 
+    p = np.array([p[0] for p in list_of_tuples])
+    q = np.array([p[1] for p in list_of_tuples])
+    return p, q
+
+def kl_divergence(p, q): 
+    return np.sum(p*np.log(p/q))
+
+def js_divergence(p, q):
+    m = (1./2.)*(p + q)
+    return (1./2.)*kl_divergence(p, m) + (1./2.)*kl_divergence(q, m)
+
+def compute_kl_divergence(train_sample, test_sample, n_bins=10): 
+    """
+    Computes the KL Divergence using the support 
+    intersection between two different samples
+    """
+    e, p = compute_probs(train_sample, n=n_bins)
+    _, q = compute_probs(test_sample, n=e)
+
+    list_of_tuples = support_intersection(p, q)
+    p, q = get_probs(list_of_tuples)
+    
+    return kl_divergence(p, q)
+
+def compute_js_divergence(train_sample, test_sample, n_bins=10): 
+    """
+    Computes the JS Divergence using the support 
+    intersection between two different samples
+    """
+    e, p = compute_probs(train_sample, n=n_bins)
+    _, q = compute_probs(test_sample, n=e)
+    
+    list_of_tuples = support_intersection(p,q)
+    p, q = get_probs(list_of_tuples)
+    
+    return js_divergence(p, q)
+
+final = compute_js_divergence(p, q, n_bins=10)
+
+final
+
+
+# -- Discrete variables
+
+def compute_probs(data, n=10): 
+    h, e = np.histogram(data, n)
+    p = h/data.shape[0]
+    return e, p
+
+def support_intersection(p, q): 
+    sup_int = (
+        list(
+            filter(
+                lambda x: (x[0]!=0) & (x[1]!=0), zip(p, q)
+            )
+        )
+    )
+    return sup_int
+
+def get_probs(list_of_tuples): 
+    p = np.array([p[0] for p in list_of_tuples])
+    q = np.array([p[1] for p in list_of_tuples])
+    return p, q
+
+def kl_divergence(p, q): 
+    return np.sum(p*np.log(p/q))
+
+def js_divergence(p, q):
+    m = (1./2.)*(p + q)
+    return (1./2.)*kl_divergence(p, m) + (1./2.)*kl_divergence(q, m)
+
+def compute_kl_divergence(train_sample, test_sample, n_bins=10): 
+    """
+    Computes the KL Divergence using the support 
+    intersection between two different samples
+    """
+    e, p = compute_probs(train_sample, n=n_bins)
+    _, q = compute_probs(test_sample, n=e)
+
+    list_of_tuples = support_intersection(p, q)
+    p, q = get_probs(list_of_tuples)
+    
+    return kl_divergence(p, q)
+
+def compute_js_divergence(train_sample, test_sample, n_bins=10): 
+    """
+    Computes the JS Divergence using the support 
+    intersection between two different samples
+    """
+    e, p = compute_probs(train_sample, n=n_bins)
+    _, q = compute_probs(test_sample, n=e)
+    
+    list_of_tuples = support_intersection(p,q)
+    p, q = get_probs(list_of_tuples)
+    
+    return js_divergence(p, q)
+
+
+p = (folds['y_2009']['close'] - folds['y_2009']['open'])*10000
+p = np.array([1 if p_i > 0 else 0 for p_i in p])
+
+q = (folds['y_2010']['close'] - folds['y_2010']['open'])*10000
+q = np.array([1 if q_i > 0 else 0 for q_i in q])
+
+compute_js_divergence(p, q, n_bins=10)
