@@ -300,145 +300,49 @@ from matplotlib import pyplot as plt
 import seaborn as sns
 sns.set()
 
-p = (folds['q_01_2009']['close'] - folds['q_01_2009']['open'])*10000
+# p = (folds['q_02_2010']['close'] - folds['q_02_2010']['open'])*10000
 # p = np.array(p/max(p))
-p = p[0:190]
+# p = p[0:190]
 
-q = (folds['q_03_2009']['close'] - folds['q_03_2009']['open'])*10000
+# q = (folds['q_04_2009']['close'] - folds['q_04_2009']['open'])*10000
 # q = np.array((q - np.mean(q))/np.std(q))
 # q = np.array(q/max(q))
-q = q[0:190]
+# q = q[0:190]
 
 # sns.jointplot(x=p, y=q, kind='scatter')
 # plt.show()
 
-fig = sns.kdeplot(p, shade=True, color="r")
-fig = sns.kdeplot(q, shade=True, color="b")
-plt.show()
+# fig = sns.kdeplot(p, shade=True, color="r")
+# fig = sns.kdeplot(q, shade=True, color="b")
+# plt.show()
 
-# -- Synthetic data 
-# x = np.arange(-10, 10, 0.001)
-# p = norm.pdf(x, 2, 2)
-# q = norm.pdf(x, 2, 2)
+# Example 1: Very different PDFs
+q = (folds['q_01_2009']['close'] - folds['q_01_2009']['open'])
+# q = (q + abs(min(q)))/max(q)
 
-def compute_probs(data, n=10): 
-    h, e = np.histogram(data, n)
-    p = h/data.shape[0]
-    return e, p
+p = (folds['q_01_2011']['close'] - folds['q_01_2011']['open'])
+# p = (p + abs(min(p)))/max(p)
 
-def support_intersection(p, q): 
-    sup_int = (
-        list(
-            filter(
-                lambda x: (x[0]!=0) & (x[1]!=0), zip(p, q)
-            )
-        )
-    )
-    return sup_int
+# Example 1: Very similar PDFs
+# q = (folds['q_01_2011']['close'] - folds['q_01_2011']['open'])
+# q = (q + abs(min(q)))/max(q)
 
-def get_probs(list_of_tuples): 
-    p = np.array([p[0] for p in list_of_tuples])
-    q = np.array([p[1] for p in list_of_tuples])
-    return p, q
+# p = (folds['q_04_2010']['close'] - folds['q_04_2010']['open'])
+# p = (p + abs(min(p)))/max(p)
 
-def kl_divergence(p, q): 
-    return np.sum(p*np.log(p/q))
+# Example 3: Identical PDFs (the same data)
+# q = (folds['q_03_2010']['close'] - folds['q_03_2010']['open'])*10000
+# q = (q + abs(min(q)))/1000
+# p = (folds['q_03_2010']['close'] - folds['q_03_2010']['open'])*10000
+# p = (p + abs(min(p)))/1000
 
-def js_divergence(p, q):
-    m = (1./2.)*(p + q)
-    return (1./2.)*kl_divergence(p, m) + (1./2.)*kl_divergence(q, m)
+dissimilarity = fn.info_matrix(p, q)
+dissimilarity
 
-def compute_kl_divergence(train_sample, test_sample, n_bins=10): 
-    """
-    Computes the KL Divergence using the support 
-    intersection between two different samples
-    """
-    e, p = compute_probs(train_sample, n=n_bins)
-    _, q = compute_probs(test_sample, n=e)
-
-    list_of_tuples = support_intersection(p, q)
-    p, q = get_probs(list_of_tuples)
-    
-    return kl_divergence(p, q)
-
-def compute_js_divergence(train_sample, test_sample, n_bins=10): 
-    """
-    Computes the JS Divergence using the support 
-    intersection between two different samples
-    """
-    e, p = compute_probs(train_sample, n=n_bins)
-    _, q = compute_probs(test_sample, n=e)
-    
-    list_of_tuples = support_intersection(p,q)
-    p, q = get_probs(list_of_tuples)
-    
-    return js_divergence(p, q)
-
-final = compute_js_divergence(p, q, n_bins=10)
-
-final
-
-
-# -- Discrete variables
-
-def compute_probs(data, n=10): 
-    h, e = np.histogram(data, n)
-    p = h/data.shape[0]
-    return e, p
-
-def support_intersection(p, q): 
-    sup_int = (
-        list(
-            filter(
-                lambda x: (x[0]!=0) & (x[1]!=0), zip(p, q)
-            )
-        )
-    )
-    return sup_int
-
-def get_probs(list_of_tuples): 
-    p = np.array([p[0] for p in list_of_tuples])
-    q = np.array([p[1] for p in list_of_tuples])
-    return p, q
-
-def kl_divergence(p, q): 
-    return np.sum(p*np.log(p/q))
-
-def js_divergence(p, q):
-    m = (1./2.)*(p + q)
-    return (1./2.)*kl_divergence(p, m) + (1./2.)*kl_divergence(q, m)
-
-def compute_kl_divergence(train_sample, test_sample, n_bins=10): 
-    """
-    Computes the KL Divergence using the support 
-    intersection between two different samples
-    """
-    e, p = compute_probs(train_sample, n=n_bins)
-    _, q = compute_probs(test_sample, n=e)
-
-    list_of_tuples = support_intersection(p, q)
-    p, q = get_probs(list_of_tuples)
-    
-    return kl_divergence(p, q)
-
-def compute_js_divergence(train_sample, test_sample, n_bins=10): 
-    """
-    Computes the JS Divergence using the support 
-    intersection between two different samples
-    """
-    e, p = compute_probs(train_sample, n=n_bins)
-    _, q = compute_probs(test_sample, n=e)
-    
-    list_of_tuples = support_intersection(p,q)
-    p, q = get_probs(list_of_tuples)
-    
-    return js_divergence(p, q)
-
-
-p = (folds['y_2009']['close'] - folds['y_2009']['open'])*10000
-p = np.array([1 if p_i > 0 else 0 for p_i in p])
-
-q = (folds['y_2010']['close'] - folds['y_2010']['open'])*10000
-q = np.array([1 if q_i > 0 else 0 for q_i in q])
-
-compute_js_divergence(p, q, n_bins=10)
+# Group data together
+import plotly.figure_factory as ff
+labels = ['q_04_2010', 'q_01_2011']
+hist_data = [p, q]
+all_dists = ff.create_distplot(hist_data, labels, bin_size=0.05, histnorm='probability')
+# Show plot
+all_dists.show()

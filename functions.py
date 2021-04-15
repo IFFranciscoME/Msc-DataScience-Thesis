@@ -2204,3 +2204,56 @@ def generalization_tests():
     # -- Out-Of-Distribution -- #
     
     return 1
+
+# ------------------------------------------------------------------- KULLBACK-LIEBLER DIVERGENCE MATRIX -- #
+# --------------------------------------------------------------------------------------------------------- #
+
+def info_matrix(p, q):
+    
+    """
+    p_data: dict
+        With fold data to perform the calculations
+
+
+
+    """
+
+    import scipy
+    from scipy.stats import gengamma
+
+    def compute_gamma_parameters(data): 
+        mean = np.mean(data)
+        variance = np.var(data)
+        alpha = (mean**2)/variance
+        beta = (mean)/(variance)
+        theta = 1/beta
+        return alpha, beta
+
+    def kl_divergence_generalized_gamma(alpha_1, beta_1, alpha_2, beta_2, p1=1, p2=1):
+        """
+        Computes the Kullback-Leibler divergence 
+        between two gamma distributions
+        """
+        theta_1 = 1/beta_1
+        theta_2 = 1/beta_2
+        
+        a = p1*(theta_2**alpha_2)*scipy.special.gamma(alpha_2/p2)
+        b = p2*(theta_1**alpha_1)*scipy.special.gamma(alpha_1/p1)
+        c = (((scipy.special.digamma(alpha_1/p1))/p1) + 
+            np.log(theta_1))*(alpha_1 - alpha_2)
+        d = scipy.special.gamma((alpha_1+p2)/p1)
+        e = scipy.special.gamma((alpha_1/p1))
+        f = (theta_1/theta_2)**(p2)
+        g = alpha_1/p1
+        
+        return np.log(a/b) + c + (d/e)*f - g
+
+    a_p, b_p, loc_p, scale_p = gengamma.fit(p)
+    a_q, b_q, loc_p, scale_p = gengamma.fit(q)
+
+    # a_p, b_p = compute_gamma_parameters(p)
+    # a_q, b_q = compute_gamma_parameters(q)
+
+    kl = kl_divergence_generalized_gamma(a_p, b_p, a_q, b_q, p1=1, p2=1)
+
+    return kl
