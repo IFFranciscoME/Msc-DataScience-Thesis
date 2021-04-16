@@ -2221,12 +2221,12 @@ def info_matrix(p, q):
     import scipy
     from scipy.stats import gengamma
 
-    def compute_gamma_parameters(data): 
+    def compute_gamma_parameters(data):
+
         mean = np.mean(data)
         variance = np.var(data)
-        alpha = (mean**2)/variance
-        beta = (mean)/(variance)
-        theta = 1/beta
+        alpha = mean**2/variance
+        beta = variance/mean
         return alpha, beta
 
     def kl_divergence_generalized_gamma(alpha_1, beta_1, alpha_2, beta_2, p1=1, p2=1):
@@ -2248,11 +2248,11 @@ def info_matrix(p, q):
         
         return np.log(a/b) + c + (d/e)*f - g
 
-    a_p, b_p, loc_p, scale_p = gengamma.fit(p)
-    a_q, b_q, loc_p, scale_p = gengamma.fit(q)
+    # a_p, b_p, loc_p, scale_p = gengamma.fit(p)
+    # a_q, b_q, loc_p, scale_p = gengamma.fit(q)
 
-    # a_p, b_p = compute_gamma_parameters(p)
-    # a_q, b_q = compute_gamma_parameters(q)
+    a_p, b_p = compute_gamma_parameters(p)
+    a_q, b_q = compute_gamma_parameters(q)
 
     kl = kl_divergence_generalized_gamma(a_p, b_p, a_q, b_q, p1=1, p2=1)
 

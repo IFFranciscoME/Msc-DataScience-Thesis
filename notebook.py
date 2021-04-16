@@ -316,33 +316,33 @@ sns.set()
 # fig = sns.kdeplot(q, shade=True, color="b")
 # plt.show()
 
-# Example 1: Very different PDFs
-q = (folds['q_01_2009']['close'] - folds['q_01_2009']['open'])
-# q = (q + abs(min(q)))/max(q)
+# Example 1: Very different PDFs of two sub-samples
+q_label = 'q_03_2012'
+p_label = 'q_04_2012'
 
-p = (folds['q_01_2011']['close'] - folds['q_01_2011']['open'])
-# p = (p + abs(min(p)))/max(p)
+# Example 2: Very similar PDFs of two sub-samples
+q_label = 'q_01_2009'
+p_label = 'q_03_2009'
 
-# Example 1: Very similar PDFs
-# q = (folds['q_01_2011']['close'] - folds['q_01_2011']['open'])
-# q = (q + abs(min(q)))/max(q)
+# use the variable from wich the sign is extracted, for continuous KLD, since for the
+# discrete case the alternative would be to use only 2 types of values because there are
+# just two classes.
+q = (folds[q_label]['close'] - folds[q_label]['open'])
+p = (folds[p_label]['close'] - folds[p_label]['open'])
+# shift to only positive numbers by adding the abs of the most negative value 
+q = (q + abs(min(q)))/max(q)
+p = (p + abs(min(p)))/max(p)
 
-# p = (folds['q_04_2010']['close'] - folds['q_04_2010']['open'])
-# p = (p + abs(min(p)))/max(p)
+# divergence metric (just two samples)
+divergence = fn.info_matrix(p, q)
+divergence
 
-# Example 3: Identical PDFs (the same data)
-# q = (folds['q_03_2010']['close'] - folds['q_03_2010']['open'])*10000
-# q = (q + abs(min(q)))/1000
-# p = (folds['q_03_2010']['close'] - folds['q_03_2010']['open'])*10000
-# p = (p + abs(min(p)))/1000
-
-dissimilarity = fn.info_matrix(p, q)
-dissimilarity
-
-# Group data together
+# plot for visual validation
 import plotly.figure_factory as ff
-labels = ['q_04_2010', 'q_01_2011']
-hist_data = [p, q]
-all_dists = ff.create_distplot(hist_data, labels, bin_size=0.05, histnorm='probability')
+labels = [q_label, p_label]
+data = [q, p]
+all_dists = ff.create_distplot(hist_data=data, group_labels=labels, bin_size=.05,
+                              histnorm='probability', show_curve=False)
+all_dists.update_layout(title='Kull-Back Divergence Metric: ' + str(divergence))
 # Show plot
 all_dists.show()
