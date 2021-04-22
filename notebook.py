@@ -342,7 +342,9 @@ import plotly.figure_factory as ff
 labels = [q_label, p_label]
 data = [q, p]
 all_dists = ff.create_distplot(hist_data=data, group_labels=labels, bin_size=.05,
-                              histnorm='probability', show_curve=False)
+                               histnorm='probability', show_curve=False)
+
 all_dists.update_layout(title='Kull-Back Divergence Metric: ' + str(divergence))
+
 # Show plot
 all_dists.show()

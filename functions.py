@@ -2227,6 +2227,7 @@ def info_matrix(p, q):
         variance = np.var(data)
         alpha = mean**2/variance
         beta = variance/mean
+        
         return alpha, beta
 
     def kl_divergence_generalized_gamma(alpha_1, beta_1, alpha_2, beta_2, p1=1, p2=1):
