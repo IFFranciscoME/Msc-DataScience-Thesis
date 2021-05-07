@@ -1,0 +1,49 @@
+
+
+root
+
+files
+|
+| -- backups
+|   |
+|    --- ludwig
+|   |   |
+|   |    ---- test_2_16042021
+|   |
+|    --- t490
+|	    |
+|	     ---- test_2_16042021
+| -- logs
+|   |
+|    --- ludwig
+|   |   |
+|   |    ---- test_2_16042021
+|   |
+|    --- t490
+|	    |
+|	     ---- test_2_16042021
+|
+| -- notebooks
+|   |
+|    --- notebook_16042021.ipynb
+|
+| - prices
+
+
+-- msc_thesis_t490_venv
+-- msc_thesis_ludwig_venv
+
+- t490_workspace
+- ludwig_workspace
+
+- changelog.txt
+- requirements.txt
+- README.rst
+
+- main.py
+- data.py
+- functions.py
+- visualizations.py
+
+- notebook.py
+- notebook_.ipynb

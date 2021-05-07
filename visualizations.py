@@ -485,10 +485,16 @@ def plot_h_histograms(p_data):
 
     df_hist['type'] = types
 
-    fig = px.histogram(df_hist, x="data", facet_row='type', color='type', histnorm='probability',
-                       opacity=0.75, nbins=550)
-    fig.update_xaxes(matches=None)
+    df_hist.rename(columns = {"data": "Normalized Data"}, inplace=True)
+
+    fig = px.histogram(df_hist, x="Normalized Data", facet_row='type', color='type', histnorm='probability',
+                       opacity=0.75, nbins=550, color_discrete_sequence=px.colors.sequential.ice)
+    
+    fig.update_xaxes(matches=None, title_font=dict(size=16))
     fig.update_yaxes(matches=None, title_font=dict(size=12))
+
+    fig.update_layout(legend=dict(orientation="h", x=0.5, xanchor='center', title=None,
+    font=dict(size=16)))
 
     return fig
 
@@ -497,7 +503,7 @@ def plot_h_histograms(p_data):
 # -- --------------------------------------------------------------------------------------------------- -- #
 
 
-def plot_heatmap_corr(p_data, p_title):
+def plot_heatmap_corr(p_data, p_colors, p_scale=False, p_title=None):
     """
     Generates a heatmap correlation matrix with seaborn library
 
@@ -513,6 +519,12 @@ def plot_heatmap_corr(p_data, p_title):
         Title for plot
 
         p_title = 'main plot'
+    
+    p_scale: bool
+        whether to show or not vertical scale of correlation
+    
+    p_colors: str
+        Color scale according to pre-defined colors in plotly
 
     Returns
     -------
@@ -532,20 +544,21 @@ def plot_heatmap_corr(p_data, p_title):
     # mask = np.triu(np.ones_like(g_data, dtype=bool))
     nrLT = g_data.where(np.triu(np.ones(g_data.shape)).astype(np.bool_))
    
+    zs = np.ones((nrLT.shape))
+
     g_heat = go.Figure()
-    title = 'Correlation Matrix: ' + p_title
 
     g_heat = g_heat.add_trace(go.Heatmap(showscale=False,
-        z = nrLT*1, 
+        z = zs, 
         x = nrLT.columns.values,
         y = nrLT.columns.values,
         xgap = 0,   # Sets the horizontal gap (in pixels) between bricks
         ygap = 0,
-        zmin = -1,  # Sets the lower bound of the color domain
-        zmax = +1,
         colorscale = ['#FFFFFF', '#FFFFFF']))
+    
+    g_heat.update_layout(paper_bgcolor='#FFFFFF', plot_bgcolor='#FFFFFF')
 
-    g_heat = g_heat.add_trace(go.Heatmap(showscale=False,
+    g_heat = g_heat.add_trace(go.Heatmap(showscale=p_scale,
         z = rLT,
         x = rLT.columns.values,
         y = rLT.columns.values,
@@ -553,10 +566,9 @@ def plot_heatmap_corr(p_data, p_title):
         zmax = +1,
         xgap = +1,   # Sets the horizontal gap (in pixels) between bricks
         ygap = +1,
-        colorscale = 'Blues'))  
+        colorscale = p_colors))  
 
     g_heat = g_heat.update_layout(
-        title_text=title,
         title_x = 0.5, 
         title_y = 0.90, 
         width = 1000, 
@@ -577,8 +589,8 @@ def plot_heatmap_corr(p_data, p_title):
         colors_z = ['#FAFAFA' if i > 0 else '#6E6E6E' for i in flat_z]
         coords = product(range(a), range(b))
         for pos, elem, color in zip(coords, flat_z, colors_z):
-            att.append({'font': {'color': color, 'size':9},
-                        'text': str(np.round(elem, 2)), 'showarrow': False,
+            att.append({'font': {'color': color, 'size':8},
+                        'text': str(np.round(elem, 1)), 'showarrow': False,
                         'x': pos[1],
                         'y': pos[0]})
         return att

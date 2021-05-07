@@ -82,7 +82,7 @@ for n_fold in list(folds.keys()):
     dates_folds.append(folds[n_fold]['timestamp'].iloc[-1])
 
 # Plot_1 with t-folds vertical lines
-plot_2 = vs.plot_ohlc(p_ohlc=historical_prices, p_theme=dt.theme_plot_2, p_vlines=dates_folds)
+plot_2 = vs.plot_ohlc(p_ohlc=historical_prices, p_theme=dt.theme_plot_2, p_vlines=None)
 
 # Show plot in script
 # plot_2.show()
@@ -131,6 +131,9 @@ for i in range(0, len(ml_models)):
 # Fold to make a description
 des_fold = df_filtered.columns[0][:-2]
 
+# print fold that is beign used for data visualization
+print(des_fold)
+
 # TABLE data profile (Target)
 exp_train_y = memory_palace[des_fold]['features']['train_y']
 exp_val_y = memory_palace[des_fold]['features']['val_y']
@@ -140,10 +143,13 @@ tabla_2 = fn.data_profile(p_data=exp_val_y, p_type='target', p_mult=10000)
 
 # TABLE data profile (Inputs)
 exp_train_x = memory_palace[des_fold]['features']['train_x']
-exp_val_x = memory_palace[des_fold]['features']['val_x']
+u_exp_train_x = exp_train_x.T.drop_duplicates().T
 
-tabla_3 = fn.data_profile(p_data=exp_train_x, p_type='target', p_mult=10000)
-tabla_4 = fn.data_profile(p_data=exp_val_x, p_type='target', p_mult=10000)
+exp_val_x = memory_palace[des_fold]['features']['val_x']
+u_exp_val_x = exp_train_x.T.drop_duplicates().T
+
+tabla_3 = fn.data_profile(p_data=u_exp_train_x, p_type='target', p_mult=10000)
+tabla_4 = fn.data_profile(p_data=u_exp_val_x, p_type='target', p_mult=10000)
 
 # -- ----------------------------------------------------------------------- PLOT: MULTI PLOT HISTOGRAMS -- #
 # -- ---------------------------------------------------------------------------- ---------------------- -- #
@@ -155,7 +161,7 @@ plot_2_1 = vs.plot_h_histograms(p_data=exp_train_x.iloc[:, 0:9])
 # plot_2_1.show()
 
 # PLOT histogram (Features)
-plot_2_2 = vs.plot_h_histograms(p_data=exp_train_x.iloc[:, -10:])
+# plot_2_2 = vs.plot_h_histograms(p_data=exp_train_x.iloc[:, -10:])
 
 # Show plot
 # plot_2_2.show()
@@ -164,19 +170,35 @@ plot_2_2 = vs.plot_h_histograms(p_data=exp_train_x.iloc[:, -10:])
 # -- ---------------------------------------------------------------------------- ---------------------- -- #
 
 # -- Target and Auto regressive Features correlation
-exp_1 = pd.concat([exp_train_y.copy(), exp_train_x.iloc[:, 0:55].copy()], axis=1)
-exp_1_corr_p = exp_1.corr('pearson')
-title_txt = 'Linear-Autoregressive Features Vs Target Correlation (pearson)'
-exp_1_plot = vs.plot_heatmap_corr(p_data=exp_1_corr_p.copy(), p_title=title_txt)
+exp_1 = pd.concat([u_exp_train_x.iloc[:, 0:52].copy()], axis=1)
 
-# Show plot
-# exp_1_plot.show()
+exp_1_corr_p = exp_1.corr('pearson')
+exp_1_p_plot = vs.plot_heatmap_corr(p_data=exp_1_corr_p.copy(), p_colors='Blues')
+exp_1_corr_s = exp_1.corr('spearman')
+exp_1_s_plot = vs.plot_heatmap_corr(p_data=exp_1_corr_s.copy(), p_colors='Greens')
+
+# Show plots
+# exp_1_p_plot.show()
+# exp_1_s_plot.show()
+
+# -- Among Symbolic Features
+exp_2 = pd.concat([u_exp_train_x.iloc[:, -25:].copy()], axis=1)
+
+exp_2_corr_p = exp_2.corr('pearson')
+exp_2_p_plot = vs.plot_heatmap_corr(p_data=exp_2_corr_p.copy(), p_colors='Blues')
+
+exp_2_corr_s = exp_2.corr('spearman')
+exp_2_s_plot = vs.plot_heatmap_corr(p_data=exp_2_corr_s.copy(), p_colors='Greens')
+
+# Show plots
+exp_2_p_plot.show()
+exp_2_s_plot.show()
 
 # -- Target and Symbolic Features correlation
 exp_2 = pd.concat([exp_train_y.copy(), exp_train_x.iloc[:, -40:].copy()], axis=1)
 exp_2_corr_p = exp_1.corr('pearson')
 title_txt = 'Symbolic Features Vs Target Correlation (pearson)'
-exp_2_plot = vs.plot_heatmap_corr(p_data=exp_1_corr_p.copy(), p_title=title_txt)
+exp_2_plot = vs.plot_heatmap_corr(p_data=exp_1_corr_p.copy(), p_title=title_txt, p_scale=True)
 
 # Show plot
 # exp_2_plot.show()

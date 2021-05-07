@@ -154,7 +154,7 @@ models = {
 # -------------------------------------------------------------------- Historical Minute Prices Grouping -- #
 # -------------------------------------------------------------------- --------------------------------- -- #
 
-def group_daily():
+def group_data():
     
     # resample by the minute "T", and by the day will be "D", and by 8 hours will be "8H"
     file_nom = 'M1'
@@ -183,7 +183,8 @@ def group_daily():
 
         for year in years:
             data_temp = data.groupby(pd.Grouper(freq='1Y')).get_group(year + '-12-31')
-            data_temp.to_csv('files/prices/' + file_nom + '/MP_' + file_nom + '_' + year + '.csv')
+            file_name_base = 'files/prices/' + file_nom + '/MP_' + file_nom + '_'
+            data_temp.to_csv(file_name_base + year + '.csv')
             r_data['MP_' + file_nom + '_' + year] = data_temp
 
     return r_data
@@ -281,14 +282,14 @@ theme_plot_1 = dict(p_colors={'color_1': '#6b6b6b', 'color_2': '#ABABAB', 'color
                     p_fonts={'font_title': 18, 'font_axis': 10, 'font_ticks': 10},
                     p_dims={'width': 900, 'height': 400},
                     p_labels={'title': 'Precios OHLC',
-                              'x_title': 'Dates', 'y_title': 'Continuous Future Prices USD/MXN'})
+                              'x_title': 'Dates', 'y_title': 'Future Prices USD/MXN'})
 
 # Plot_2 : Timeseries T-Folds blocks without filtration
 theme_plot_2 = dict(p_colors={'color_1': '#6b6b6b', 'color_2': '#ABABAB', 'color_3': '#ABABAB'},
                     p_fonts={'font_title': 18, 'font_axis': 10, 'font_ticks': 10},
                     p_dims={'width': 900, 'height': 500},
-                    p_labels={'title': 'T-Folds por Bloques Sin Filtraciones',
-                              'x_title': 'Fechas', 'y_title': 'Continuous Future Prices USD/MXN'})
+                    p_labels={'title': '',
+                              'x_title': 'Dates', 'y_title': 'Future Prices USD/MXN'})
 
 # Plot_3 Observed Class vs Predicted Class
 theme_plot_3 = dict(p_colors={'color_1': '#6b6b6b', 'color_2': '#ABABAB', 'color_3': '#ABABAB'},
