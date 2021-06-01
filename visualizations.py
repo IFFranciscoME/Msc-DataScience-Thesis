@@ -74,7 +74,7 @@ def plot_ohlc(p_ohlc, p_theme, p_vlines):
 
     # tick values calculation for simetry in y axes
     y0_ticks_vals = np.arange(min(p_ohlc['low']), max(p_ohlc['high']),
-                              (max(p_ohlc['high']) - min(p_ohlc['low'])) / 10)
+                              (max(p_ohlc['high']) - min(p_ohlc['low'])) / 6)
     y0_ticks_vals = np.append(y0_ticks_vals, max(p_ohlc['high']))
     y0_ticks_vals = np.round(y0_ticks_vals, 4)
 
@@ -99,7 +99,7 @@ def plot_ohlc(p_ohlc, p_theme, p_vlines):
                                         titlefont=dict(color=p_theme['p_colors']['color_1']),
                                         tickfont=dict(color=p_theme['p_colors']['color_1'],
                                                       size=p_theme['p_fonts']['font_axis']),
-                                        showgrid=True, gridcolor='lightgrey', gridwidth=.05))
+                                        showgrid=True, gridcolor='lightgrey', gridwidth=.75))
 
     # If parameter vlines is used
     if p_vlines is not None:
@@ -228,7 +228,7 @@ def plot_ohlc_class(p_ohlc, p_theme, p_data_class, p_vlines):
         close=[p_ohlc['close'].iloc[i] for i in ohlc_lag],
         increasing={'line': {'color': 'grey'}},
         decreasing={'line': {'color': 'grey'}},
-        name='Feature-Lag'))
+        name='Subset/Feature-Lag'))
 
     # Add layer for the success based color of candles in OHLC candlestick chart
     fig_g_ohlc.add_trace(go.Candlestick(
@@ -276,7 +276,7 @@ def plot_ohlc_class(p_ohlc, p_theme, p_data_class, p_vlines):
         fig_g_ohlc.update_layout(shapes=shapes_list)
 
     # Legend format
-    fig_g_ohlc.update_layout(legend=go.layout.Legend(x=.35, y=-.3, orientation='h',
+    fig_g_ohlc.update_layout(legend=go.layout.Legend(x=.2, y=-.3, orientation='h',
                                                      bordercolor='dark grey',
                                                      borderwidth=1,
                                                      font=dict(size=p_theme['p_fonts']['font_axis'])))
@@ -402,7 +402,7 @@ def plot_multiroc(p_data, p_theme, p_metric):
         yaxis=dict(title_text=p_theme['p_labels']['y_title'],
                    tickfont=dict(color='grey', size=p_theme['p_fonts']['font_axis'])))
 
-    fig_rocs.add_shape(type='line', line=dict(width=1, dash='dash', color='grey'), x0=0, x1=1, y0=0, y1=1)
+    fig_rocs.add_shape(type='line', line=dict(width=1.5, dash='dash', color='grey'), x0=0, x1=1, y0=0, y1=1)
 
     # n line colors (max, min, other)
     line_colors = ['#047CFB', '#FB5D41', '#ABABAB']
@@ -418,7 +418,7 @@ def plot_multiroc(p_data, p_theme, p_metric):
         p_tpr = model['tpr']
         p_color = line_colors[2]
         p_size = 1
-        p_name = p_metric + '_generic: ' +  str(round(metrics[i], 2))
+        p_name = p_metric + '-gen-' + str(round(metrics[i], 2))
         
         if i == max_metric:
             p_color = line_colors[0]
@@ -433,7 +433,7 @@ def plot_multiroc(p_data, p_theme, p_metric):
                                         mode='lines', line=dict(width=p_size, color=p_color)))
 
     # Legend format
-    fig_rocs.update_layout(legend=go.layout.Legend(x=1.05, y=1.05, orientation='v',
+    fig_rocs.update_layout(legend=go.layout.Legend(x=1.10, y=.82, orientation='v',
                                                    bordercolor='dark grey',
                                                    borderwidth=1,
                                                    font=dict(size=p_theme['p_fonts']['font_axis'])))
@@ -449,7 +449,7 @@ def plot_multiroc(p_data, p_theme, p_metric):
 # -- ----------------------------------------------------------------------------- Horizontal Histograms -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 
-def plot_h_histograms(p_data):
+def plot_h_histograms(p_data, p_theme):
     """
     Horizontal layout of histograms, one per column in input data
 
@@ -485,16 +485,33 @@ def plot_h_histograms(p_data):
 
     df_hist['type'] = types
 
+    # Semester
+    colors_1 = ['#2893ff', '#0080ff', '#0076ec','#006cd8', '#0062c5', '#0058b1', '#004f9d', '#00458a', 
+                '#003b76', '#00274f']
+
+    # heldout
+    colors_2 = ['#5ace7e', '#4aca72', '#3bc566','#36b75e', '#32a856', '#2d994e', '#247a3f', '#1b5c2f', 
+                '#174d28', '#123e20']
+
     df_hist.rename(columns = {"data": "Normalized Data"}, inplace=True)
 
-    fig = px.histogram(df_hist, x="Normalized Data", facet_row='type', color='type', histnorm='probability',
-                       opacity=0.75, nbins=550, color_discrete_sequence=px.colors.sequential.ice)
+    fig = px.histogram(df_hist, x="Normalized Data", facet_row='type', color='type',
+                       histnorm='probability',
+                       opacity=0.95, nbins=200, color_discrete_sequence=colors_1)
     
     fig.update_xaxes(matches=None, title_font=dict(size=16))
-    fig.update_yaxes(matches=None, title_font=dict(size=12))
+    fig.update_yaxes(matches=None, title_font=dict(size=10, color = 'rgba(0,0,0,0)'))
 
-    fig.update_layout(legend=dict(orientation="h", x=0.5, xanchor='center', title=None,
-    font=dict(size=16)))
+    for anno in fig['layout']['annotations']:
+        anno['text'] = ''
+    
+    fig.update_layout(legend=dict(orientation="h", x=0.475, xanchor='center', title=None,
+    font=dict(size=14)))
+
+     # Formato de tamanos
+    # fig.layout.autosize = True
+    fig.layout.width = p_theme['p_dims']['width']
+    fig.layout.height = p_theme['p_dims']['height']
 
     return fig
 

@@ -34,6 +34,7 @@ from tensorflow.python.keras import backend as K
 from tensorflow.keras import layers, models, regularizers, optimizers
 
 from datetime import datetime
+import scipy
 from scipy.stats import kurtosis as m_kurtosis
 from scipy.stats import skew as m_skew
 
@@ -2062,7 +2063,6 @@ def model_cases(p_models, p_global_cases, p_data_folds, p_cases_type, p_filters)
                     else:
                         e_hof = []
                         break                                 
-        
                 
         # Get features used for every case, therefore, for min and max metric cases
             features = {'features': p_global_cases[period]['features'],
@@ -2205,36 +2205,30 @@ def generalization_tests():
     
     return 1
 
-# ------------------------------------------------------------------- KULLBACK-LIEBLER DIVERGENCE MATRIX -- #
+# -------------------------------------------------------------------------- KULLBACK-LIEBLER DIVERGENCE -- #
 # --------------------------------------------------------------------------------------------------------- #
 
-def info_matrix(p, q):
-    
-    """
-    p_data: dict
-        With fold data to perform the calculations
-
-
-
-    """
-
-    import scipy
-    from scipy.stats import gengamma
-
+def kldivergence(p, q):
+        
     def compute_gamma_parameters(data):
+        """
+        Computes the parameters of gamma distribution by Methods of Moments.
+        """
 
         mean = np.mean(data)
         variance = np.var(data)
+        # sometimes refered in literature as k
         alpha = mean**2/variance
-        beta = variance/mean
+        # sometimes refered in literature as 1/theta
+        beta = mean/variance
         
         return alpha, beta
 
     def kl_divergence_generalized_gamma(alpha_1, beta_1, alpha_2, beta_2, p1=1, p2=1):
         """
-        Computes the Kullback-Leibler divergence 
-        between two gamma distributions
+        Computes the Kullback-Leibler divergence between two gamma distributions
         """
+
         theta_1 = 1/beta_1
         theta_2 = 1/beta_2
         
@@ -2248,9 +2242,6 @@ def info_matrix(p, q):
         g = alpha_1/p1
         
         return np.log(a/b) + c + (d/e)*f - g
-
-    # a_p, b_p, loc_p, scale_p = gengamma.fit(p)
-    # a_q, b_q, loc_p, scale_p = gengamma.fit(q)
 
     a_p, b_p = compute_gamma_parameters(p)
     a_q, b_q = compute_gamma_parameters(q)
